@@ -137,6 +137,9 @@
   .bubble .got { opacity: .3; transform: scale(.85); }
   .bubble .tail { position: absolute; left: 50%; bottom: -7px; width: 14px; height: 14px; margin-left: -7px; background: rgba(255,251,245,.92); transform: rotate(45deg); border-radius: 0 0 4px 0; }
   .bubble.shake { animation: shake .42s; }
+  .bubble .badge-crit { display: none; position: absolute; left: -8px; top: -6px; width: 22px; height: 22px; border-radius: 50%; background: linear-gradient(160deg, #e8c370, #c99a3f); color: #fffaf0; font: 800 12px/22px var(--body); text-align: center; box-shadow: 0 2px 6px rgba(120,80,20,.3); }
+  .bubble.critic .badge-crit { display: block; }
+  .bubble.critic .disc { box-shadow: inset 0 0 0 2px #d9a54a; }
   .bubble.pop { animation: bubblePop .4s cubic-bezier(.3,1.6,.5,1); }
   .bubble.hidden { opacity: 0; }
   @keyframes shake { 0%,100% { translate: 0 0; } 20% { translate: -6px 0; } 40% { translate: 5px 0; } 60% { translate: -4px 0; } 80% { translate: 3px 0; } }
@@ -281,6 +284,51 @@
   .ghost-btn.danger { color: var(--bad); }
   .role-title { font: 800 11px var(--body); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); margin: 12px 4px 7px; }
 
+  /* ---------- day panel extras: weather, goals, streak, day card ---------- */
+  .daychips { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+  .dchip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px 2px 4px; border-radius: 999px; background: rgba(74,52,40,.07); font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+  .dchip svg { width: 15px; height: 15px; }
+  .dchip.ev { background: rgba(217,165,74,.18); color: #85601c; }
+  .goals { margin-top: 8px; display: grid; gap: 4px; }
+  .goal { display: grid; grid-template-columns: 15px 1fr auto; gap: 6px; align-items: center; font-size: 12px; font-weight: 700; color: var(--ink); }
+  .goal i { width: 15px; height: 15px; border-radius: 5px; box-shadow: inset 0 0 0 1.5px rgba(74,52,40,.3); display: grid; place-items: center; font-style: normal; font-size: 10px; color: #fff; }
+  .goal.done i { background: #7f9a6f; box-shadow: none; }
+  .goal.done span { color: var(--ink-soft); text-decoration: line-through; }
+  .goal.failed { opacity: .45; }
+  .goal.failed i { background: rgba(194,107,78,.5); box-shadow: none; }
+  .goal small { font-size: 11px; font-weight: 800; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  #streakPill { position: absolute; left: 50%; top: 78px; transform: translateX(-50%) scale(.6); padding: 5px 12px 5px 7px; display: flex; gap: 6px; align-items: center; font-size: 12.5px; font-weight: 800; color: var(--ink-soft); opacity: 0; transition: opacity .3s, transform .35s cubic-bezier(.3,1.6,.5,1); }
+  #streakPill.on { opacity: 1; transform: translateX(-50%) scale(1); }
+  #streakPill.bump { animation: streakBump .4s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes streakBump { 40% { scale: 1.15; } }
+  #streakPill .fl { width: 20px; height: 20px; display: grid; }
+  #streakPill b { font: 600 17px var(--display); color: #b05a2c; }
+  #dayCard { position: absolute; left: 50%; top: 92px; transform: translate(-50%, -14px); display: flex; gap: 12px; align-items: center; padding: 12px 18px 12px 12px; opacity: 0; pointer-events: none; transition: opacity .5s, transform .5s cubic-bezier(.2,.85,.2,1); max-width: min(440px, calc(100vw - 24px)); }
+  #dayCard.on { opacity: 1; transform: translate(-50%, 0); }
+  #dayCard .ic { width: 40px; height: 40px; border-radius: 13px; background: rgba(255,255,255,.7); display: grid; place-items: center; flex: none; }
+  #dayCard .ic svg { width: 28px; height: 28px; }
+  #dayCard b { display: block; font: 600 18px var(--display); }
+  #dayCard span { font-size: 13px; font-weight: 700; color: var(--ink-soft); }
+  .goal-card { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 11px 13px; border-radius: 16px; background: rgba(255,255,255,.6); margin-bottom: 8px; }
+  .goal-card b { font: 600 15px var(--display); }
+  .goal-card .rw { font: 800 12px var(--body); color: var(--good); }
+  .goal-card .meter { grid-column: span 2; }
+  .goal-card.done { opacity: .7; } .goal-card.failed { opacity: .5; }
+  .ms-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .ms { display: grid; grid-template-columns: 30px 1fr; gap: 8px; align-items: center; padding: 9px 10px; border-radius: 14px; background: rgba(255,255,255,.55); }
+  .ms svg { width: 28px; height: 28px; }
+  .ms.locked { opacity: .55; filter: grayscale(.9); }
+  .ms b { display: block; font: 600 13px var(--display); line-height: 1.15; }
+  .ms span { font-size: 11px; font-weight: 700; color: var(--ink-soft); line-height: 1.25; display: block; }
+  .rev { padding: 9px 0; border-top: 1px solid rgba(74,52,40,.08); }
+  .rev:first-of-type { border-top: 0; }
+  .rev .top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+  .rev .who { display: inline-flex; gap: 5px; align-items: center; }
+  .rev .who svg { width: 15px; height: 15px; }
+  .rev .st { color: #c8913a; letter-spacing: 1px; font-size: 13px; }
+  .rev p { margin: 3px 0 0; font-size: 13px; font-weight: 700; line-height: 1.35; }
+  .rev.crit { background: rgba(217,165,74,.1); border-radius: 12px; padding: 9px 10px; border: 0; margin-bottom: 4px; }
+
   /* ---------- Customise drawer ---------- */
   #custom { position: absolute; top: 12px; left: 12px; bottom: 12px; width: 360px; max-width: calc(100vw - 24px); transform: translateX(calc(-100% - 30px)); transition: transform .5s cubic-bezier(.2,.85,.2,1); display: flex; flex-direction: column; border-radius: 26px; background: var(--glass-strong); z-index: 3; }
   #custom.open { transform: none; }
@@ -330,6 +378,9 @@
     #shop.open { transform: none; }
     .tiles { grid-template-columns: 1fr 1fr; }
     .stats.three { grid-template-columns: 1fr 1fr; }
+    .goals, .daychips { display: none; }
+    #streakPill { top: auto; bottom: 118px; }
+    #dayCard { top: 80px; }
     #dayPanel { left: 10px; top: 10px; min-width: 0; padding: 9px 12px; }
     .brand { font-size: 15px; } .brand .logo { width: 22px; height: 22px; }
     #moneyPanel { top: auto; bottom: 10px; left: 10px; transform: none; padding: 7px 16px 7px 8px; }
@@ -373,7 +424,11 @@
     <div class="brand"><span class="logo" data-icon="logo"></span><span id="brandName">Bean &amp; Bloom</span></div>
     <div class="clock"><span id="sunIcon" data-icon="sun"></span><span id="dayLabel">Day 1</span><span>·</span><span id="clockLabel">7:00 AM</span></div>
     <div class="daybar"><i id="dayFill"></i></div>
+    <div class="daychips" id="dayChips"></div>
+    <div class="goals" id="goalList"></div>
   </div>
+  <div id="streakPill" class="glass"><span class="fl" data-icon="flame"></span><b id="streakN">×2</b><span id="streakBonus">+10% tips</span></div>
+  <div id="dayCard" class="glass"><span class="ic" id="dcIcon"></span><div><b id="dcTitle"></b><span id="dcSub"></span></div></div>
 
   <div id="moneyPanel" class="glass top"><span class="coin">$</span><span id="money">0</span></div>
 
@@ -405,12 +460,13 @@
   <div id="shop" class="glass ia" role="dialog" aria-label="Manage your café">
     <div class="shop-head"><div><h2>Manage</h2><p id="mgSub">Run the numbers, run the café</p></div><button class="close-btn" id="shopClose" data-icon="close" aria-label="Close"></button></div>
     <div class="tabs" id="mgTabs" role="tablist">
-      <button role="tab" data-tab="overview" class="on">Overview</button><button role="tab" data-tab="menu">Menu</button><button role="tab" data-tab="staff">Staff</button><button role="tab" data-tab="upgrades">Upgrades</button>
+      <button role="tab" data-tab="overview" class="on">Overview</button><button role="tab" data-tab="menu">Menu</button><button role="tab" data-tab="staff">Staff</button><button role="tab" data-tab="upgrades">Upgrades</button><button role="tab" data-tab="goals">Goals</button>
     </div>
     <div class="shop-list" id="tab-overview" role="tabpanel"></div>
     <div class="shop-list" id="tab-menu" role="tabpanel" hidden></div>
     <div class="shop-list" id="tab-staff" role="tabpanel" hidden></div>
     <div class="shop-list" id="shopList" role="tabpanel" hidden></div>
+    <div class="shop-list" id="tab-goals" role="tabpanel" hidden></div>
   </div>
 
   <div id="custom" class="glass ia" role="dialog" aria-label="Customise your café">
@@ -2058,6 +2114,16 @@ const ICONS = {
   faceGood: `<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#c9dbb8"/><circle cx="12.5" cy="14.5" r="1.8" fill="${INK}"/><circle cx="21.5" cy="14.5" r="1.8" fill="${INK}"/><path d="M11 19.5c3.4 3.6 8.6 3.6 12 0" stroke="${INK}" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`,
   faceOk: `<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#efe0bf"/><circle cx="12.5" cy="14.5" r="1.8" fill="${INK}"/><circle cx="21.5" cy="14.5" r="1.8" fill="${INK}"/><path d="M12 21h10" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/></svg>`,
   faceBad: `<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#efc2b0"/><circle cx="12.5" cy="14.5" r="1.8" fill="${INK}"/><circle cx="21.5" cy="14.5" r="1.8" fill="${INK}"/><path d="M11.5 23c3.2-3 7.8-3 11 0" stroke="${INK}" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`,
+  cloud: `<svg viewBox="0 0 24 24"><path d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.6 9.2 4.7 4.7 0 0 0 7 18.5z" fill="#c9cdd3" stroke="#8a8f97" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
+  rain: `<svg viewBox="0 0 24 24"><path d="M7 14.5h10.5a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7.6 5.2 4.7 4.7 0 0 0 7 14.5z" fill="#b9c2cc" stroke="#7d8793" stroke-width="1.4" stroke-linejoin="round"/><path d="M8.5 17l-1 2.6M12.5 17l-1 2.6M16.5 17l-1 2.6" stroke="#6f9fc9" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  student: `<svg viewBox="0 0 24 24"><path d="M2.5 9.5L12 5l9.5 4.5L12 14z" fill="#8e9fb4" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/><path d="M6.5 11.6v4c1.6 1.6 3.4 2.2 5.5 2.2s3.9-.6 5.5-2.2v-4" fill="none" stroke="${INK}" stroke-width="1.5"/><path d="M19.5 10.5v5" stroke="${INK}" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+  tourist: `<svg viewBox="0 0 24 24"><rect x="3.5" y="7.5" width="17" height="11" rx="3" fill="#d7a64f" stroke="${INK}" stroke-width="1.5"/><circle cx="12" cy="13" r="3.4" fill="#f3e6d4" stroke="${INK}" stroke-width="1.5"/><path d="M8.5 7.5l1.4-2.2h4.2l1.4 2.2" fill="none" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+  commuter: `<svg viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="11" rx="2.5" fill="#6f8199" stroke="${INK}" stroke-width="1.5"/><path d="M9 8V6.5A1.5 1.5 0 0 1 10.5 5h3A1.5 1.5 0 0 1 15 6.5V8M3.5 12.5h17" fill="none" stroke="${INK}" stroke-width="1.5"/></svg>`,
+  trophy: `<svg viewBox="0 0 24 24"><path d="M7.5 4.5h9v4a4.5 4.5 0 0 1-9 0z" fill="#d9a54a" stroke="#9c7330" stroke-width="1.5" stroke-linejoin="round"/><path d="M7.5 6H5a2.5 2.5 0 0 0 2.6 3.4M16.5 6H19a2.5 2.5 0 0 1-2.6 3.4" fill="none" stroke="#9c7330" stroke-width="1.4"/><path d="M12 13v3.5M8.5 19.5h7l-.8-3h-5.4z" fill="#d9a54a" stroke="#9c7330" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+  flame: `<svg viewBox="0 0 24 24"><path d="M12 3c.8 3.2 4.8 4.8 4.8 9.6A4.8 4.8 0 0 1 12 17.4a4.8 4.8 0 0 1-4.8-4.8c0-2 1-3.4 2-4.4.2 1.6 1 2.6 2 3 0-2.8-.4-5.2.8-8.2z" fill="#e08a4f" stroke="#b05a2c" stroke-width="1.3" stroke-linejoin="round"/><path d="M12 17.4c-1.5 0-2.4-1-2.4-2.3 0-1.5 1.4-2.3 2.4-3.9 1 1.6 2.4 2.4 2.4 3.9 0 1.3-.9 2.3-2.4 2.3z" fill="#f3c46b"/></svg>`,
+  regular: `<svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.6" fill="#eec4a6" stroke="${INK}" stroke-width="1.5"/><path d="M5 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5z" fill="#9fb193" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
+  critic: `<svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" fill="#d9a54a" stroke="#b8862f" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
+  starGold: `<svg viewBox="0 0 24 24"><path d="M12 3.2l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.6l-5.2 2.8 1-5.9-4.3-4.1 5.9-.8z" fill="#d9a54a" stroke="#b8862f" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
   warn: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#c9765a"/><path d="M12 7v6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1.4" fill="#fff"/></svg>`,
 };
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon] || ''; });
@@ -2344,13 +2410,36 @@ class Character {
     const bridge = mesh(cylGeo(0.008, 0.008, 0.06, 6), MAT.darkMetal, { cast: false }); bridge.rotation.z = Math.PI / 2; bridge.position.set(0, 0.04, 0.245); this.glasses.add(bridge);
     this.head.add(this.glasses);
     this.apron = mesh(CH_GEO.apron, MAT.linen, { cast: false }); this.apron.position.set(0, 0.36, 0.245); this.apron.rotation.x = -0.12; this.torso.add(this.apron);
+    // accessories that tell guest types apart at a glance
+    const acc = (this.acc = {});
+    acc.backpack = mesh(boxGeo(0.34, 0.4, 0.16, 0.07, 4), MAT.linen); acc.backpack.position.set(0, 0.48, -0.3); this.torso.add(acc.backpack);
+    acc.tie = mesh(boxGeo(0.065, 0.24, 0.025, 0.012, 2), MAT.linen, { cast: false }); acc.tie.position.set(0, 0.6, 0.27); acc.tie.rotation.x = -0.14; this.torso.add(acc.tie);
+    acc.camera = new THREE.Group();
+    { const b = mesh(boxGeo(0.15, 0.1, 0.07, 0.025, 2), MAT.darkMetal, { cast: false }); acc.camera.add(b); const l = mesh(cylGeo(0.032, 0.036, 0.05, 16), MAT.chrome, { cast: false }); l.rotation.x = Math.PI / 2; l.position.z = 0.05; acc.camera.add(l); }
+    acc.camera.position.set(0.02, 0.5, 0.29); this.torso.add(acc.camera);
+    acc.scarf = mesh(torGeo(0.2, 0.065, 12, 32), MAT.linen); acc.scarf.rotation.x = Math.PI / 2; acc.scarf.position.set(0, 0.83, 0.01); this.torso.add(acc.scarf);
+    acc.sunHat = new THREE.Group();
+    { const brim = mesh(cylGeo(0.4, 0.4, 0.022, 40), MAT.linen); acc.sunHat.add(brim); const crown = mesh(sphereGeo(0.25, 32, 18), MAT.linen); crown.scale.set(1, 0.62, 1); crown.position.y = 0.04; acc.sunHat.add(crown); const band = mesh(torGeo(0.235, 0.022, 8, 40), MAT.linen); band.rotation.x = Math.PI / 2; band.position.y = 0.03; acc.sunHat.add(band); acc.sunBand = band; }
+    acc.sunHat.position.set(0, 0.17, -0.02); acc.sunHat.rotation.x = -0.12; this.head.add(acc.sunHat);
+    acc.beret = new THREE.Group();
+    { const b = mesh(sphereGeo(0.26, 32, 18), MAT.linen); b.scale.set(1.12, 0.36, 1.12); acc.beret.add(b); const st = mesh(sphereGeo(0.03, 12, 8), MAT.linen); st.position.y = 0.09; acc.beret.add(st); }
+    acc.beret.position.set(0.03, 0.2, -0.03); acc.beret.rotation.z = -0.25; this.head.add(acc.beret);
+    acc.visor = mesh(boxGeo(0.25, 0.022, 0.17, 0.01, 2), MAT.linen); acc.visor.position.set(0, 0.11, 0.23); acc.visor.rotation.x = 0.28; this.head.add(acc.visor);
+    // props for seated guests (reading, scrolling)
+    acc.book = new THREE.Group();
+    for (const sd of [-1, 1]) { const pg = mesh(boxGeo(0.13, 0.015, 0.18, 0.006, 2), MAT.linen, { cast: false }); pg.position.x = sd * 0.065; pg.rotation.z = sd * 0.18; acc.book.add(pg); }
+    acc.bookCover = mesh(boxGeo(0.28, 0.012, 0.19, 0.006, 2), MAT.terracotta, { cast: false }); acc.bookCover.position.y = -0.012; acc.book.add(acc.bookCover);
+    acc.book.position.set(0, 0.42, 0.42); acc.book.rotation.x = -0.75; this.torso.add(acc.book);
+    acc.phone = mesh(boxGeo(0.075, 0.13, 0.014, 0.012, 2), MAT.darkMetal, { cast: false }); acc.phone.position.set(0.08, 0.5, 0.38); acc.phone.rotation.x = -0.6; this.torso.add(acc.phone);
+    for (const k in acc) if (acc[k].isObject3D && k !== 'sunBand' && k !== 'bookCover') acc[k].visible = false;
     // animation state
     this.phase = rand(TAU); this.walk = 0; this.sit = 0; this.seatY = 0.5;
     this.bounce = 0; this.bounceV = 0; this.seed = rand(100); this.sip = 0; this.mood = 'neutral';
     this.moving = false; this.speed = 1.8; this.stomp = 1; this.carry = false;
     this.headWorldY = 1.6;
   }
-  dress({ skin, outfit, pants, hairColor, style, glasses = false, scale = 1, apron = null, hat = null }) {
+  dress({ skin, outfit, pants, hairColor, style, glasses = false, scale = 1, apron = null, hat = null, backpack = null, tie = null, camera = false, scarf = null, headwear = null, cap = null }) {
+    if (headwear && (style === 'beanie' || style === 'cap' || style === 'curly' || style === 'bun')) style = 'short';
     const s = skinMat(skin), o = fabricMat(outfit), p = fabricMat(pants), h = hairMat(hairColor);
     this.body.material = o; this.headMesh.material = s;
     for (const a of this.arms) a.material = o;
@@ -2364,16 +2453,46 @@ class Character {
     if (style === 'beanie') { this.hair.short.visible = true; this.hair.rim.visible = true; this.hair.pom.visible = true; }
     if (style === 'curly') for (const c of this.hair.curls) c.visible = true;
     if (style === 'chef') { this.hair.short.visible = true; this.hair.chefBand.visible = this.hair.chefTop.visible = true; this.hair.chefBand.material = this.hair.chefTop.material = fabricMat(0xf8f4ee); }
+    const A = this.acc;
+    A.visor.visible = style === 'cap';
+    if (style === 'cap') { const cm = fabricMat(cap || pick([0x8e9fb4, 0xc9765a, 0x9fb193, 0xd7a64f])); this.hair.short.visible = true; this.hair.short.material = cm; A.visor.material = cm; }
+    A.backpack.visible = !!backpack; if (backpack) A.backpack.material = fabricMat(backpack);
+    A.tie.visible = !!tie; if (tie) A.tie.material = fabricMat(tie);
+    A.camera.visible = !!camera;
+    A.scarf.visible = !!scarf; if (scarf) A.scarf.material = fabricMat(scarf);
+    A.sunHat.visible = headwear === 'sun'; A.beret.visible = headwear === 'beret';
+    if (headwear === 'sun') { const st = fabricMat(0xe9d3a3); A.sunHat.children.forEach((m) => { m.material = st; }); A.sunBand.material = fabricMat(pick([0xc9765a, 0x8e9fb4, 0x7f9474])); }
+    if (headwear === 'beret') { const bm = fabricMat(0x5a2f33); A.beret.children.forEach((m) => { m.material = bm; }); }
+    A.book.visible = false; A.phone.visible = false;
     this.glasses.visible = glasses;
     this.apron.visible = !!apron; if (apron) this.apron.material = fabricMat(apron);
     this.root.scale.setScalar(scale);
     this.scale = scale;
   }
-  randomize() {
-    this.dress({
+  randomize(type = 'regular') {
+    const o = {
       skin: pick(SKIN_TONES), outfit: pick(OUTFITS), pants: pick(PANTS), hairColor: pick(HAIR_COLORS),
       style: pick(HAIR_STYLES), glasses: Math.random() < 0.22, scale: rand(0.86, 1.06),
-    });
+    };
+    const chance = (p) => Math.random() < p;
+    if (type === 'student') {
+      if (chance(0.85)) o.backpack = pick([0xc9765a, 0x8e9fb4, 0xd7a64f, 0x7f9474, 0xe8b3a1]);
+      if (chance(0.35)) o.style = 'beanie'; else if (chance(0.3)) o.style = 'cap';
+      o.glasses = chance(0.3); o.scale = rand(0.84, 0.98);
+    } else if (type === 'commuter') {
+      o.outfit = pick([0x3e4b5b, 0x4a4440, 0x5d6b7a, 0x6b5a4a, 0x34404d]); o.pants = pick([0x2f2b28, 0x3e4b5b, 0x4a4440]);
+      if (chance(0.7)) o.tie = pick([0xc9765a, 0xd7a64f, 0x8a3e3e, 0x9fb193]);
+      o.style = pick(['short', 'bun', 'bob', 'bald', 'short']); o.glasses = chance(0.45);
+    } else if (type === 'tourist') {
+      if (chance(0.72)) o.headwear = 'sun';
+      o.camera = chance(0.8); o.outfit = pick([0xe2cdb0, 0xe8b3a1, 0xd7a64f, 0xf1e6d6, 0x8e9fb4, 0x9fb193]);
+    } else if (type === 'critic') {
+      o.headwear = 'beret'; o.glasses = true; o.scarf = 0x8a3e3e; o.outfit = 0x3b3733; o.pants = 0x2f2b28; o.style = pick(['short', 'bob']); o.scale = rand(0.95, 1.04);
+    } else {
+      if (chance(0.2)) o.scarf = pick([0xc9765a, 0xd7a64f, 0x9fb193, 0xe8b3a1, 0x8e9fb4]);
+      if (chance(0.12)) o.style = 'cap';
+    }
+    this.dress(o);
   }
   setMood(m) {
     this.mood = m;
@@ -2436,6 +2555,7 @@ const G = {
   phase: 'title', day: 1, time: DAY_START, money: 0, rep: 2.0, paused: false,
   up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0 },
   prices: { latte: 3.5, matcha: 5, pastry: 3 }, staff: [], history: [], // opening prices sit a little under fair
+  streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0 },
   spawnTimer: 1.2, lightHour: 8.4, closing: false, stats: null, bought: 0,
 };
 const perItem = () => ({ latte: 0, matcha: 0, pastry: 0 });
@@ -2444,6 +2564,7 @@ function newStats() {
     served: 0, stormed: 0, turned: 0, balked: 0, revenue: 0, tips: 0, bestTip: 0,
     ingredients: 0, wages: 0, rent: 0, hiring: 0, satSum: 0, speedSum: 0, valueSum: 0, waitSum: 0,
     sold: perItem(), salesBy: perItem(), made: perItem(), repStart: G.rep, moneyStart: G.money, bought: 0,
+    byType: {}, bestStreak: 0, pastries: 0,
   };
 }
 G.stats = newStats();
@@ -2453,7 +2574,7 @@ const tableCount = () => 2 + G.up.tables;
 // ---- pricing: guests judge your prices against what feels fair *here* ----
 // Reputation and a nicer room (furniture, decor) earn you pricing power.
 const ambience = () => (1 + 0.05 * (G.rep - 2.5)) * (1 + 0.06 * furnitureLevel() + 0.04 * G.up.decor);
-const fairPrice = (k) => BASE_PRICE[k] * ambience();
+const fairPrice = (k) => BASE_PRICE[k] * ambience() * (today.fair[k] || 1);
 const priceRatio = (k) => G.prices[k] / fairPrice(k);
 const valueScore = (r) => clamp(1 - (r - 0.85) * 1.6, 0, 1); // 1 = a steal, 0 = a rip-off
 const VALUE_BANDS = [[0.8, 'A steal', 'good'], [0.97, 'Good value', 'good'], [1.12, 'Fair', 'ok'], [1.35, 'Pricey', 'warn'], [Infinity, 'Rip-off', 'bad']];
@@ -2469,14 +2590,17 @@ const footfall = () => { const r = menuIndex(); return r <= 1 ? 1 + Math.min(0.3
 const rentToday = () => 10 + 4 * tableCount();
 const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
 function nextSpawnInterval() {
-  const r = clamp((G.rep - 0.5) / 4.5, 0, 1);
-  let base = (lerp(8.2, 2.9, r) * (1 - 0.14 * G.up.sign)) / footfall();
+  // word of mouth lags: footfall follows the reputation you opened the day with
+  const r = clamp(((G.stats ? G.stats.repStart : G.rep) - 0.5) / 4.5, 0, 1);
+  // a party averages ~1.35 guests, so groups arrive a little less often than singles used to
+  let base = (lerp(9.8, 3.5, r) * (1 - 0.14 * G.up.sign)) / (footfall() * today.footfall);
   const h = G.time;
   if ((h > 8 && h < 10) || (h > 12 && h < 13.6)) base *= 0.78; // morning & lunch rush
   else if (h > 15 && h < 16.8) base *= 1.18;
   return base * rand(0.72, 1.28);
 }
-function addRep(d) { G.rep = clamp(G.rep + d, 0.5, 5); ui.repDirty = true; }
+// reputation can't swing more than about a star in a single day either way
+function addRep(d) { const s0 = G.stats ? G.stats.repStart : G.rep; G.rep = clamp(G.rep + d, Math.max(0.5, s0 - 0.9), Math.min(5, s0 + 0.8)); ui.repDirty = true; }
 function addMoney(d) { G.money += d; ui.moneyDirty = true; } // can dip below zero: wages and rent don't wait
 
 // ---------------------------------------------------------------------
@@ -2680,18 +2804,30 @@ const AISLES = [-1.35, 2.3, 6.0];
 const nearestAisle = (x) => AISLES.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a));
 const QUEUE_SPOTS = [V3(3.35, 0, -4.25), V3(2.6, 0, -3.85), V3(1.85, 0, -3.45)];
 
+// ---- tables: two seats each, they get messy, and tips wait on them until cleared ----
+const Z_C = 4.75; // walkway along the front of the second row
+const COIN_GEO = cylGeo(0.055, 0.055, 0.018, 18);
 class Table {
   constructor(i, pos) {
     this.i = i; this.pos = pos.clone(); this.row = pos.z < 1 ? 0 : 1;
     this.group = new THREE.Group(); this.group.position.copy(pos); world.add(this.group);
     this.group.visible = false; this.active = false; this.level = -1;
-    this.customer = null; this.items = []; this.furniture = null;
-    this.seat = V3(pos.x, 0, pos.z - 0.82);
+    this.party = null; this.items = []; this.furniture = null; this.dirty = false; this.pendingTip = 0; this.dirtySince = 0;
+    this.seats = [
+      { pos: V3(pos.x, 0, pos.z - 0.82), yaw: 0 }, // back chair, faces the camera
+      { pos: V3(pos.x, 0, pos.z + 0.82), yaw: Math.PI }, // front chair
+    ];
     this.serve = V3(pos.x + 0.98, 0, pos.z);
     this.seatY = 0.5;
-    makeProxy(new THREE.CylinderGeometry(1.0, 1.0, 1.9, 16), this, pos.clone().add(V3(0, 0.95, -0.15)));
+    this.coins = new THREE.Group();
+    for (let k = 0; k < 6; k++) { const c = mesh(COIN_GEO, MAT.brass, { cast: false }); c.position.set((k % 2) * 0.05 - 0.02, k * 0.019, (k % 3) * 0.02); c.rotation.y = k; this.coins.add(c); }
+    this.coins.position.set(0.18, TABLE_H + 0.01, 0.12); this.coins.visible = false;
+    this.group.add(this.coins);
+    makeProxy(new THREE.CylinderGeometry(1.0, 1.0, 1.9, 16), this, pos.clone().add(V3(0, 0.95, 0)));
   }
   get title() { return `Table ${this.i + 1}`; }
+  get guests() { return this.party ? this.party.members : []; }
+  get free() { return this.active && !this.party && !this.dirty; }
   build(level) {
     if (this.furniture) this.group.remove(this.furniture);
     const f = new THREE.Group();
@@ -2708,13 +2844,24 @@ class Table {
     const f = this.build(level);
     if (animate) popIn(f, 0, 0.7);
   }
-  spot(kind) { return kind === 'pastry' ? V3(this.pos.x - 0.27, TABLE_H, this.pos.z - 0.1) : V3(this.pos.x + 0.1, TABLE_H, this.pos.z - 0.3); }
-  pathFromDoor() {
-    const pts = [V3(ROOM.door.x, 0, Z_A)];
-    if (this.row === 0) pts.push(V3(this.seat.x, 0, Z_A));
-    else { const ax = nearestAisle(this.pos.x); pts.push(V3(ax, 0, Z_A), V3(ax, 0, Z_B), V3(this.seat.x, 0, Z_B)); }
-    pts.push(this.seat.clone());
+  // item spots mirror through the table centre for the front seat
+  spot(kind, seat = 0) {
+    const s = seat ? -1 : 1;
+    return kind === 'pastry' ? V3(this.pos.x - 0.27 * s, TABLE_H, this.pos.z - 0.1 * s) : V3(this.pos.x + 0.1 * s, TABLE_H, this.pos.z - 0.3 * s);
+  }
+  pathToSeat(seat) {
+    const p = this.seats[seat].pos, pts = [V3(ROOM.door.x, 0, Z_A)];
+    const lane = this.row === 0 ? (seat ? Z_B : Z_A) : (seat ? Z_C : Z_B);
+    if (lane === Z_A) pts.push(V3(p.x, 0, Z_A));
+    else { const ax = nearestAisle(this.pos.x); pts.push(V3(ax, 0, Z_A), V3(ax, 0, lane), V3(p.x, 0, lane)); }
+    pts.push(p.clone());
     return pts;
+  }
+  showTip() {
+    const n = this.pendingTip <= 0 ? 0 : clamp(Math.ceil(this.pendingTip / 1.2), 1, 6);
+    this.coins.visible = n > 0;
+    this.coins.children.forEach((c, k) => { c.visible = k < n; });
+    if (n) popIn(this.coins, 0, 0.4);
   }
   clearItems() {
     for (const it of this.items) { const { kind, mesh: m } = it; shrinkOut(m, 0.35, () => releaseItemMesh(kind, m)); }
@@ -2722,7 +2869,26 @@ class Table {
   }
 }
 const tables = LAYOUT.tables.map((p, i) => new Table(i, p));
-const freeTable = () => tables.find((t) => t.active && !t.customer);
+const freeTable = () => tables.find((t) => t.free);
+
+// clearing a table: dishes go, the tip pile is banked
+function clearTable(t, by = null) {
+  if (t.party || !t.dirty) return false;
+  t.clearItems();
+  const tip = t.pendingTip;
+  if (tip > 0.004) {
+    addMoney(tip); G.stats.tips += tip; G.stats.bestTip = Math.max(G.stats.bestTip, tip);
+    ui.float(`+$${tip.toFixed(2)} tips`, V3(t.pos.x, TABLE_H + 0.6, t.pos.z), tip >= 3 ? 'big' : 'tip');
+    sfx.coins(tip >= 3);
+    if (tip >= 3 && !by) { pushCamera(t.pos, 0.08); burstSparkles(V3(t.pos.x, TABLE_H + 0.3, t.pos.z), 20); }
+  } else sfx.clink(0.6);
+  t.pendingTip = 0; t.dirty = false;
+  if (t.coins.visible) shrinkOut(t.coins, 0.3, () => { t.coins.visible = false; t.coins.scale.setScalar(1); });
+  burstSparkles(V3(t.pos.x, TABLE_H + 0.15, t.pos.z), 10, [1, 0.95, 0.8], 0.5);
+  setTimeout(assignQueue, 250);
+  tutorial.onCleared();
+  return true;
+}
 
 // ---- order bubbles (HTML) ----
 const labelsEl = document.getElementById('labels');
@@ -2730,7 +2896,7 @@ const RING_LEN = 2 * Math.PI * 26;
 function createBubble() {
   const el = document.createElement('div');
   el.className = 'bubble hidden';
-  el.innerHTML = `<div class="tail"></div><div class="disc"></div><svg class="ring" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="rgba(74,52,40,.10)" stroke-width="5"/><circle class="p" cx="30" cy="30" r="26" fill="none" stroke="#8fa486" stroke-width="5" stroke-linecap="round" stroke-dasharray="${RING_LEN}" stroke-dashoffset="0"/></svg><div class="main"></div><div class="side"></div>`;
+  el.innerHTML = `<div class="tail"></div><div class="disc"></div><svg class="ring" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="none" stroke="rgba(74,52,40,.10)" stroke-width="5"/><circle class="p" cx="30" cy="30" r="26" fill="none" stroke="#8fa486" stroke-width="5" stroke-linecap="round" stroke-dasharray="${RING_LEN}" stroke-dashoffset="0"/></svg><div class="main"></div><div class="side"></div><div class="badge-crit">★</div>`;
   labelsEl.appendChild(el);
   return { el, ring: el.querySelector('.p'), main: el.querySelector('.main'), side: el.querySelector('.side'), shown: false, lastFrac: -1, lastColor: '' };
 }
@@ -2741,21 +2907,54 @@ function showEmote(worldPos, icon, dur = 1.6) {
   ui.emotes.push({ el, pos: worldPos.clone(), t: 0, dur });
 }
 
-// ---- customers ----
-const customers = [];
-const customerPool = [];
-const queue = [null, null, null];
+// ---- guest types: each segment weighs price, speed and the menu differently ----
+const GUEST_TYPES = {
+  regular: { name: 'Regular', plural: 'Regulars', sens: 1.0, patience: 1.0, tip: 1.0, pastry: 1.0, matcha: 1.0, pair: 0.32 },
+  student: { name: 'Student', plural: 'Students', sens: 1.6, patience: 1.25, tip: 0.6, pastry: 0.8, matcha: 1.35, pair: 0.55 },
+  commuter: { name: 'Commuter', plural: 'Commuters', sens: 0.55, patience: 0.8, tip: 1.4, pastry: 0.6, matcha: 0.7, pair: 0.12 },
+  tourist: { name: 'Tourist', plural: 'Tourists', sens: 0.85, patience: 1.1, tip: 1.15, pastry: 1.7, matcha: 1.2, pair: 0.65 },
+  critic: { name: 'Food critic', plural: 'Food critics', sens: 1.25, patience: 0.85, tip: 1.0, pastry: 1.2, matcha: 1.0, pair: 0 },
+};
+// today's conditions (weather & events fill these in each morning)
+const today = { weather: 'sunny', event: null, footfall: 1, patience: 1, eat: 1, pair: 1, mix: {}, fair: {}, criticDue: false, criticCame: false };
+function pickGuestType() {
+  const h = G.time;
+  const w = {
+    regular: 4,
+    student: h > 13 && h < 18.5 ? 3.4 : 1.4,
+    commuter: h < 10 ? 4.2 : h < 17 ? 1.1 : 2.2,
+    tourist: h > 10 && h < 17.5 ? 2.2 : 0.7,
+  };
+  for (const k in today.mix) w[k] *= today.mix[k];
+  let sum = 0; for (const k in w) sum += w[k];
+  let r = Math.random() * sum;
+  for (const k in w) { r -= w[k]; if (r <= 0) return k; }
+  return 'regular';
+}
+const guestRatio = (g, kind) => 1 + (priceRatio(kind) - 1) * GUEST_TYPES[g.type].sens; // how pricey it feels *to this guest*
 
-function makeOrder() {
+function makeOrder(type) {
+  const T = GUEST_TYPES[type];
   let drink = 'latte';
-  if (G.up.matcha) { // relative price nudges the drink choice
-    const wm = 0.42 * clamp(Math.pow(priceRatio('latte') / priceRatio('matcha'), 2.2), 0.25, 2.5);
+  if (G.up.matcha) { // relative price and taste nudge the drink choice
+    const wm = 0.42 * T.matcha * clamp(Math.pow(priceRatio('latte') / priceRatio('matcha'), 2.2 * T.sens), 0.25, 2.5);
     if (Math.random() < wm / (wm + 0.58)) drink = 'matcha';
   }
   const items = [{ kind: drink, status: 'need' }];
-  if (G.up.pastry && Math.random() < 0.45 * clamp(2 - priceRatio('pastry'), 0.15, 1.4)) items.push({ kind: 'pastry', status: 'need' });
+  const pr = 1 + (priceRatio('pastry') - 1) * T.sens;
+  if (G.up.pastry && Math.random() < 0.45 * T.pastry * clamp(2 - pr, 0.15, 1.4)) items.push({ kind: 'pastry', status: 'need' });
   return items;
 }
+
+// placeholders until the reviews & goals systems below are defined
+let leaveReview = () => {};
+let goals = { onServed() {}, onStorm() {}, update() {} };
+
+// ---- customers & parties ----
+const customers = [];
+const customerPool = [];
+const parties = [];
+const queue = [null, null, null];
 
 class Walker {
   // shared waypoint following with interpolation-friendly prev/curr state
@@ -2790,6 +2989,12 @@ class Walker {
   }
 }
 
+class Party {
+  constructor(type, size) { this.type = type; this.size = size; this.members = []; this.table = null; this.queueIdx = -1; this.arrived = 0; this.qPatience = 24; this.state = 'enter'; this.done = false; }
+  get leader() { return this.members[0]; }
+  get label() { const T = GUEST_TYPES[this.type]; return this.size > 1 ? `2 ${T.plural}` : T.name; }
+}
+
 class Customer extends Walker {
   constructor() {
     super();
@@ -2798,84 +3003,62 @@ class Customer extends Walker {
     world.add(this.ch.root);
     this.bubble = createBubble();
   }
-  spawn() {
-    this.ch.randomize(); this.ch.setMood('neutral'); this.ch.sit = 0; this.ch.stomp = 1; this.ch.root.visible = true;
-    this.pos.set(DOOR_OUT.x + rand(-0.25, 0.25), 0, DOOR_OUT.z); this.prev.copy(this.pos);
+  spawn(party, idx) {
+    this.party = party; this.idx = idx; this.type = party.type;
+    this.ch.randomize(this.type); this.ch.setMood('neutral'); this.ch.sit = 0; this.ch.stomp = 1; this.ch.root.visible = true; this.ch.activity = null;
+    const off = idx ? V3(0.45, 0, -0.55) : V3(rand(-0.15, 0.15), 0, 0);
+    this.offset = idx ? V3(0.42, 0, 0.22) : V3(0, 0, 0);
+    this.pos.copy(DOOR_OUT).add(off); this.prev.copy(this.pos);
     this.yaw = this.prevYaw = 0;
     this.speed = rand(1.75, 2.05);
-    this.setPath([DOOR_IN.clone()]);
+    this.setPath([DOOR_IN.clone().add(V3(idx * 0.4, 0, -idx * 0.25))]);
     this.state = 'enter';
-    this.order = makeOrder(); this.table = null; this.timer = 0; this.waited = 0;
-    this.patienceMax = basePatience(); this.patience = this.patienceMax; this.qPatience = 22;
+    this.order = makeOrder(this.type); this.table = null; this.seat = 0; this.timer = 0; this.waited = 0; this.paid = false;
+    this.patienceMax = basePatience() * GUEST_TYPES[this.type].patience * today.patience; this.patience = this.patienceMax;
     this.bubble.shown = false; this.bubble.el.classList.add('hidden'); this.bubble.lastFrac = -1;
+    this.bubble.el.classList.toggle('critic', this.type === 'critic');
     this.renderBubbleItems();
     customers.push(this);
-    sfx.doorbell();
+    party.members.push(this);
   }
-  get seated() { return this.state === 'wait' || this.state === 'eat' || this.state === 'sitting'; }
-  arrive() {
-    const t = freeTable();
-    if (t) return this.goToTable(t);
-    const qi = queue.indexOf(null);
-    if (qi >= 0 && !G.closing) { queue[qi] = this; this.state = 'toQueue'; this.setPath([QUEUE_SPOTS[qi].clone()]); return; }
-    this.turnAway();
-  }
-  goToTable(t) {
-    t.customer = this; this.table = t;
-    const path = t.pathFromDoor();
-    if (this.state === 'queue' || this.state === 'toQueue') path.unshift(V3(ROOM.door.x - 0.4, 0, -3.3));
+  get seated() { return this.state === 'wait' || this.state === 'eat' || this.state === 'sitting' || this.state === 'settled' || this.state === 'done'; }
+  headY() { return this.ch.headWorldY; }
+  goToSeat(t, seat, fromQueue) {
+    this.table = t; this.seat = seat;
+    const path = t.pathToSeat(seat);
+    if (fromQueue) path.unshift(V3(ROOM.door.x - 0.4, 0, -3.3));
     this.setPath(path);
     this.state = 'toSeat';
   }
-  turnAway(reason = 'full') {
-    this.state = 'leave';
-    this.ch.setMood('sad');
-    showEmote(V3(this.pos.x, this.headY(), this.pos.z), 'sad');
-    if (reason !== 'closing') { G.stats.turned++; addRep(-0.05); }
-    this.setPath([DOOR_IN.clone(), DOOR_OUT.clone()]);
-  }
-  leaveQueue(reason) {
-    const qi = queue.indexOf(this); if (qi >= 0) queue[qi] = null;
-    compactQueue();
-    this.turnAway(reason);
-  }
-  headY() { return this.ch.headWorldY; }
+  walkOut(extra = []) { this.state = 'leave'; this.setPath([...extra, DOOR_IN.clone(), DOOR_OUT.clone()]); }
   fixed(dt) {
     this.prev.copy(this.pos); this.prevYaw = this.yaw;
+    const P = this.party;
     switch (this.state) {
-      case 'enter': if (this.follow(dt)) this.arrive(); break;
+      case 'enter': if (this.follow(dt)) { this.state = 'arrived'; this.ch.moving = false; if (++P.arrived >= P.members.length) partyArrive(P); } break;
+      case 'arrived': this.faceTo(0, dt, 4); break;
       case 'toQueue': if (this.follow(dt)) this.state = 'queue'; break;
-      case 'queue':
-        this.faceTo(0.5, dt, 4);
-        this.qPatience -= dt;
-        if (this.qPatience <= 0) this.leaveQueue('impatient');
-        break;
+      case 'queue': this.faceTo(0.5, dt, 4); break;
       case 'toSeat':
         if (this.follow(dt)) { this.state = 'sitting'; this.timer = 0; this.ch.seatY = this.table.seatY; }
         break;
       case 'sitting':
         this.timer += dt;
-        this.faceTo(0, dt, 14);
+        this.faceTo(this.table.seats[this.seat].yaw, dt, 14);
         this.ch.sit = smooth(clamp(this.timer / 0.45, 0, 1));
-        if (this.timer >= 0.45) {
-          // reading the menu: steep prices make some guests walk straight back out
-          const worst = Math.max(...this.order.map((o) => priceRatio(o.kind)));
-          if (Math.random() < clamp((worst - 1.4) * 1.8, 0, 0.9)) this.balk();
-          else {
-            this.state = 'wait'; this.showBubble();
-            if (worst > 1.25) showEmote(V3(this.pos.x, this.headY() + 0.55, this.pos.z), 'pricey', 1.2);
-          }
-        }
+        if (this.timer >= 0.45) { this.state = 'settled'; partyMaybeOrder(P); }
         break;
+      case 'settled': break;
       case 'wait':
         this.patience -= dt; this.waited += dt;
-        if (this.patience <= 0) this.stormOff();
+        if (this.patience <= 0) partyStorm(P);
         break;
       case 'eat':
         this.timer -= dt;
         if (Math.random() < dt * 0.5 && this.ch.sip <= 0) this.ch.sip = 1;
-        if (this.timer <= 0) this.standUp(false);
+        if (this.timer <= 0) { this.state = 'done'; partyMaybeLeave(P); }
         break;
+      case 'done': if (Math.random() < dt * 0.3 && this.ch.sip <= 0) this.ch.sip = 1; break;
       case 'standing':
         this.timer += dt;
         this.ch.sit = 1 - smooth(clamp(this.timer / 0.35, 0, 1));
@@ -2893,6 +3076,7 @@ class Customer extends Walker {
     sfx.pop();
     tutorial.onOrder(this);
   }
+  hideBubble() { this.bubble.shown = false; this.bubble.el.classList.add('hidden'); }
   renderBubbleItems() {
     const [a, b] = this.order;
     this.bubble.main.innerHTML = ICONS[a.kind];
@@ -2900,150 +3084,425 @@ class Customer extends Walker {
     if (b) { this.bubble.side.style.display = ''; this.bubble.side.innerHTML = ICONS[b.kind]; this.bubble.side.classList.toggle('got', b.status === 'done'); }
     else this.bubble.side.style.display = 'none';
   }
-  needs(kind) { return this.order.some((o) => o.kind === kind && o.status === 'need'); }
+  needs(kind) { return this.state === 'wait' && this.order.some((o) => o.kind === kind && o.status === 'need'); }
   receive(o) {
     o.status = 'done';
     this.ch.kick(0.8);
     this.patience = Math.min(this.patienceMax, this.patience + this.patienceMax * 0.12);
     this.renderBubbleItems();
     sfx.clink(1);
-    burstSparkles(V3(this.pos.x, TABLE_H + 0.2, this.pos.z + 0.5), 8, [1, 0.9, 0.7], 0.5);
+    burstSparkles(V3(this.pos.x, TABLE_H + 0.2, this.pos.z + (this.seat ? -0.5 : 0.5)), 8, [1, 0.9, 0.7], 0.5);
     if (this.state === 'wait' && this.order.every((x) => x.status === 'done')) this.pay();
   }
   pay() {
-    // satisfaction = how fast it came + how fair the price felt
+    // satisfaction = how fast it came + how fair the price felt to this kind of guest
+    const T = GUEST_TYPES[this.type];
     const speed = clamp(this.patience / this.patienceMax, 0, 1);
     let value = 0, total = 0;
-    for (const o of this.order) { total += G.prices[o.kind]; value += valueScore(priceRatio(o.kind)); }
+    for (const o of this.order) { total += G.prices[o.kind]; value += valueScore(guestRatio(this, o.kind)); }
     value /= this.order.length;
     const sat = clamp(0.5 * speed + 0.5 * value, 0, 1);
-    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel());
-    addMoney(total + tip);
+    const streakBonus = 1 + 0.05 * Math.min(5, G.streak);
+    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus;
+    addMoney(total);
+    this.paid = true;
     const S = G.stats;
-    S.served++; S.revenue += total; S.tips += tip; S.bestTip = Math.max(S.bestTip, tip);
+    S.served++; S.revenue += total;
     S.satSum += sat; S.speedSum += speed; S.valueSum += value; S.waitSum += this.waited;
+    S.byType[this.type] = (S.byType[this.type] || 0) + 1;
     for (const o of this.order) { S.sold[o.kind]++; S.salesBy[o.kind] += G.prices[o.kind]; }
-    addRep(sat >= 0.45 ? (sat - 0.45) * 0.13 * (1 + 0.25 * G.up.decor) * clamp((5.4 - G.rep) / 3.4, 0.15, 1.2) : (sat - 0.45) * 0.14);
+    const critic = this.type === 'critic' ? 4 : 1;
+    addRep(critic * (sat >= 0.45 ? (sat - 0.45) * 0.13 * (1 + 0.25 * G.up.decor) * clamp((5.4 - G.rep) / 3.4, 0.15, 1.2) : (sat - 0.45) * 0.14));
+    if (this.table) { this.table.pendingTip += tip; }
+    G.streak = speed >= 0.6 ? G.streak + 1 : 0; G.stats.bestStreak = Math.max(G.stats.bestStreak, G.streak); ui.streakDirty = true;
     const head = V3(this.pos.x, this.headY() + 0.2, this.pos.z);
     ui.float(`+$${total.toFixed(2)}`, head, '');
-    const big = tip >= 2.5 && sat > 0.78;
-    if (tip >= 0.4) setTimeout(() => ui.float(`+$${tip.toFixed(2)} tip`, head, big ? 'big' : 'tip'), 260);
-    sfx.coins(big);
-    this.state = 'eat'; this.timer = rand(5.2, 7.2);
+    sfx.coins(false);
+    this.state = 'eat'; this.timer = rand(5.2, 7.2) * today.eat;
+    this.sat = sat; this.speedScore = speed; this.valueScoreAvg = value;
     this.ch.setMood(sat >= 0.48 ? 'happy' : 'neutral'); this.ch.kick(sat >= 0.48 ? 1.3 : 0.5);
-    this.bubble.shown = false; this.bubble.el.classList.add('hidden');
+    this.hideBubble();
     showEmote(V3(this.pos.x, this.headY(), this.pos.z), sat >= 0.72 ? 'heart' : sat >= 0.48 ? 'smile' : value < speed ? 'pricey' : 'slow', 1.4);
-    if (big) { pushCamera(this.pos, 0.1); burstSparkles(V3(this.pos.x, this.headY(), this.pos.z), 26); ui.toast('Big tip! Fast service at a fair price ✨', 'coin', 2600, 'bigtip'); }
+    leaveReview(this, sat, speed, value);
+    goals.onServed(this, sat, speed);
     tutorial.onServed();
   }
-  balk() {
-    this.ch.setMood('sad');
-    showEmote(V3(this.pos.x, this.headY(), this.pos.z), 'pricey', 1.8);
-    ui.float('Too pricey!', V3(this.pos.x, this.headY() + 0.25, this.pos.z), 'bad');
-    G.stats.balked++; addRep(-0.04);
-    sfx.nope();
-    this.standUp(false);
-  }
-  stormOff() {
+  angry() {
     this.ch.setMood('angry');
-    this.bubble.shown = false; this.bubble.el.classList.add('hidden');
+    this.hideBubble();
     showEmote(V3(this.pos.x, this.headY(), this.pos.z), 'angry', 1.8);
     for (let i = 0; i < 6; i++) setTimeout(() => puffSteam(V3(this.ch.root.position.x, this.headY() + 0.1, this.ch.root.position.z), 0.8, [0.42, 0.38, 0.36]), i * 90);
-    G.stats.stormed++; addRep(-0.32);
-    ui.float('−★ reputation', V3(this.pos.x, this.headY() + 0.2, this.pos.z), 'bad');
-    sfx.angry();
-    this.standUp(true);
+    this.speed = 2.7; this.ch.stomp = 1.25;
   }
-  standUp(angry) {
-    const t = this.table;
+  standUp() {
     this.state = 'standing'; this.timer = 0;
-    if (angry) { this.speed = 2.7; this.ch.stomp = 1.25; }
-    if (t) {
-      const back = t.pathFromDoor().reverse();
-      back.shift();
-      this.setPath([...back, DOOR_IN.clone(), DOOR_OUT.clone()]);
-      this.ch.moving = false;
-      t.clearItems();
-      t.customer = null; this.table = null;
-      setTimeout(assignQueue, 400);
-    }
-  }
-  forceLeave() {
-    if (this.state === 'queue' || this.state === 'toQueue') return this.leaveQueue('closing');
-    if (this.state === 'leave' || this.state === 'standing') return;
-    if (this.state === 'enter') { this.state = 'leave'; this.setPath([DOOR_OUT.clone()]); return; }
-    this.bubble.shown = false; this.bubble.el.classList.add('hidden');
-    if (this.table) this.standUp(false); else { this.state = 'leave'; this.setPath([DOOR_IN.clone(), DOOR_OUT.clone()]); }
+    const t = this.table;
+    const back = t.pathToSeat(this.seat).reverse(); back.shift();
+    this.setPath([...back, DOOR_IN.clone(), DOOR_OUT.clone()]);
+    this.ch.moving = false;
+    this.hideBubble();
+    this.table = null;
   }
   despawn() {
     this.ch.root.visible = false;
-    this.bubble.shown = false; this.bubble.el.classList.add('hidden');
+    this.hideBubble();
     const i = customers.indexOf(this); if (i >= 0) customers.splice(i, 1);
+    const P = this.party;
+    if (P) { const j = P.members.indexOf(this); if (j >= 0) P.members.splice(j, 1); if (!P.members.length) { const k = parties.indexOf(P); if (k >= 0) parties.splice(k, 1); } }
+    this.party = null;
     customerPool.push(this);
   }
   render(alpha, dt, t) {
     this.renderWalker(alpha, dt, t);
-    if (this.seated && this.table) { // settle exactly on the seat while sitting
-      this.ch.root.position.x = lerp(this.ch.root.position.x, this.table.seat.x, this.ch.sit);
-      this.ch.root.position.z = lerp(this.ch.root.position.z, this.table.seat.z, this.ch.sit);
+    if (this.table && this.ch.sit > 0) { // settle exactly on the seat while sitting
+      const s = this.table.seats[this.seat].pos;
+      this.ch.root.position.x = lerp(this.ch.root.position.x, s.x, this.ch.sit);
+      this.ch.root.position.z = lerp(this.ch.root.position.z, s.z, this.ch.sit);
     }
   }
 }
 
-function spawnCustomer() {
-  const c = customerPool.pop() || new Customer();
-  c.spawn();
+// ---- party-level decisions ----
+function spawnParty() {
+  const type = today.criticDue && !today.criticCame && G.time > 9 && Math.random() < 0.25 ? 'critic' : pickGuestType();
+  const size = Math.random() < GUEST_TYPES[type].pair * today.pair ? 2 : 1;
+  const P = new Party(type, size);
+  parties.push(P);
+  for (let i = 0; i < size; i++) (customerPool.pop() || new Customer()).spawn(P, i);
+  sfx.doorbell();
+  if (type === 'critic') { today.criticCame = true; ui.toast('A food critic just walked in! Make it fast and fair.', 'starGold', 3400); }
+  return P;
+}
+const spawnCustomer = spawnParty;
+function partyArrive(P) {
+  const t = freeTable();
+  if (t) return seatParty(P, t, false);
+  const qi = queue.indexOf(null);
+  if (qi >= 0 && !G.closing) { queue[qi] = P; P.queueIdx = qi; P.state = 'queue'; P.qPatience = 24 * today.patience; moveQueue(P); return; }
+  partyTurnAway(P, 'full');
+}
+function moveQueue(P) { for (const m of P.members) { m.state = 'toQueue'; m.setPath([QUEUE_SPOTS[P.queueIdx].clone().add(m.offset)]); } }
+function seatParty(P, t, fromQueue) {
+  t.party = P; P.table = t; P.state = 'seated';
+  P.members.forEach((m, i) => m.goToSeat(t, i, fromQueue));
+}
+function partyTurnAway(P, reason) {
+  if (P.queueIdx >= 0) { queue[P.queueIdx] = null; P.queueIdx = -1; compactQueue(); }
+  P.state = 'leaving';
+  for (const m of P.members) { m.ch.setMood('sad'); m.walkOut(); }
+  showEmote(V3(P.leader.pos.x, P.leader.headY(), P.leader.pos.z), 'sad');
+  if (reason !== 'closing') {
+    G.stats.turned += P.members.length; addRep(-0.03); G.streak = 0; ui.streakDirty = true;
+    if (tables.some((t) => t.dirty)) G.stats.turnedDirty = (G.stats.turnedDirty || 0) + P.members.length;
+  }
+}
+function partyMaybeOrder(P) {
+  if (P.members.some((m) => m.state !== 'settled')) return;
+  // reading the menu: steep prices make some groups walk straight back out
+  let worst = 0;
+  for (const m of P.members) for (const o of m.order) worst = Math.max(worst, guestRatio(m, o.kind));
+  if (Math.random() < clamp((worst - 1.4) * 1.8, 0, 0.9)) return partyBalk(P);
+  P.state = 'ordering';
+  for (const m of P.members) { m.state = 'wait'; m.showBubble(); }
+  if (worst > 1.25) showEmote(V3(P.leader.pos.x, P.leader.headY() + 0.55, P.leader.pos.z), 'pricey', 1.2);
+}
+function partyBalk(P) {
+  for (const m of P.members) m.ch.setMood('sad');
+  showEmote(V3(P.leader.pos.x, P.leader.headY(), P.leader.pos.z), 'pricey', 1.8);
+  ui.float('Too pricey!', V3(P.leader.pos.x, P.leader.headY() + 0.25, P.leader.pos.z), 'bad');
+  G.stats.balked += P.members.length; addRep(-0.04 * P.members.length * (P.type === 'critic' ? 5 : 1));
+  for (const m of P.members) leaveReview(m, 0.15, 1, 0, 'balk');
+  sfx.nope();
+  partyLeave(P);
+}
+function partyStorm(P) {
+  let stormed = 0;
+  for (const m of P.members) if (!m.paid) { m.angry(); stormed++; leaveReview(m, 0.1, 0, 0.5, 'storm'); }
+  G.stats.stormed += stormed; addRep(-0.2 * stormed * (P.type === 'critic' ? 3 : 1));
+  G.streak = 0; ui.streakDirty = true;
+  ui.float('−★ reputation', V3(P.leader.pos.x, P.leader.headY() + 0.2, P.leader.pos.z), 'bad');
+  sfx.angry();
+  goals.onStorm();
+  partyLeave(P);
+}
+function partyMaybeLeave(P) { if (P.members.every((m) => m.state === 'done')) partyLeave(P); }
+function partyLeave(P) {
+  const t = P.table;
+  P.state = 'leaving';
+  for (const m of P.members) if (m.table) m.standUp();
+  if (t) {
+    t.party = null; P.table = null;
+    t.dirty = t.items.length > 0 || t.pendingTip > 0;
+    t.dirtySince = G.time;
+    t.showTip();
+    if (t.dirty) tutorial.onDirty(t);
+    setTimeout(assignQueue, 400);
+  }
+}
+function forceLeaveAll(reason = 'closing') {
+  for (const P of [...parties]) {
+    if (P.state === 'leaving') continue;
+    if (P.state === 'queue') { partyTurnAway(P, reason); continue; }
+    if (P.state === 'enter') { P.state = 'leaving'; for (const m of P.members) m.walkOut(); continue; }
+    if (P.table) partyLeave(P); else { P.state = 'leaving'; for (const m of P.members) m.walkOut(); }
+  }
 }
 function compactQueue() {
   for (let i = 0; i < queue.length - 1; i++) {
     if (!queue[i] && queue[i + 1]) {
       queue[i] = queue[i + 1]; queue[i + 1] = null;
-      const c = queue[i]; c.state = 'toQueue'; c.setPath([QUEUE_SPOTS[i].clone()]);
+      queue[i].queueIdx = i; moveQueue(queue[i]);
     }
   }
 }
 function assignQueue() {
   for (let i = 0; i < queue.length; i++) {
-    const c = queue[i];
-    if (!c) continue;
+    const P = queue[i];
+    if (!P) continue;
     const t = freeTable();
     if (!t) break;
-    queue[i] = null;
-    c.goToTable(t);
+    queue[i] = null; P.queueIdx = -1;
+    seatParty(P, t, true);
   }
   compactQueue();
 }
+function updateParties(dt) {
+  for (const P of parties) {
+    if (P.state !== 'queue') continue;
+    P.qPatience -= dt;
+    if (P.qPatience <= 0) partyTurnAway(P, 'impatient');
+  }
+}
 
 // ---- serving ----
-const spotFor = (table, kind) => table.spot(kind);
+const spotFor = (table, kind, seat = 0) => table.spot(kind, seat);
 function serveTable(table) {
-  const c = table.customer;
-  if (!c || c.state !== 'wait') { sfx.nope(); return false; }
+  const waiting = table.guests.filter((g) => g.state === 'wait');
+  if (!waiting.length) { sfx.nope(); return false; }
   let any = false;
-  for (const o of c.order) {
+  for (const c of waiting) for (const o of c.order) {
     if (o.status !== 'need') continue;
     const slot = findReady(o.kind);
     if (!slot) continue;
     const item = slot.item; slot.item = null; any = true;
     o.status = 'incoming';
-    const dest = spotFor(table, o.kind);
-    fly(item.mesh, item.mesh.position, dest, 0.55, 1.1, () => {
+    fly(item.mesh, item.mesh.position, spotFor(table, o.kind, c.seat), 0.55, 1.1, () => {
       table.items.push({ kind: item.kind, mesh: item.mesh });
       if (c.table === table && c.state === 'wait') c.receive(o);
-      else table.clearItems();
     }, TAU * 0.5);
   }
   ui.traysDirty = true;
   if (!any) {
-    const missing = c.order.find((o) => o.status === 'need');
-    c.bubble.el.classList.remove('shake'); void c.bubble.el.offsetWidth; c.bubble.el.classList.add('shake');
+    const c = waiting.find((g) => g.order.some((o) => o.status === 'need'));
+    const missing = c && c.order.find((o) => o.status === 'need');
+    if (c) { c.bubble.el.classList.remove('shake'); void c.bubble.el.offsetWidth; c.bubble.el.classList.add('shake'); }
     if (missing) ui.toast(`No ${ITEM_NAMES[missing.kind].toLowerCase()} ready yet — ${missing.kind === 'pastry' ? 'click the pastry case' : missing.kind === 'matcha' ? 'click the matcha bar' : 'click the espresso machine'}!`, 'warn', 2200, 'need-' + missing.kind);
     sfx.nope();
   } else sfx.whoosh();
   return any;
 }
+function clickTable(t) {
+  if (t.guests.some((g) => g.state === 'wait')) return serveTable(t);
+  if (!t.party && t.dirty) return clearTable(t);
+  sfx.nope();
+  return false;
+}
 
 function onItemReady(kind) { tutorial.onReady(kind); }
+
+// ---------------------------------------------------------------------
+// 12b. DAYS — weather, events, daily goals, milestones, reviews
+// ---------------------------------------------------------------------
+const WEATHER = {
+  sunny: { name: 'Sunny', icon: 'sun', footfall: 1.1, patience: 1, eat: 1, mix: { tourist: 1.4 }, sun: 1, gloom: 0, rain: 0 },
+  cloudy: { name: 'Cloudy', icon: 'cloud', footfall: 1, patience: 1, eat: 1.05, mix: {}, sun: 0.5, gloom: 0.45, rain: 0 },
+  rainy: { name: 'Rainy', icon: 'rain', footfall: 0.82, patience: 1.15, eat: 1.3, mix: { tourist: 0.5, regular: 1.3 }, sun: 0.22, gloom: 0.85, rain: 1 },
+};
+const EVENTS = {
+  critic: { name: 'Critic in town', icon: 'starGold', desc: 'A food critic will drop by today. Impress them!', apply() { today.criticDue = true; } },
+  market: { name: 'Market day', icon: 'tourist', desc: 'Tourists flock in: +30% guests.', apply() { today.footfall *= 1.3; today.mix.tourist = (today.mix.tourist || 1) * 2; } },
+  exams: { name: 'Exam week', icon: 'student', desc: 'Students everywhere, often in pairs.', apply() { today.mix.student = (today.mix.student || 1) * 2.5; today.pair *= 1.3; } },
+  festival: { name: 'Coffee festival', icon: 'latte', desc: 'Everyone wants coffee: lattes feel 15% more worth it.', apply() { today.fair.latte = 1.15; today.footfall *= 1.12; } },
+  office: { name: 'New offices nearby', icon: 'commuter', desc: 'More commuters (they pay for speed, not bargains).', apply() { today.mix.commuter = (today.mix.commuter || 1) * 2.4; } },
+};
+function rollDay() {
+  const wkey = G.day === 1 ? 'sunny' : (() => { const r = Math.random(); return r < 0.45 ? 'sunny' : r < 0.78 ? 'cloudy' : 'rainy'; })();
+  const W = WEATHER[wkey];
+  Object.assign(today, { weather: wkey, event: null, footfall: W.footfall, patience: W.patience, eat: W.eat, pair: 1, mix: { ...W.mix }, fair: {}, criticDue: false, criticCame: false });
+  if (G.day >= 2 && Math.random() < (G.day === 3 ? 1 : 0.45)) { // day 3 always brings something to talk about
+    const keys = Object.keys(EVENTS);
+    const ev = G.day === 3 ? 'critic' : pick(keys);
+    today.event = ev; EVENTS[ev].apply();
+  }
+  rain.setActive(W.rain > 0);
+  ui.dayChipsDirty = true;
+}
+
+// ---- reviews: guests say what they think on the way out ----
+const REVIEW_NAMES = ['Ana', 'Ben', 'Cleo', 'Dev', 'Elif', 'Finn', 'Gia', 'Hugo', 'Ivy', 'Jon', 'Kira', 'Leo', 'Maya', 'Nico', 'Omar', 'Priya', 'Quinn', 'Rosa', 'Sami', 'Tess', 'Uma', 'Vik', 'Willa', 'Yuki', 'Zoe'];
+const REVIEW_LINES = {
+  great: ['Fast, friendly and fair. My new spot!', 'The {item} was perfect and came in a flash.', 'Cosy vibes and a lovely {item}.', 'Honestly the best {item} around.', 'Came for a {item}, stayed for the vibes.'],
+  good: ['Solid {item}, nice room.', 'Pleasant stop, would come back.', 'Good {item}, friendly staff.'],
+  slow: ['Waited ages for my {item}.', 'Lovely place, but so slow today.', 'Took forever. Staff looked swamped.'],
+  pricey: ['{price} for a {item}? Bit steep.', 'Nice {item}, but my wallet is crying.', 'Overpriced for what it is.'],
+  cheap: ['Such good value!', 'Can’t believe the price of the {item} here.', 'Great {item}, kind prices.'],
+  balk: ['Took one look at the prices and left.', 'Way too expensive. Walked straight out.'],
+  storm: ['Sat there forever, nobody served us.', 'Gave up waiting. Not again.'],
+  student: ['Perfect study spot, wifi and a {item}.', 'Cheap enough for my student budget.'],
+  tourist: ['A must-visit when in town!', 'Found this gem on our trip.'],
+  commuter: ['In and out in minutes. Love it.', 'My morning {item} stop now.'],
+};
+const CRITIC_PAPERS = ['The Daily Grind', 'Brew Weekly', 'The Saucer', 'Crema Times'];
+function leaveReviewImpl(g, sat, speed, value, reason) {
+  const critic = g.type === 'critic';
+  if (!critic && Math.random() > (reason ? 0.5 : 0.42)) return;
+  const stars = reason ? 1 : clamp(Math.round(1 + sat * 4.3), 1, 5);
+  const item = g.order[0].kind, price = fmtMoney(G.prices[item]);
+  let pool;
+  if (reason === 'balk') pool = REVIEW_LINES.balk;
+  else if (reason === 'storm') pool = REVIEW_LINES.storm;
+  else if (speed < 0.45 && speed <= value) pool = REVIEW_LINES.slow;
+  else if (value < 0.45) pool = REVIEW_LINES.pricey;
+  else if (sat >= 0.78 && Math.random() < 0.35 && REVIEW_LINES[g.type]) pool = REVIEW_LINES[g.type];
+  else if (value > 0.92 && Math.random() < 0.5) pool = REVIEW_LINES.cheap;
+  else pool = sat >= 0.75 ? REVIEW_LINES.great : REVIEW_LINES.good;
+  const text = pick(pool).replace('{item}', ITEM_NAMES[item].toLowerCase()).replace('{price}', price);
+  const r = { stars, text, type: g.type, day: G.day, name: critic ? pick(CRITIC_PAPERS) : `${pick(REVIEW_NAMES)} ${String.fromCharCode(65 + ((Math.random() * 26) | 0))}.`, critic };
+  G.reviews.unshift(r); if (G.reviews.length > 40) G.reviews.pop();
+  const S = G.stats; S.reviewSum = (S.reviewSum || 0) + stars; S.reviewN = (S.reviewN || 0) + 1;
+  if (critic) { ui.toast(`${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} “${text}” — ${r.name}`, 'starGold', 5200); if (stars === 5) milestones.unlock('critic5'); }
+  else if ((stars === 5 || stars === 1) && elapsed - (ui.lastReviewToast || -99) > 22) { ui.lastReviewToast = elapsed; ui.toast(`${'★'.repeat(stars)}${'☆'.repeat(5 - stars)} “${text}”`, stars === 5 ? 'heart' : 'warn', 3200); }
+  ui.reviewsDirty = true;
+}
+leaveReview = leaveReviewImpl;
+
+// ---- daily goals: three small targets each morning, paid out on the spot ----
+function makeGoals() {
+  const T = tableCount(), L = G.history[G.history.length - 1];
+  const reward = (base) => Math.max(10, Math.round((base * 0.6 + G.day * 3) / 5) * 5);
+  const pool = [
+    { id: 'serve', text: (n) => `Serve ${n} guests`, target: Math.round(16 + T * 4 + G.day * 2), get: () => G.stats.served, reward: reward(30) },
+    { id: 'profit', text: (n) => `Make ${fmtMoney(n)} profit`, target: Math.max(60, Math.round(((L ? L.profit : 60) * 1.15) / 10) * 10), get: () => books().profit, reward: reward(40), atClose: true },
+    { id: 'happy', text: () => 'Keep happiness above 80%', target: 0.8, get: () => (G.stats.served ? G.stats.satSum / G.stats.served : 0), reward: reward(30), atClose: true, frac: true },
+    { id: 'nostorm', text: () => 'Nobody storms off', target: 1, get: () => (G.stats.stormed ? 0 : 1), reward: reward(25), atClose: true, fragile: true },
+    { id: 'streak', text: (n) => `Hit a ${n}× service streak`, target: Math.min(20, 8 + G.day), get: () => G.stats.bestStreak, reward: reward(25) },
+  ];
+  if (G.up.pastry) pool.push({ id: 'pastry', text: (n) => `Sell ${n} pastries`, target: 6 + G.day, get: () => G.stats.sold.pastry, reward: reward(20) });
+  if (G.up.matcha) pool.push({ id: 'matcha', text: (n) => `Sell ${n} matchas`, target: 6 + G.day, get: () => G.stats.sold.matcha, reward: reward(20) });
+  if (today.criticDue) pool.push({ id: 'critic', text: () => 'Delight the food critic (4★+)', target: 1, get: () => (G.reviews.some((r) => r.critic && r.day === G.day && r.stars >= 4) ? 1 : 0), reward: reward(60) });
+  const must = today.criticDue ? ['critic'] : [];
+  const rest = pool.filter((g) => !must.includes(g.id)).sort(() => Math.random() - 0.5);
+  return [...pool.filter((g) => must.includes(g.id)), ...rest].slice(0, 3).map((g) => ({ ...g, done: false, failed: false }));
+}
+goals = {
+  list: [],
+  start() { this.list = makeGoals(); ui.goalsDirty = true; },
+  progress(g) { const v = g.get(); return g.frac ? v : Math.min(v, g.target); },
+  complete(g) {
+    if (g.done || g.failed) return;
+    g.done = true; addMoney(g.reward); G.stats.goalCash = (G.stats.goalCash || 0) + g.reward;
+    ui.toast(`Goal done: ${g.text(g.target)} · +${fmtMoney(g.reward)}`, 'check', 3000);
+    sfx.upgrade(); ui.goalsDirty = true;
+    G.stats.goalsDone = (G.stats.goalsDone || 0) + 1;
+    if (this.list.every((x) => x.done)) milestones.unlock('allgoals');
+  },
+  update() {
+    for (const g of this.list) {
+      if (g.done || g.failed) continue;
+      if (g.fragile && g.get() < g.target) { g.failed = true; ui.goalsDirty = true; continue; }
+      if (!g.atClose && g.get() >= g.target) this.complete(g);
+    }
+  },
+  close() { for (const g of this.list) if (!g.done && !g.failed) { if (g.get() >= g.target) this.complete(g); else g.failed = true; } ui.goalsDirty = true; },
+  onServed() { this.update(); },
+  onStorm() { this.update(); },
+};
+
+// ---- milestones: one-off achievements with a small bonus ----
+const MILESTONES = [
+  { id: 'first', name: 'First pour', desc: 'Serve your first guest', reward: 10 },
+  { id: 'served50', name: 'Neighbourhood spot', desc: 'Serve 50 guests in total', reward: 40 },
+  { id: 'served250', name: 'Local legend', desc: 'Serve 250 guests in total', reward: 120 },
+  { id: 'rep3', name: 'Three stars', desc: 'Reach 3★ reputation', reward: 30 },
+  { id: 'rep4', name: 'Four stars', desc: 'Reach 4★ reputation', reward: 60 },
+  { id: 'rep5', name: 'Five stars', desc: 'Reach a perfect 5★', reward: 150 },
+  { id: 'streak10', name: 'In the zone', desc: 'Hit a 10× service streak', reward: 50 },
+  { id: 'fullhouse', name: 'Full house', desc: 'Four or more tables, all occupied', reward: 40 },
+  { id: 'hire', name: 'Team player', desc: 'Hire your first staff member', reward: 20 },
+  { id: 'fullteam', name: 'Dream team', desc: 'Employ five staff at once', reward: 100 },
+  { id: 'profit200', name: 'In the black', desc: 'Make $200 profit in one day', reward: 60 },
+  { id: 'profit500', name: 'Money machine', desc: 'Make $500 profit in one day', reward: 150 },
+  { id: 'critic5', name: 'Rave review', desc: 'Get 5★ from a food critic', reward: 100 },
+  { id: 'allgoals', name: 'Overachiever', desc: 'Finish all daily goals in a day', reward: 50 },
+  { id: 'menu', name: 'Full menu', desc: 'Offer lattes, matcha and pastries', reward: 30 },
+  { id: 'maxed', name: 'Gold standard', desc: 'Max out a multi-level upgrade', reward: 60 },
+];
+const milestones = {
+  unlock(id) {
+    if (G.milestones[id]) return;
+    const m = MILESTONES.find((x) => x.id === id); if (!m) return;
+    G.milestones[id] = G.day;
+    addMoney(m.reward);
+    ui.toast(`Milestone: ${m.name} · +${fmtMoney(m.reward)}`, 'trophy', 3400);
+    sfx.upgrade(); burstSparkles(V3(0.5, 2.6, 0), 30);
+    ui.goalsDirty = true;
+  },
+  check() {
+    const L = G.lifetime.served + G.stats.served;
+    if (L >= 1) this.unlock('first');
+    if (L >= 50) this.unlock('served50');
+    if (L >= 250) this.unlock('served250');
+    if (G.rep >= 3) this.unlock('rep3');
+    if (G.rep >= 4) this.unlock('rep4');
+    if (G.rep >= 4.95) this.unlock('rep5');
+    if (G.stats.bestStreak >= 10) this.unlock('streak10');
+    const act = tables.filter((t) => t.active);
+    if (act.length >= 4 && act.every((t) => t.party)) this.unlock('fullhouse');
+    if (G.staff.length >= 1) this.unlock('hire');
+    if (G.staff.length >= 5) this.unlock('fullteam');
+    if (G.up.matcha && G.up.pastry) this.unlock('menu');
+    if (UPGRADES.some((u) => u.costs.length > 1 && G.up[u.id] >= u.costs.length)) this.unlock('maxed');
+  },
+};
+
+// ---- rain: streaks falling outside the walls (the room itself has a roof, honest) ----
+const rain = (() => {
+  const N = 900;
+  const geoR = new THREE.CylinderGeometry(0.02, 0.02, 0.75, 5, 1, true);
+  const matR = new THREE.MeshBasicMaterial({ color: 0x8293a8, transparent: true, opacity: 0.0, depthWrite: false });
+  const im = new THREE.InstancedMesh(geoR, matR, N);
+  im.frustumCulled = false; im.userData.noAO = true; im.renderOrder = 5; im.visible = false;
+  const drops = [];
+  const spawnPos = (d) => {
+    // only behind and beside the walls: anything between the camera and the room would read as indoor rain
+    const r = Math.random();
+    if (r < 0.45) { d.x = rand(-13, 11); d.z = rand(-13, -6); }
+    else if (r < 0.75) { d.x = rand(-14, -7.7); d.z = rand(-6, 6); }
+    else { d.x = rand(7.7, 13); d.z = rand(-12, -1); }
+    d.y = rand(0, 9);
+  };
+  for (let i = 0; i < N; i++) { const d = { x: 0, y: 0, z: 0, v: rand(9, 12) }; spawnPos(d); drops.push(d); }
+  scene.add(im);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.08, 0, 0.05)), sc = new THREE.Vector3(1, 1, 1), p = new THREE.Vector3();
+  let active = false, level = 0;
+  return {
+    setActive(on) { active = on; },
+    get level() { return level; },
+    update(dt) {
+      level = damp(level, active ? 1 : 0, 1.5, dt);
+      im.visible = level > 0.02;
+      if (!im.visible) return;
+      matR.opacity = 0.7 * level;
+      for (let i = 0; i < N; i++) {
+        const d = drops[i];
+        d.y -= d.v * dt;
+        if (d.y < -0.6) { spawnPos(d); d.y = 8 + Math.random(); }
+        im.setMatrixAt(i, m4.compose(p.set(d.x, d.y, d.z), q, sc));
+      }
+      im.instanceMatrix.needsUpdate = true;
+    },
+  };
+})();
 
 // ---- staff: every hired worker is a Worker; their role decides what they do ----
 const ROLES = {
@@ -3066,7 +3525,7 @@ const staffLevel = (kind) => { const w = workers.find((x) => x.cfg.kind === kind
 const staffSpeed = (kind) => 1 - 0.08 * staffLevel(kind);
 const demandFor = (kind) => {
   let n = 0;
-  for (const c of customers) if (c.state === 'wait' || c.state === 'sitting' || c.state === 'toSeat' || c.state === 'queue') for (const o of c.order) if (o.kind === kind && o.status === 'need') n++;
+  for (const c of customers) if (c.state === 'wait' || c.state === 'sitting' || c.state === 'settled' || c.state === 'toSeat' || c.state === 'queue') for (const o of c.order) if (o.kind === kind && o.status === 'need') n++;
   return n;
 };
 
@@ -3105,7 +3564,7 @@ class Worker extends Walker {
   }
   // brewers slip behind the counter at its open end; servers wait in front of it
   entryPath() { return this.isServer ? [V3(this.home.x, 0, Z_A), this.home.clone()] : [V3(-0.42, 0, Z_A), V3(-0.42, 0, Z_LANE), this.home.clone()]; }
-  get walkSpeed() { return [0, 2.4, 2.95, 3.5][this.data.level]; }
+  get walkSpeed() { return [0, 2.6, 3.1, 3.6][this.data.level]; }
   get workTime() { return [0, 0.5, 0.38, 0.28][this.data.level]; }
   walkTo(pts, then) { this.setPath(pts); this.state = 'walk'; this.onArrive = then; }
   idle() { this.state = 'idle'; this.task = null; this.think = 0.12; this.ch.moving = false; }
@@ -3141,26 +3600,47 @@ class Worker extends Walker {
     });
   }
   decideDelivery() {
-    // most impatient guest first; prefer guests whose whole remaining order is ready
-    const waiting = customers.filter((c) => c.state === 'wait').sort((a, b) => a.patience / a.patienceMax - b.patience / b.patienceMax);
-    const plans = waiting.map((c) => {
-      const picks = [];
-      for (const o of c.order) {
-        if (o.status !== 'need') continue;
-        const slot = slots.find((s) => s.item && s.item.kind === o.kind && !s.item.reserved && !picks.some((p) => p.slot === s));
-        if (slot) picks.push({ slot, item: slot.item, o });
+    // plan per table: what's ready for the guests waiting there; most impatient table first
+    const plans = [];
+    for (const t of tables) {
+      const waiting = t.guests.filter((g) => g.state === 'wait');
+      if (!waiting.length) continue;
+      const picks = [], used = new Set();
+      let needN = 0, minFrac = 1, missingInProduction = false;
+      for (const c of waiting) {
+        minFrac = Math.min(minFrac, c.patience / c.patienceMax);
+        for (const o of c.order) {
+          if (o.status !== 'need') continue;
+          needN++;
+          const slot = picks.length < 3 && slots.find((sl) => sl.item && sl.item.kind === o.kind && !sl.item.reserved && !used.has(sl));
+          if (slot) { picks.push({ slot, item: slot.item, o, c }); used.add(slot); }
+          else if (stations[o.kind].pending > 0) missingInProduction = true;
+        }
       }
-      const needN = c.order.filter((o) => o.status === 'need').length;
-      const missingInProduction = c.order.some((o) => o.status === 'need' && !picks.some((p) => p.o === o) && stations[o.kind].pending > 0);
-      return { c, picks, complete: picks.length > 0 && picks.length === needN, ok: picks.length > 0 && (picks.length === needN || !missingInProduction || c.patience / c.patienceMax < 0.45) };
-    });
+      if (picks.length) plans.push({ t, picks, minFrac, complete: picks.length === needN, ok: picks.length === needN || !missingInProduction || minFrac < 0.45 });
+    }
+    plans.sort((a, b) => a.minFrac - b.minFrac);
     const plan = plans.find((p) => p.complete) || plans.find((p) => p.ok);
-    if (!plan) { if (this.pos.distanceTo(this.home) > 0.05) this.walkTo([this.home.clone()], () => this.idle()); return; }
-    const { c, picks } = plan;
-    for (const p of picks) { p.item.reserved = true; p.o.status = 'incoming'; }
-    const x = picks.reduce((sum, p) => sum + p.slot.pos.x, 0) / picks.length;
-    const task = (this.task = { picks, c, table: c.table, x });
-    this.walkTo([V3(x, 0, Z_FRONT)], () => this.work(this.workTime, () => this.pickUp(task)));
+    if (plan) {
+      for (const p of plan.picks) { p.item.reserved = true; p.o.status = 'incoming'; }
+      const x = plan.picks.reduce((sum, p) => sum + p.slot.pos.x, 0) / plan.picks.length;
+      const task = (this.task = { picks: plan.picks, table: plan.t, x });
+      this.walkTo([V3(x, 0, Z_FRONT)], () => this.work(this.workTime, () => this.pickUp(task)));
+      return;
+    }
+    // nothing to carry: bus the table that's been messy longest
+    const dirty = tables.filter((t) => t.dirty && !t.party && !t.claimedBy).sort((a, b) => a.dirtySince - b.dirtySince)[0];
+    if (dirty) {
+      dirty.claimedBy = this;
+      const task = (this.task = { bus: dirty, x: this.home.x, picks: [] });
+      this.walkTo(this.outPath(dirty, this.pos.x), () => this.work(this.workTime + 0.3, () => {
+        dirty.claimedBy = null; clearTable(dirty, this); this.task = null;
+        const back = this.outPath(dirty, task.x).reverse(); back.shift();
+        this.walkTo([...back, V3(this.home.x, 0, Z_A), this.home.clone()], () => { this.idle(); this.think = 0; });
+      }));
+      return;
+    }
+    if (this.pos.distanceTo(this.home) > 0.05) this.walkTo([this.home.clone()], () => this.idle());
   }
   outPath(table, x) {
     const s = table.serve, pts = [V3(x, 0, Z_A)];
@@ -3186,18 +3666,19 @@ class Worker extends Walker {
     this.carry = null; this.ch.carry = false;
   }
   releaseTask() { // unreserve items we were walking to collect
+    if (this.task && this.task.bus) this.task.bus.claimedBy = null;
     if (this.task && !this.carry) for (const p of this.task.picks) { if (p.slot.item === p.item) p.item.reserved = false; if (p.o.status === 'incoming') p.o.status = 'need'; }
     this.task = null;
   }
   deliver(task) {
-    const { c, table } = task;
+    const { table } = task;
     const carried = this.carry; this.carry = null; this.ch.carry = false;
     task.picks.forEach((p, i) => {
-      const item = carried[i];
+      const item = carried[i], c = p.c;
       if (c.table === table && c.state === 'wait') {
-        fly(item.mesh, item.mesh.position, spotFor(table, p.o.kind), 0.3, 0.25, () => {
+        fly(item.mesh, item.mesh.position, spotFor(table, p.o.kind, c.seat), 0.3, 0.25, () => {
           table.items.push({ kind: item.kind, mesh: item.mesh });
-          if (c.table === table && c.state === 'wait') c.receive(p.o); else table.clearItems();
+          if (c.table === table && c.state === 'wait') c.receive(p.o);
         });
       } else { this.carry = [item]; this.dropCarry(); }
     });
@@ -3407,6 +3888,8 @@ const LIGHT_KEYS = [
 ];
 const _lk = { sun: C(0), top: C(0), bot: C(0), glow: C(0) };
 let lampFactor = 0, shaftFactor = 0;
+const weatherFx = { sun: 1, gloom: 0 }; // eased toward today's weather each frame
+const GLOOM_TOP = C(0xb4b8c0), GLOOM_BOT = C(0xd6d4d0), GLOOM_GLOW = C(0xdedbd5);
 function applyLighting(hour) {
   const h = ((hour % 24) + 24) % 24;
   let i = 0; while (i < LIGHT_KEYS.length - 2 && LIGHT_KEYS[i + 1].h <= h) i++;
@@ -3415,14 +3898,14 @@ function applyLighting(hour) {
   const L = (p) => lerp(a[p], b[p], k);
   _lk.sun.copy(a.sun).lerp(b.sun, k);
   sunLight.color.copy(_lk.sun);
-  sunLight.intensity = L('si');
+  sunLight.intensity = L('si') * weatherFx.sun;
   const el = THREE.MathUtils.degToRad(L('el')), az = THREE.MathUtils.degToRad(L('az'));
   // az: -90 = from the window wall (left), 0 = from the front, +90 = from the right
   sunDir.set(-Math.sin(az) * Math.cos(el), -Math.sin(el), -Math.cos(az) * Math.cos(el) * 0.55 - 0.22).normalize();
   placeSun();
-  scene.environmentIntensity = L('env');
+  scene.environmentIntensity = L('env') * (1 - 0.22 * weatherFx.gloom);
   hemi.intensity = L('hemi');
-  lampFactor = L('lamp');
+  lampFactor = Math.min(1.5, L('lamp') + weatherFx.gloom * 0.55); // rainy days get the lamps on early
   for (const l of lampLights) l.intensity = l.userData.base * lampFactor;
   MAT.bulb.emissiveIntensity = 0.8 + lampFactor * 3.4;
   MAT.lampInner.emissiveIntensity = 0.25 + lampFactor * 1.3;
@@ -3430,8 +3913,12 @@ function applyLighting(hour) {
   skyUniforms.top.value.copy(a.top).lerp(b.top, k);
   skyUniforms.bottom.value.copy(a.bot).lerp(b.bot, k);
   skyUniforms.glow.value.copy(a.glow).lerp(b.glow, k);
+  if (weatherFx.gloom > 0.01) { // overcast: pull the backdrop toward soft grey (less so at night, when it's dark anyway)
+    const g = weatherFx.gloom * 0.65 * clamp(L('si') / 2.5, 0.15, 1);
+    skyUniforms.top.value.lerp(GLOOM_TOP, g); skyUniforms.bottom.value.lerp(GLOOM_BOT, g); skyUniforms.glow.value.lerp(GLOOM_GLOW, g);
+  }
   renderer.toneMappingExposure = L('exp');
-  shaftFactor = L('shaft') * clamp((sunDir.x - 0.15) / 0.35, 0, 1);
+  shaftFactor = L('shaft') * clamp((sunDir.x - 0.15) / 0.35, 0, 1) * clamp((weatherFx.sun - 0.3) / 0.7, 0, 1);
   shafts.mat.uniforms.uStrength.value = shaftFactor * 0.26;
   shafts.mat.uniforms.uColor.value.copy(_lk.sun);
   shafts.rebuild();
@@ -3486,7 +3973,7 @@ function interact(obj) {
     if (r === 'ok') { sfx.click(); tutorial.onBrew(obj.kind); obj.squish = 1; }
     else if (r === 'full') { sfx.nope(); ui.toast(`${obj.title} queue is full`, 'warn', 1500, 'qfull' + obj.kind); }
   } else if (obj instanceof Table) {
-    serveTable(obj);
+    clickTable(obj);
   }
 }
 
@@ -3624,6 +4111,11 @@ const audio = {
     const g = ctx.createGain(); g.gain.value = 0.018;
     s.connect(f); f.connect(g); g.connect(this.musicBus); s.start();
     this.musicBus.gain.setTargetAtTime(0.55, ctx.currentTime, 2.5);
+    // rain: bright hiss; crowd: a soft, wobbling mid-band murmur
+    const mk = (type, freq, q) => { const src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true; const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = freq; fl.Q.value = q; const gn = ctx.createGain(); gn.gain.value = 0; src.connect(fl); fl.connect(gn); gn.connect(this.sfxBus); src.start(0, Math.random()); return { fl, gn }; };
+    const r = mk('highpass', 1800, 0.5); this.rainGain = r.gn;
+    const cr = mk('bandpass', 520, 0.9); this.crowdGain = cr.gn;
+    const lfo = ctx.createOscillator(), lg = ctx.createGain(); lfo.frequency.value = 0.7; lg.gain.value = 180; lfo.connect(lg); lg.connect(cr.fl.frequency); lfo.start();
     // lo-fi pad + sparse plucks
     const chords = [[349.2, 440, 523.3, 659.3], [329.6, 392, 493.9, 587.3], [293.7, 349.2, 440, 523.3], [261.6, 329.6, 392, 493.9]];
     const penta = [523.3, 587.3, 659.3, 784, 880, 1046.5];
@@ -3640,6 +4132,14 @@ const audio = {
     };
     schedule();
     setInterval(schedule, 500);
+  },
+  setScene(rainLevel, crowd) {
+    if (!this.ctx || !this.rainGain) return;
+    const now = this.ctx.currentTime;
+    if (now - (this.sceneT || 0) < 0.4) return;
+    this.sceneT = now;
+    this.rainGain.gain.setTargetAtTime(0.05 * rainLevel, now, 0.8);
+    this.crowdGain.gain.setTargetAtTime(Math.min(0.03, crowd * 0.0035), now, 1.2);
   },
   pad(freq, at, dur) {
     const ctx = this.ctx;
@@ -3671,6 +4171,7 @@ const sfx = {
   nope() { if (!audio.ok()) return; audio.tone(330, 0.09, { gain: 0.05, type: 'square', filter: 1200 }); audio.tone(247, 0.14, { gain: 0.05, type: 'square', filter: 1200, when: 0.09 }); },
   upgrade() { if (!audio.ok()) return; [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => audio.tone(f, 0.5, { gain: 0.06, type: 'triangle', when: i * 0.07 })); audio.hiss(0.6, { gain: 0.02, freq: 7000, type: 'highpass', when: 0.2 }); },
   doorbell() { if (!audio.ok()) return; audio.tone(1318.5, 0.9, { gain: 0.045 }); audio.tone(1046.5, 1.1, { gain: 0.04, when: 0.16 }); },
+  streak(n) { if (!audio.ok()) return; const f = 660 * Math.pow(2, Math.min(n, 10) / 12); audio.tone(f, 0.18, { gain: 0.05, type: 'triangle' }); audio.tone(f * 1.5, 0.22, { gain: 0.035, type: 'triangle', when: 0.06 }); },
   dayEnd() { if (!audio.ok()) return; [392, 493.9, 587.3, 784].forEach((f, i) => audio.tone(f, 1.6, { gain: 0.05, type: 'triangle', when: i * 0.12 })); },
 };
 
@@ -3772,7 +4273,7 @@ const ui = {
     this.updateQualityLabel();
   },
   updateMuteIcon() { $('muteBtn').innerHTML = audio.muted ? ICONS.mute : ICONS.sound; },
-  updateQualityLabel() { $('qualityLabel').textContent = quality.mode === 'auto' ? 'AUTO' : QUALITY_TIERS[quality.mode].label.toUpperCase().slice(0, 4); },
+  updateQualityLabel() { $('qualityLabel').textContent = quality.mode === 'auto' ? 'AUTO' : ({ high: 'HIGH', medium: 'MED', low: 'LOW' })[quality.mode]; },
   toggleMute() { audio.setMuted(!audio.muted); this.updateMuteIcon(); },
   togglePause(force) {
     if (G.phase !== 'open') return;
@@ -3804,7 +4305,7 @@ const ui = {
     this.tab = tab;
     for (const b of $('mgTabs').children) { const on = b.dataset.tab === tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); }
     $('tab-overview').hidden = tab !== 'overview'; $('tab-menu').hidden = tab !== 'menu';
-    $('tab-staff').hidden = tab !== 'staff'; $('shopList').hidden = tab !== 'upgrades';
+    $('tab-staff').hidden = tab !== 'staff'; $('shopList').hidden = tab !== 'upgrades'; $('tab-goals').hidden = tab !== 'goals';
     this.refreshTab(true);
   },
   refreshTab(force) {
@@ -3816,6 +4317,7 @@ const ui = {
     if (this.tab === 'overview') this.renderOverview(force);
     else if (this.tab === 'menu') this.renderMenu(force);
     else if (this.tab === 'staff') { if (force || this.staffDirty) this.renderStaff(); }
+    else if (this.tab === 'goals') this.renderGoals();
     else this.shopDirty = true;
   },
 
@@ -3823,7 +4325,8 @@ const ui = {
   renderOverview(force) {
     const el = $('tab-overview');
     if (force || !el.firstChild) {
-      el.innerHTML = '<div class="sec ov-hero" id="ovHero"></div><div class="sec" id="ovBooks"></div><div class="sec" id="ovHappy"></div><div class="sec" id="ovChartSec"><h5>Profit by day <small>last 7 days</small></h5><div class="chart" id="ovChart"></div><table class="hist" id="ovHist"></table></div><div class="sec" id="ovMenu"></div>';
+      el.innerHTML = '<div class="sec ov-hero" id="ovHero"></div><div class="sec" id="ovBooks"></div><div class="sec" id="ovHappy"></div><div class="sec" id="ovReviews"></div><div class="sec" id="ovChartSec"><h5>Profit by day <small>last 7 days</small></h5><div class="chart" id="ovChart"></div><table class="hist" id="ovHist"></table></div><div class="sec" id="ovMenu"></div>';
+      this.reviewsDirty = true;
       this.chartSig = '';
     }
     const S = G.stats, B = books(), last = G.history[G.history.length - 1];
@@ -3869,6 +4372,23 @@ const ui = {
       $('ovHist').innerHTML = show.length ? `<thead><tr><th>Day</th><th>Guests</th><th>Takings</th><th>Costs</th><th>Profit</th></tr></thead><tbody>${show.slice().reverse().map((d) => `<tr><td>${d.name}</td><td>${d.served}</td><td>${fmtMoney(d.sales)}</td><td>${fmtMoney(d.costs)}</td><td class="${d.profit < 0 ? 'neg' : ''}">${fmtMoney(d.profit)}</td></tr>`).join('')}</tbody>` : '';
       this.chartData = show;
     }
+    // reviews (names and lines are plain text)
+    if (this.reviewsDirty) {
+      this.reviewsDirty = false;
+      const box = $('ovReviews'), avg = S.reviewN ? S.reviewSum / S.reviewN : 0;
+      box.innerHTML = `<h5>Latest reviews <small>${S.reviewN ? `today ${avg.toFixed(1)}★ from ${S.reviewN}` : 'none yet today'}</small></h5>`;
+      const list = G.reviews.slice(0, 5);
+      if (!list.length) box.insertAdjacentHTML('beforeend', '<div class="menu-note" style="margin:0">Guests leave reviews on their way out.</div>');
+      for (const r of list) {
+        const d = document.createElement('div'); d.className = 'rev' + (r.critic ? ' crit' : '');
+        d.innerHTML = `<div class="top"><span class="who">${ICONS[r.critic ? 'critic' : r.type] || ICONS.regular}<span class="nm"></span></span><span class="st">${'★'.repeat(r.stars)}${'☆'.repeat(5 - r.stars)}</span></div><p></p>`;
+        d.querySelector('.nm').textContent = `${r.name} · Day ${r.day}`; d.querySelector('p').textContent = `“${r.text}”`;
+        box.appendChild(d);
+      }
+    }
+    // guest mix
+    const mix = Object.entries(S.byType || {}).sort((a, b) => b[1] - a[1]).map(([k, n]) => `<span class="chip">${GUEST_TYPES[k].plural} <b>${n}</b></span>`).join('');
+    if (mix) $('ovHappy').insertAdjacentHTML('beforeend', `<div class="chips">${mix}</div>`);
     // per-item margins
     const rows = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => {
       const p = G.prices[k], m = (p - UNIT_COST[k]) / p;
@@ -3975,6 +4495,10 @@ const ui = {
       stat('Lost guests', lost, `${S.balked} over price`),
       stat('Reputation', `${G.rep.toFixed(1)}★`, `<span style="color:${dRep >= 0 ? 'var(--good)' : 'var(--bad)'}">${dRep >= 0 ? '+' : ''}${dRep.toFixed(2)} today</span>`),
     ].join('');
+    const gd = goals.list.filter((g) => g.done).length;
+    $('sumStats').insertAdjacentHTML('beforeend', stat('Goals', `${gd} / ${goals.list.length}`, G.stats.goalCash ? `+${fmtMoney(G.stats.goalCash)} bonus` : 'daily targets')
+      + stat('Reviews', S.reviewN ? `${(S.reviewSum / S.reviewN).toFixed(1)}★` : '—', S.reviewN ? `${S.reviewN} written` : 'none today')
+      + stat('Best streak', `×${S.bestStreak}`, 'fast serves in a row'));
     const coach = $('sumCoach'); coach.innerHTML = '';
     for (const t of coachTips(S, profit)) { const p = document.createElement('p'); p.textContent = t; coach.appendChild(p); }
   },
@@ -4033,6 +4557,53 @@ const ui = {
     }
     for (const b of document.querySelectorAll('.chips-floor button')) b.classList.toggle('on', b.dataset.floor === style.floor);
   },
+  // ---------- HUD: weather/event chips, goal list, streak, morning card ----------
+  renderDayChips() {
+    this.dayChipsDirty = false;
+    const W = WEATHER[today.weather], E = today.event && EVENTS[today.event];
+    $('dayChips').innerHTML = `<span class="dchip">${ICONS[W.icon]}${W.name}</span>${E ? `<span class="dchip ev">${ICONS[E.icon]}${E.name}</span>` : ''}`;
+  },
+  renderGoalList() {
+    this.goalsDirty = false;
+    const el = $('goalList');
+    if (G.phase === 'title' || !goals.list.length) { el.innerHTML = ''; return; }
+    el.innerHTML = goals.list.map((g, i) => {
+      const prog = g.done ? '' : g.frac ? `${Math.round(goals.progress(g) * 100)}%` : g.target > 1 ? `${Math.floor(goals.progress(g))}/${g.target}` : '';
+      return `<div class="goal${g.done ? ' done' : g.failed ? ' failed' : ''}"><i>${g.done ? '✓' : g.failed ? '×' : ''}</i><span>${g.text(g.target)}</span><small id="gp${i}">${prog}</small></div>`;
+    }).join('');
+  },
+  renderStreak() {
+    this.streakDirty = false;
+    const n = G.streak, pill = $('streakPill');
+    pill.classList.toggle('on', n >= 2 && G.phase === 'open');
+    if (n >= 2) {
+      $('streakN').textContent = `×${n}`;
+      $('streakBonus').textContent = `streak · +${Math.min(5, n) * 5}% tips`;
+      if (n !== this.lastStreak) { pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump'); if (n >= 3) sfx.streak(n); }
+    }
+    this.lastStreak = n;
+  },
+  showDayCard() {
+    const W = WEATHER[today.weather], E = today.event && EVENTS[today.event];
+    $('dcIcon').innerHTML = ICONS[E ? E.icon : W.icon];
+    $('dcTitle').textContent = `Day ${G.day} · ${W.name}${E ? ` · ${E.name}` : ''}`;
+    $('dcSub').textContent = E ? E.desc : { sunny: 'Sunshine brings extra footfall and tourists.', cloudy: 'A grey, steady sort of day.', rainy: 'Fewer guests, but they linger and forgive slow service.' }[today.weather];
+    const c = $('dayCard'); c.classList.add('on');
+    clearTimeout(this.dayCardTimer); this.dayCardTimer = setTimeout(() => c.classList.remove('on'), 4600);
+    this.dayChipsDirty = true; this.goalsDirty = true;
+  },
+  // ---------- Goals tab ----------
+  renderGoals() {
+    const el = $('tab-goals');
+    const today_ = goals.list.map((g) => {
+      const p = g.frac ? goals.progress(g) / g.target : goals.progress(g) / g.target;
+      const lbl = g.done ? 'Done' : g.failed ? 'Missed' : g.frac ? `${Math.round(goals.progress(g) * 100)}% / ${Math.round(g.target * 100)}%` : g.target > 1 ? `${Math.floor(goals.progress(g))} / ${g.target}` : g.atClose ? 'Checked at closing' : 'In progress';
+      return `<div class="goal-card${g.done ? ' done' : g.failed ? ' failed' : ''}"><b>${g.text(g.target)}</b><span class="rw">+${fmtMoney(g.reward)}</span><div class="meter${g.failed ? ' bad' : ''}"><i style="width:${clamp(g.done ? 1 : p, 0, 1) * 100}%"></i></div><small style="font-size:11.5px;font-weight:700;color:var(--ink-soft)">${lbl}</small></div>`;
+    }).join('') || '<div class="menu-note">Goals appear when the café opens.</div>';
+    const got = MILESTONES.filter((m) => G.milestones[m.id]).length;
+    const ms = MILESTONES.map((m) => `<div class="ms${G.milestones[m.id] ? '' : ' locked'}">${ICONS.trophy}<div><b>${m.name}</b><span>${m.desc} · +${fmtMoney(m.reward)}</span></div></div>`).join('');
+    el.innerHTML = `<div class="sec"><h5>Today’s goals <small>paid out instantly</small></h5>${today_}</div><div class="sec"><h5>Milestones <small>${got} / ${MILESTONES.length}</small></h5><div class="ms-grid">${ms}</div></div>`;
+  },
   chartHover(e) {
     const h = e.target.closest && e.target.closest('.hit'); const tip = $('chartTip');
     if (!h || !tip || !this.chartData) return;
@@ -4071,11 +4642,14 @@ const ui = {
       sub = obj.kind === 'pastry' ? `Click to plate a pastry · ${obj.pending}/${obj.maxQueue}` : `Click to ${obj.kind === 'matcha' ? 'whisk a matcha' : 'brew a latte'} · ${obj.pending}/${obj.maxQueue} queued`;
       if (obj.blocked) sub = 'Counter full — serve some drinks!';
     } else if (obj instanceof Table) {
-      const c = obj.customer;
-      if (!c) sub = 'Waiting for a guest';
-      else if (c.state === 'wait') { const need = c.order.filter((o) => o.status === 'need').map((o) => ITEM_NAMES[o.kind]); sub = need.length ? `Click to serve: ${need.join(' + ')}` : 'On its way…'; }
-      else if (c.state === 'eat') sub = 'Enjoying their order';
-      else sub = 'Guest arriving…';
+      const P = obj.party;
+      if (!P) sub = obj.dirty ? `Click to clear${obj.pendingTip > 0.004 ? ` · ${fmtMoney(obj.pendingTip)} in tips` : ''}${obj.claimedBy ? ' (server on the way)' : ''}` : 'Ready for guests';
+      else {
+        title += ` · ${P.label}`;
+        const need = [];
+        for (const g of P.members) if (g.state === 'wait') for (const o of g.order) if (o.status === 'need') need.push(ITEM_NAMES[o.kind]);
+        sub = need.length ? `Click to serve: ${need.join(' + ')}` : P.members.some((g) => g.state === 'wait') ? 'On its way…' : P.members.some((g) => g.state === 'eat' || g.state === 'done') ? 'Enjoying their order' : 'Settling in…';
+      }
     }
     const html = `${title}<small>${sub}</small>`;
     if (html !== this.ttHtml) { tt.innerHTML = html; this.ttHtml = html; }
@@ -4095,6 +4669,10 @@ const ui = {
     if (this.moneyDirty) { this.moneyDirty = false; this.shopDirty = true; this.staffDirty = true; }
     this.tabTimer -= dt;
     if (this.shopOpen && this.tabTimer <= 0) { this.tabTimer = 0.5; this.refreshTab(false); }
+    if (this.dayChipsDirty) this.renderDayChips();
+    if (this.streakDirty) this.renderStreak();
+    this.goalTimer = (this.goalTimer || 0) - dt;
+    if (this.goalsDirty || (this.goalTimer <= 0 && G.phase === 'open')) { this.goalTimer = 0.5; this.renderGoalList(); }
     if (this.repDirty) {
       this.repDirty = false;
       $('starFill').style.width = `${(G.rep / 5) * 120}px`;
@@ -4196,6 +4774,10 @@ const tutorial = {
     }[id];
     if (msg && !this.seen.has(id + G.up[id])) { this.seen.add(id + G.up[id]); this.show(msg, 6500); }
   },
+  onDirty() {
+    if (!this.seen.has('dirty') && G.staff.every((s) => s.role !== 'server')) { this.seen.add('dirty'); this.show('Guests left a mess (and a tip!). Click the <b>table</b> to clear it.<small>Nobody sits at a dirty table. Servers clear tables for you</small>', 8000, 'coin'); }
+  },
+  onCleared() { if (this.seen.has('dirty') && !this.seen.has('cleared')) { this.seen.add('cleared'); this.hide(); } },
   onHire(role) {
     const msg = {
       barista: 'Your barista brews lattes when guests need them.<small>Servers carry orders out to tables</small>',
@@ -4221,6 +4803,7 @@ function startGame() {
   document.body.classList.remove('title');
   $('startWrap').classList.add('hidden');
   G.phase = 'open'; G.time = DAY_START; G.spawnTimer = 1.4; G.stats = newStats();
+  rollDay(); goals.start(); ui.showDayCard();
   tutorial.start();
   sfx.pop();
 }
@@ -4228,13 +4811,16 @@ function endDay() {
   G.phase = 'summary';
   for (const w of workers) w.snapHome();
   for (const c of [...customers]) c.despawn();
+  parties.length = 0;
   queue.fill(null);
   const S = G.stats;
+  for (const t of tables) { t.party = null; if (t.dirty) clearTable(t, 'close'); t.claimedBy = null; }
   // close the books: wages and rent fall due at closing time
   let wages = 0;
   for (const st of G.staff) { wages += wageDue(st); st.hiredAt = DAY_START; }
   S.wages += wages; S.rent = rentToday();
   addMoney(-(wages + S.rent));
+  goals.close();
   const sat = S.served ? S.satSum / S.served : 0;
   const costs = S.ingredients + S.wages + S.rent;
   const profit = S.revenue + S.tips - costs;
@@ -4242,7 +4828,11 @@ function endDay() {
   const r2 = (v) => Math.round(v * 100) / 100;
   G.history.push({ day: G.day, sales: r2(S.revenue), tips: r2(S.tips), costs: r2(costs), profit: r2(profit), served: S.served, lost: S.stormed + S.turned + S.balked, sat: Math.round(sat * 1000) / 1000, rep: r2(G.rep) });
   if (G.history.length > 30) G.history.shift();
+  G.lifetime.served += S.served; G.lifetime.profit += profit;
+  if (profit >= 200) milestones.unlock('profit200');
+  if (profit >= 500) milestones.unlock('profit500');
   ui.renderSummary(profit, prev, sat);
+  ui.streakDirty = true;
   $('nextDayBtn').textContent = `Open Day ${G.day + 1}`;
   $('summaryWrap').classList.remove('hidden');
   tutorial.hide();
@@ -4264,6 +4854,7 @@ function coachTips(S, profit) {
   }
   if (S.balked >= 2) tips.push([6 + S.balked, `${S.balked} guests read the menu and walked straight out. Check your prices in Manage → Menu.`]);
   if (S.stormed >= 2) tips.push([5 + S.stormed, `${S.stormed} guests gave up waiting. Staff or a faster machine would help.`]);
+  if ((S.turnedDirty || 0) >= 3) tips.push([7 + S.turnedDirty * 0.5, `${S.turnedDirty} guests were turned away while tables sat dirty. Clear tables faster, or hire another server.`]);
   if (S.turned >= 4) tips.push([3 + S.turned * 0.5, `You turned away ${S.turned} guests at the door. More tables would seat them, or higher prices would thin the queue.`]);
   if (profit < 0) tips.push([9, 'You lost money today. Compare wages and ingredients against sales.']);
   if (S.wages > (S.revenue + S.tips) * 0.55 && S.wages > 0) tips.push([6, 'Wages ate most of your takings. Make sure every hire is pulling their weight.']);
@@ -4275,12 +4866,14 @@ function startNextDay() {
   $('summaryWrap').classList.add('hidden');
   G.day++; G.phase = 'transition'; G.transT = 0; G.transFrom = G.time;
   G.closing = false;
+  rollDay(); // the weather rolls in during the night
+  for (const t of tables) { t.dirty = false; t.pendingTip = 0; t.coins.visible = false; t.clearItems(); }
   for (const s of slots) { if (s.item && !s.item.reserved) { const it = s.item; s.item = null; shrinkOut(it.mesh, 0.3, () => releaseItemMesh(it.kind, it.mesh)); } }
   ui.traysDirty = true;
 }
 function finishTransition() {
-  G.phase = 'open'; G.time = DAY_START; G.spawnTimer = 1.6; G.stats = newStats();
-  ui.toast(`Day ${G.day} — good morning!`, 'sun', 2600);
+  G.phase = 'open'; G.time = DAY_START; G.spawnTimer = 1.6; G.stats = newStats(); G.streak = 0; ui.streakDirty = true;
+  goals.start(); ui.showDayCard();
   if (G.day === 2 && !tutorial.seen.has('prices')) { tutorial.seen.add('prices'); tutorial.show('New day! Set your own prices in <b>Manage → Menu</b>.<small>Too cheap leaves money on the table, too pricey scares guests off</small>', 9000, 'coin'); }
   saveGame();
 }
@@ -4289,6 +4882,7 @@ function saveGame() {
   try {
     localStorage.setItem('bb-save', JSON.stringify({
       v: 2, day: G.day, money: G.money, rep: G.rep, up: G.up, prices: G.prices, history: G.history,
+      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, weather: today.weather, event: today.event,
       staff: G.staff.map(({ role, level, name, skin, hair, scale }) => ({ role, level, name, skin, hair, scale })),
     }));
   } catch (_) { /* storage may be unavailable */ }
@@ -4314,6 +4908,9 @@ function loadGame() {
     }
     if (d.prices) for (const k of ITEMS) { const [lo, hi] = priceRange(k); G.prices[k] = clamp(Math.round(num(d.prices[k], BASE_PRICE[k]) / PRICE_STEP) * PRICE_STEP, lo, hi); }
     G.history = Array.isArray(d.history) ? d.history.filter((h) => h && Number.isFinite(h.profit)).slice(-30) : [];
+    if (Array.isArray(d.reviews)) G.reviews = d.reviews.filter((r) => r && typeof r.text === 'string').slice(0, 40).map((r) => ({ stars: clamp(r.stars | 0, 1, 5), text: String(r.text).slice(0, 120), type: GUEST_TYPES[r.type] ? r.type : 'regular', day: r.day | 0, name: String(r.name || '').slice(0, 24), critic: !!r.critic }));
+    if (d.milestones && typeof d.milestones === 'object') for (const m of MILESTONES) if (d.milestones[m.id]) G.milestones[m.id] = d.milestones[m.id] | 0;
+    if (d.lifetime) G.lifetime = { served: num(d.lifetime.served, 0), profit: num(d.lifetime.profit, 0) };
     return true;
   } catch (_) { return false; }
 }
@@ -4367,22 +4964,25 @@ function fixedUpdate(dt) {
   G.time += dt * HOURS_PER_SEC;
   if (!G.closing && G.time >= OPEN_FROM && G.time < OPEN_UNTIL) {
     G.spawnTimer -= dt;
-    const active = customers.filter((c) => c.state !== 'leave').length;
+    const active = parties.filter((P) => P.state !== 'leaving').length;
     if (G.spawnTimer <= 0) {
       G.spawnTimer = nextSpawnInterval();
-      if (active < tableCount() + queue.length + 1) spawnCustomer();
+      if (active < tableCount() + queue.length + 1) spawnParty();
     }
   }
   if (!G.closing && G.time >= OPEN_UNTIL) {
     G.closing = true;
     ui.toast('Closing time — finishing the last orders', 'moon', 3200);
-    for (const c of [...customers]) if (c.state === 'queue' || c.state === 'toQueue') c.forceLeave();
+    for (const P of [...parties]) if (P.state === 'queue') partyTurnAway(P, 'closing');
   }
   for (const st of stationList) st.fixed(dt);
   for (let i = customers.length - 1; i >= 0; i--) customers[i].fixed(dt);
+  updateParties(dt);
   for (let i = workers.length - 1; i >= 0; i--) workers[i].fixed(dt);
   updateFlights(dt);
-  if (G.time >= 21.6) for (const c of [...customers]) c.forceLeave();
+  G.tick = (G.tick || 0) + dt;
+  if (G.tick >= 0.5) { G.tick = 0; goals.update(); milestones.check(); }
+  if (G.time >= 21.6) forceLeaveAll('closing');
   if (G.time >= DAY_END && customers.length === 0 && flights.length === 0) endDay();
 }
 
@@ -4396,7 +4996,11 @@ function renderUpdate(dt, alpha) {
     G.lightHour = lerp(G.transFrom, 24 + DAY_START, smooth(G.transT));
     if (G.transT >= 1) finishTransition();
   }
+  const W = WEATHER[today.weather] || WEATHER.sunny;
+  weatherFx.sun = damp(weatherFx.sun, W.sun, 0.9, dt); weatherFx.gloom = damp(weatherFx.gloom, W.gloom, 0.9, dt);
   applyLighting(G.lightHour);
+  rain.update(dt);
+  audio.setScene(rain.level, customers.filter((c) => c.seated).length);
 
   for (const c of customers) c.render(alpha, dt, elapsed);
   for (const w of workers) w.render(alpha, dt, elapsed);
@@ -4483,7 +5087,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.__booted = true;
 requestAnimationFrame(frame);
-window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, slots, workers, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
+window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, parties, today, rain, weatherFx, ui, goals, slots, workers, clickTable, clearTable, spawnParty, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
 
 </script>
 </body>
