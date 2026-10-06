@@ -4180,7 +4180,11 @@ const tutorial = {
   },
   hide() { $('hint').classList.add('hide'); this.timer = 0; },
   start() { this.step = 1; this.show('A guest is on the way! Click the <b>espresso machine</b> to brew a latte.<small>Tip: press 1 to brew, 2 / 3 once unlocked</small>'); },
-  onOrder() { if (this.step === 1) this.show('A guest is waiting! Click the <b>espresso machine</b> to brew their latte.<small>The ring around their order is their patience</small>'); },
+  onOrder(c) {
+    if (this.step !== 1) return;
+    const k = c.order[0].kind, where = { latte: 'espresso machine', matcha: 'matcha bar', pastry: 'pastry case' }[k];
+    this.show(`A guest is waiting! Click the <b>${where}</b> for their ${ITEM_NAMES[k].toLowerCase()}.<small>The ring around their order is their patience</small>`);
+  },
   onBrew() { if (this.step === 1) { this.step = 2; this.show('Brewing… you can queue up to 3 drinks.<small>Finished drinks wait on the counter</small>'); } },
   onReady() { if (this.step === 2) { this.step = 3; this.show('Latte ready! Now click the guest’s <b>table</b> to serve it.<small>Faster service → bigger tips</small>'); } },
   onServed() { if (this.step === 3) { this.step = 4; this.show('Lovely! Keep brewing ahead of the rush.<small>Spend your takings in Upgrades</small>', 6500); } },
