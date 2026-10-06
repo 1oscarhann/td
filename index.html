@@ -10,6 +10,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fredoka:wght@400;500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
+    --display: 'Fredoka', 'Nunito', ui-rounded, 'Segoe UI', system-ui, sans-serif;
+    --body: 'Nunito', ui-rounded, 'Segoe UI', system-ui, sans-serif;
     --ink: #4a3428;
     --ink-soft: #7a5f4e;
     --cream: #f6eee2;
@@ -23,7 +25,7 @@
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #efe3d2; }
-  body { font-family: 'Nunito', system-ui, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none; }
+  body { font-family: var(--body); color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; -webkit-user-select: none; }
   #scene { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
   #scene.pointer { cursor: pointer; }
   #scene.grabbing { cursor: grabbing; }
@@ -36,13 +38,13 @@
     -webkit-backdrop-filter: blur(18px) saturate(1.35); backdrop-filter: blur(18px) saturate(1.35);
     border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 20px;
   }
-  .fredoka { font-family: 'Fredoka', 'Nunito', sans-serif; }
+  .fredoka { font-family: var(--display); }
   #hud .top, #shopBtn, #tray, #toolbar { transition: opacity .5s, translate .5s; }
   body.shop-open #shopBtn { opacity: 0; pointer-events: none; }
   body.title #hud .top, body.title #shopBtn, body.title #tray, body.title #hint, body.title #toolbar { opacity: 0; translate: 0 -10px; pointer-events: none; }
 
   #dayPanel { position: absolute; left: 18px; top: 16px; padding: 12px 16px 13px; min-width: 214px; }
-  .brand { font-family: 'Fredoka'; font-weight: 600; font-size: 19px; display: flex; align-items: center; gap: 9px; letter-spacing: .1px; }
+  .brand { font-family: var(--display); font-weight: 600; font-size: 19px; display: flex; align-items: center; gap: 9px; letter-spacing: .1px; }
   .brand .logo { width: 26px; height: 26px; border-radius: 9px; background: linear-gradient(160deg, #d68a6c, #b9664a); display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); }
   .clock { font-weight: 700; font-size: 13.5px; color: var(--ink-soft); margin-top: 6px; display: flex; gap: 7px; align-items: center; }
   .clock svg { width: 16px; height: 16px; }
@@ -50,8 +52,8 @@
   .daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ebc68c, #c9765a); border-radius: 6px; transition: width .4s linear; }
 
   #moneyPanel { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); padding: 9px 22px 9px 11px; display: flex; align-items: center; gap: 11px; }
-  #money { font-family: 'Fredoka'; font-weight: 600; font-size: 29px; min-width: 70px; font-variant-numeric: tabular-nums; }
-  .coin { width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #f8e3ae, #d4ad68 52%, #a98140); box-shadow: inset 0 -2px 0 rgba(0,0,0,.14), 0 3px 8px rgba(150,100,40,.3); display: grid; place-items: center; color: #7a5626; font: 700 16px 'Fredoka'; }
+  #money { font-family: var(--display); font-weight: 600; font-size: 29px; min-width: 70px; font-variant-numeric: tabular-nums; }
+  .coin { width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #f8e3ae, #d4ad68 52%, #a98140); box-shadow: inset 0 -2px 0 rgba(0,0,0,.14), 0 3px 8px rgba(150,100,40,.3); display: grid; place-items: center; color: #7a5626; font: 700 16px var(--display); }
   #moneyPanel.bump { animation: bump .38s cubic-bezier(.3,1.6,.5,1); }
   @keyframes bump { 0% { scale: 1; } 45% { scale: 1.09; } 100% { scale: 1; } }
 
@@ -66,11 +68,11 @@
   .icon-btn { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; cursor: pointer; border: 1px solid var(--line); color: var(--ink); transition: transform .18s, background .2s; padding: 0; }
   .icon-btn:hover { transform: translateY(-2px); background: var(--glass-strong); }
   .icon-btn svg { width: 22px; height: 22px; }
-  .icon-btn .q { font: 700 10px 'Nunito'; letter-spacing: .04em; }
+  .icon-btn .q { font: 700 10px var(--body); letter-spacing: .04em; }
 
-  #shopBtn { position: absolute; right: 18px; bottom: 18px; padding: 12px 18px 12px 14px; font: 600 18px 'Fredoka'; color: var(--ink); display: flex; gap: 10px; align-items: center; cursor: pointer; border: 1px solid var(--line); transition: transform .18s, opacity .5s, translate .5s; }
+  #shopBtn { position: absolute; right: 18px; bottom: 18px; padding: 12px 18px 12px 14px; font: 600 18px var(--display); color: var(--ink); display: flex; gap: 10px; align-items: center; cursor: pointer; border: 1px solid var(--line); transition: transform .18s, opacity .5s, translate .5s; }
   #shopBtn:hover { transform: translateY(-2px); }
-  #shopBtn .badge { min-width: 22px; height: 22px; border-radius: 11px; background: var(--terracotta); color: #fff8ef; font: 700 13px 'Nunito'; display: grid; place-items: center; padding: 0 6px; transform: scale(0); transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+  #shopBtn .badge { min-width: 22px; height: 22px; border-radius: 11px; background: var(--terracotta); color: #fff8ef; font: 700 13px var(--body); display: grid; place-items: center; padding: 0 6px; transform: scale(0); transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
   #shopBtn .badge.on { transform: scale(1); }
   #shopBtn.glow { animation: glowPulse 1.6s ease-in-out infinite; }
   @keyframes glowPulse { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 0 6px rgba(201,118,90,.18); } }
@@ -78,7 +80,7 @@
   #shop { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 372px; max-width: calc(100vw - 24px); transform: translateX(calc(100% + 30px)); transition: transform .5s cubic-bezier(.2,.85,.2,1); display: flex; flex-direction: column; border-radius: 26px; background: var(--glass-strong); z-index: 3; }
   #shop.open { transform: none; }
   .shop-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 10px 22px; }
-  .shop-head h2 { margin: 0; font: 600 24px 'Fredoka'; }
+  .shop-head h2 { margin: 0; font: 600 24px var(--display); }
   .shop-head p { margin: 2px 0 0; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
   .close-btn { width: 36px; height: 36px; border-radius: 12px; border: 0; background: rgba(74,52,40,.08); color: var(--ink); cursor: pointer; display: grid; place-items: center; }
   .close-btn:hover { background: rgba(74,52,40,.14); }
@@ -89,12 +91,12 @@
   @keyframes cardFlash { 0% { transform: scale(1); } 30% { transform: scale(1.03); background: #fff6e6; } 100% { transform: scale(1); } }
   .card .ico { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; box-shadow: inset 0 -3px 0 rgba(0,0,0,.08); }
   .card .ico svg { width: 30px; height: 30px; }
-  .card h4 { margin: 0; font: 600 16px 'Fredoka'; }
+  .card h4 { margin: 0; font: 600 16px var(--display); }
   .card p { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-soft); line-height: 1.32; font-weight: 600; }
   .pips { display: flex; gap: 4px; margin-top: 7px; }
   .pips i { width: 16px; height: 5px; border-radius: 3px; background: rgba(74,52,40,.14); }
   .pips i.on { background: var(--terracotta); }
-  .buy { font: 600 15px 'Fredoka'; padding: 8px 12px; min-width: 70px; border-radius: 12px; border: 0; background: linear-gradient(180deg, #d88a6d, #c26b4e); color: #fff8ef; cursor: pointer; box-shadow: 0 3px 0 #a5563c, 0 6px 14px rgba(160,80,50,.25); transition: transform .12s, filter .2s; }
+  .buy { font: 600 15px var(--display); padding: 8px 12px; min-width: 70px; border-radius: 12px; border: 0; background: linear-gradient(180deg, #d88a6d, #c26b4e); color: #fff8ef; cursor: pointer; box-shadow: 0 3px 0 #a5563c, 0 6px 14px rgba(160,80,50,.25); transition: transform .12s, filter .2s; }
   .buy:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
   .buy:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #a5563c; }
   .buy:disabled { background: rgba(74,52,40,.1); color: rgba(74,52,40,.42); box-shadow: none; cursor: default; }
@@ -108,7 +110,7 @@
   @keyframes pop { 0% { transform: scale(.6); } 100% { transform: scale(1); } }
   .tray-sep { width: 1px; align-self: stretch; background: rgba(74,52,40,.12); margin: 2px 2px; }
   .stations { display: flex; gap: 6px; }
-  .st { display: flex; align-items: center; gap: 6px; padding: 4px 9px 4px 4px; border-radius: 13px; background: rgba(255,255,255,.35); font: 700 12px 'Nunito'; color: var(--ink-soft); cursor: pointer; pointer-events: auto; border: 0; }
+  .st { display: flex; align-items: center; gap: 6px; padding: 4px 9px 4px 4px; border-radius: 13px; background: rgba(255,255,255,.35); font: 700 12px var(--body); color: var(--ink-soft); cursor: pointer; pointer-events: auto; border: 0; }
   .st:hover { background: rgba(255,255,255,.6); }
   .st .ring { width: 34px; height: 34px; position: relative; }
   .st .ring svg { position: absolute; inset: 0; width: 34px; height: 34px; }
@@ -118,7 +120,7 @@
   .st .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(74,52,40,.16); }
   .st .dots i.on { background: var(--terracotta); }
   .st.off { display: none; }
-  .key { font: 800 10px 'Nunito'; color: rgba(74,52,40,.45); border: 1px solid rgba(74,52,40,.2); border-radius: 5px; padding: 0 4px; }
+  .key { font: 800 10px var(--body); color: rgba(74,52,40,.45); border: 1px solid rgba(74,52,40,.2); border-radius: 5px; padding: 0 4px; }
 
   #labels { position: absolute; inset: 0; overflow: hidden; }
   .bubble { position: absolute; left: 0; top: 0; width: 60px; height: 60px; margin: -60px 0 0 -30px; will-change: transform; transition: opacity .3s; filter: drop-shadow(0 6px 10px rgba(74,46,28,.18)); }
@@ -137,7 +139,7 @@
   .emote { position: absolute; left: 0; top: 0; width: 40px; height: 40px; margin: -46px 0 0 -20px; will-change: transform; animation: bubblePop .4s cubic-bezier(.3,1.6,.5,1); }
   .emote svg { width: 100%; height: 100%; filter: drop-shadow(0 4px 8px rgba(74,46,28,.2)); }
 
-  .float { position: absolute; left: 0; top: 0; font: 700 22px 'Fredoka'; color: #5f8a52; white-space: nowrap; text-shadow: 0 2px 0 #fffaf2, 0 0 14px rgba(255,250,240,.9); animation: floatUp 1.7s cubic-bezier(.2,.7,.3,1) forwards; pointer-events: none; }
+  .float { position: absolute; left: 0; top: 0; font: 700 22px var(--display); color: #5f8a52; white-space: nowrap; text-shadow: 0 2px 0 #fffaf2, 0 0 14px rgba(255,250,240,.9); animation: floatUp 1.7s cubic-bezier(.2,.7,.3,1) forwards; pointer-events: none; }
   .float.tip { color: #b8862f; font-size: 17px; }
   .float.big { font-size: 28px; color: #b8862f; }
   .float.bad { color: #b5523a; font-size: 19px; }
@@ -165,29 +167,30 @@
   .modal-wrap.hidden { opacity: 0; pointer-events: none; }
   .modal { width: min(460px, calc(100vw - 28px)); padding: 28px 28px 24px; border-radius: 28px; text-align: center; background: var(--glass-strong); transition: transform .5s cubic-bezier(.2,.85,.2,1); }
   .modal-wrap.hidden .modal { transform: translateY(18px) scale(.97); }
-  .modal h1 { font: 700 42px/1.02 'Fredoka'; margin: 6px 0 0; letter-spacing: -.5px; }
-  .modal h2 { font: 600 30px 'Fredoka'; margin: 0; }
+  .modal h1 { font: 700 42px/1.02 var(--display); margin: 6px 0 0; letter-spacing: -.5px; }
+  .modal h2 { font: 600 30px var(--display); margin: 0; }
   .modal .tag { margin: 6px 0 0; font-weight: 700; color: var(--ink-soft); font-size: 15px; }
   .howto { display: grid; gap: 8px; margin: 20px 0 22px; text-align: left; }
   .howto div { display: flex; gap: 12px; align-items: center; background: rgba(255,255,255,.55); border-radius: 15px; padding: 9px 12px; font-weight: 700; font-size: 14px; }
-  .howto div span.n { width: 28px; height: 28px; border-radius: 9px; flex: none; display: grid; place-items: center; background: #f1e1cd; font: 600 15px 'Fredoka'; color: var(--terracotta); }
+  .howto div span.n { width: 28px; height: 28px; border-radius: 9px; flex: none; display: grid; place-items: center; background: #f1e1cd; font: 600 15px var(--display); color: var(--terracotta); }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 18px 0 20px; }
   .stat { background: rgba(255,255,255,.58); border-radius: 15px; padding: 10px 13px; text-align: left; }
-  .stat b { display: block; font: 600 23px 'Fredoka'; }
+  .stat b { display: block; font: 600 23px var(--display); }
   .stat span { font-size: 11px; color: var(--ink-soft); font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
   .stat.wide { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; }
-  .cta { font: 600 19px 'Fredoka'; padding: 14px 28px; border-radius: 17px; border: 0; color: #fff8ef; background: linear-gradient(180deg, #d88a6d, #c26b4e); box-shadow: 0 4px 0 #a5563c, 0 12px 26px rgba(160,80,50,.32); cursor: pointer; transition: transform .12s, filter .2s; }
+  .cta { font: 600 19px var(--display); padding: 14px 28px; border-radius: 17px; border: 0; color: #fff8ef; background: linear-gradient(180deg, #d88a6d, #c26b4e); box-shadow: 0 4px 0 #a5563c, 0 12px 26px rgba(160,80,50,.32); cursor: pointer; transition: transform .12s, filter .2s; }
   .cta:hover { filter: brightness(1.05); transform: translateY(-1px); }
   .cta:active { transform: translateY(3px); box-shadow: 0 1px 0 #a5563c; }
   .seg { display: inline-flex; gap: 4px; margin-top: 16px; padding: 4px; border-radius: 13px; background: rgba(74,52,40,.07); }
-  .seg button { border: 0; background: transparent; font: 700 12px 'Nunito'; color: var(--ink-soft); padding: 6px 10px; border-radius: 9px; cursor: pointer; }
+  .seg button { border: 0; background: transparent; font: 700 12px var(--body); color: var(--ink-soft); padding: 6px 10px; border-radius: 9px; cursor: pointer; }
   .seg button.on { background: #fffaf3; color: var(--ink); box-shadow: 0 2px 6px rgba(74,46,28,.12); }
+  .link-btn { margin-top: 12px; border: 0; background: none; font: 700 12.5px var(--body); color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .muted-note { font-size: 12px; color: var(--ink-soft); font-weight: 600; margin-top: 10px; }
-  #loading { position: fixed; inset: 0; display: grid; place-items: center; background: #efe3d2; z-index: 10; transition: opacity .8s; font: 600 18px 'Fredoka'; color: var(--ink-soft); }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; background: #efe3d2; z-index: 10; transition: opacity .8s; font: 600 18px var(--display); color: var(--ink-soft); }
   #loading.done { opacity: 0; pointer-events: none; }
   #loading .spin { width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(201,118,90,.2); border-top-color: var(--terracotta); animation: spin 1s linear infinite; margin: 0 auto 14px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #pauseBadge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 14px 22px; font: 600 22px 'Fredoka'; display: none; }
+  #pauseBadge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 14px 22px; font: 600 22px var(--display); display: none; }
   body.paused #pauseBadge { display: block; }
 
   @media (max-width: 720px) {
@@ -218,6 +221,14 @@
 <body>
 <canvas id="scene" tabindex="0"></canvas>
 <div id="loading"><div><div class="spin"></div>Brewing the café…</div></div>
+<script>
+  // If the 3D engine can't be fetched (offline / blocked CDN), say so instead of spinning forever.
+  setTimeout(function () {
+    if (window.__booted) return;
+    var l = document.getElementById('loading');
+    if (l && !l.classList.contains('done')) l.innerHTML = '<div style="max-width:340px;text-align:center">Still brewing… the 3D engine loads from a CDN.<br><small>Check your internet connection, then reload.</small></div>';
+  }, 20000);
+</script>
 
 <div id="hud">
   <div id="labels"></div>
@@ -282,6 +293,7 @@
         <div><span class="n">3</span>Spend tips on upgrades &amp; grow your reputation.</div>
       </div>
       <button class="cta" id="startBtn">Open the café</button>
+      <div><button class="link-btn" id="resetBtn" hidden>Start a new café instead</button></div>
       <div><div class="seg" id="qualitySeg"><button data-q="auto" class="on">Auto</button><button data-q="high">High</button><button data-q="medium">Medium</button><button data-q="low">Low</button></div></div>
       <div class="muted-note">Drag to look around · scroll to zoom · keys 1 2 3 brew</div>
     </div>
@@ -366,6 +378,10 @@ function makeNoise(seed = 7, period = 64) {
 // 2. RENDERER, QUALITY TIERS, POST-PROCESSING
 // ---------------------------------------------------------------------
 const canvas = document.getElementById('scene');
+if (!document.createElement('canvas').getContext('webgl2')) {
+  document.getElementById('loading').innerHTML = '<div style="max-width:320px;text-align:center">This café needs WebGL 2.<br><small style="font-family:var(--body)">Try a recent Chrome, Edge, Firefox or Safari with hardware acceleration on.</small></div>';
+  throw new Error('WebGL2 unavailable');
+}
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance', stencil: false });
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -2174,7 +2190,7 @@ const machineLevel = () => 1 + G.up.machine;
 const furnitureLevel = () => G.up.furniture;
 const tableCount = () => 2 + G.up.tables;
 const spendMult = () => (0.85 + 0.07 * G.rep) * (1 + 0.08 * furnitureLevel());
-const basePatience = () => 31 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 - Math.min(0.28, (G.day - 1) * 0.035));
+const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
 function nextSpawnInterval() {
   const r = clamp((G.rep - 0.5) / 4.5, 0, 1);
   let base = lerp(9.0, 3.1, r) * (1 - 0.14 * G.up.sign);
@@ -3006,7 +3022,7 @@ function applyLighting(hour) {
   skyUniforms.glow.value.copy(a.glow).lerp(b.glow, k);
   renderer.toneMappingExposure = L('exp');
   shaftFactor = L('shaft') * clamp((sunDir.x - 0.15) / 0.35, 0, 1);
-  shafts.mat.uniforms.uStrength.value = shaftFactor * 0.16;
+  shafts.mat.uniforms.uStrength.value = shaftFactor * 0.26;
   shafts.mat.uniforms.uColor.value.copy(_lk.sun);
   shafts.rebuild();
 }
@@ -3200,6 +3216,7 @@ const audio = {
     let bar = 0, next = ctx.currentTime + 0.2;
     const schedule = () => {
       if (!this.ctx) return;
+      if (this.muted || document.hidden) { next = Math.max(next, ctx.currentTime + 0.3); return; }
       while (next < ctx.currentTime + 1.2) {
         const ch = chords[bar % chords.length];
         for (const fr of ch) this.pad(fr / 2, next, 4.4);
@@ -3323,6 +3340,7 @@ const ui = {
     el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
     labelsEl.appendChild(el);
     el.addEventListener('animationend', () => el.remove());
+    setTimeout(() => el.remove(), 2400); // fallback if animations are throttled (hidden tab)
   },
   toast(text, icon = 'spark', ms = 2600, key = null) {
     if (key) { const prev = this.toastKeys.get(key); if (prev && prev.isConnected) return; }
@@ -3375,7 +3393,8 @@ const ui = {
     if (label !== this.lastClock) { this.lastClock = label; $('clockLabel').textContent = label; $('dayLabel').textContent = `Day ${G.day}`; }
     const icon = h >= 19.6 ? 'moon' : h >= 17.5 ? 'dusk' : 'sun';
     if (icon !== this.lastSun) { this.lastSun = icon; $('sunIcon').innerHTML = ICONS[icon]; }
-    $('dayFill').style.width = `${clamp((h - DAY_START) / (DAY_END - DAY_START), 0, 1) * 100}%`;
+    const fill = `${(clamp((h - DAY_START) / (DAY_END - DAY_START), 0, 1) * 100).toFixed(1)}%`;
+    if (fill !== this.lastFill) { this.lastFill = fill; $('dayFill').style.width = fill; }
     // shop
     if (this.shopDirty) {
       this.shopDirty = false;
@@ -3600,7 +3619,7 @@ function fixedUpdate(dt) {
   if (G.time >= DAY_END && customers.length === 0 && flights.length === 0) endDay();
 }
 
-let lastT = performance.now(), elapsed = 0, acc = 0;
+let lastT = performance.now(), elapsed = 0, acc = 0, frameCount = 0;
 function renderUpdate(dt, alpha) {
   // day/night
   if (G.phase === 'open') G.lightHour = G.time;
@@ -3652,6 +3671,7 @@ function frame(now) {
   particleScale.value = renderer.getPixelRatio() * innerHeight / (2 * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2));
   if (quality.usePost) composer.render(dt); else renderer.render(scene, camera);
   perf.update(dt);
+  frameCount++;
 }
 
 // ---------------------------------------------------------------------
@@ -3667,7 +3687,11 @@ updateMenuBoard();
 if (document.fonts && document.fonts.load) document.fonts.load('700 64px Caveat').then(updateMenuBoard).catch(() => {});
 ui.init();
 ui.dispMoney = G.money; $('money').textContent = fmtMoney(G.money).slice(1);
-if (resumed) { $('startBtn').textContent = `Continue · Day ${G.day}`; tutorial.step = 4; tutorial.affordShown = true; }
+if (resumed) {
+  $('startBtn').textContent = `Continue · Day ${G.day}`; tutorial.step = 4; tutorial.affordShown = true;
+  const rb = $('resetBtn'); rb.hidden = false;
+  rb.addEventListener('click', () => { try { localStorage.removeItem('bb-save'); } catch (_) { /* ignore */ } location.reload(); });
+}
 
 const initialTier = (matchMedia('(pointer: coarse)').matches || (navigator.hardwareConcurrency || 8) <= 4) ? 'medium' : 'high';
 applyQuality(initialTier);
@@ -3684,9 +3708,14 @@ const warmDone = () => { scene.remove(warm); requestAnimationFrame(() => $('load
 const canParallel = renderer.compileAsync && renderer.extensions.has('KHR_parallel_shader_compile');
 (canParallel ? renderer.compileAsync(scene, camera) : new Promise((res) => setTimeout(() => { renderer.compile(scene, camera); res(); }, 30))).then(warmDone, warmDone);
 
-document.addEventListener('visibilitychange', () => { if (document.hidden && G.phase === 'open' && !G.paused) ui.togglePause(true); lastT = performance.now(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && G.phase === 'open' && !G.paused) ui.togglePause(true);
+  if (audio.ctx) { if (document.hidden) audio.ctx.suspend().catch(() => {}); else audio.ctx.resume().catch(() => {}); }
+  lastT = performance.now();
+});
+window.__booted = true;
 requestAnimationFrame(frame);
-window.__cafe = { fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, slots, barista, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
+window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, slots, barista, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
 
 </script>
 </body>
