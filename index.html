@@ -207,6 +207,7 @@
   .sheet-foot .cta { padding: 11px 20px; font-size: 16px; }
   @media (max-width: 520px) { .set-row { grid-template-columns: 78px 1fr auto; gap: 8px; } .set-row .seg button { padding: 6px 7px; } }
   .link-btn.danger { color: #b5523a; }
+  #sumCoach p.moment { color: #7a68ad; }
   .link-btn.danger.armed { color: #fff8ef; background: #b5523a; text-decoration: none; padding: 7px 12px; border-radius: 10px; }
   .help-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
   .help-card { display: flex; gap: 11px; align-items: flex-start; background: rgba(255,255,255,.55); border-radius: 16px; padding: 11px 12px; }
@@ -3808,8 +3809,7 @@ const cat = (() => {
     goTo(x, y, z) {
       const pts = [];
       if (this.y > 0.2 && y < 0.2) pts.push({ x: BENCH_FLOOR_X, y: 0, z: clamp(pos.z, -2.6, 1.6) });
-      if (y > 0.2 && !(this.y > 0.2)) pts.push({ x: BENCH_FLOOR_X, y: 0, z });
-      else if (y > 0.2 && this.y > 0.2) { pts.push({ x: BENCH_FLOOR_X, y: 0, z: clamp(pos.z, -2.6, 1.6) }); pts.push({ x: BENCH_FLOOR_X, y: 0, z }); }
+      if (y > 0.2 && !(this.y > 0.2)) pts.push({ x: BENCH_FLOOR_X, y: 0, z }); // bench to bench: just pad along the cushion
       pts.push({ x, y, z });
       this.path = pts; this.state = 'walk'; this.seg = null;
     },
@@ -3899,7 +3899,7 @@ const cat = (() => {
       root.position.lerpVectors(prev, pos, alpha); root.position.y = lerp(this.prevY, this.y, alpha);
       let d = this.yaw - this.prevYaw; d = Math.atan2(Math.sin(d), Math.cos(d));
       root.rotation.y = this.prevYaw + d * alpha;
-      const st = this.state, moving = st === 'walk';
+      const st = this.state, moving = st === 'walk' && G.phase === 'open';
       const hop = moving && this.seg && this.seg.hop;
       this.walk = damp(this.walk, moving && !hop ? 1 : 0, 10, dt);
       this.sit = damp(this.sit, st === 'sit' || st === 'visit' || (st === 'pet' && this.resume !== 'nap') ? 1 : 0, 6, dt);
@@ -5025,6 +5025,11 @@ const ui = {
       + stat('Reviews', S.reviewN ? `${(S.reviewSum / S.reviewN).toFixed(1)}★` : '—', S.reviewN ? `${S.reviewN} written` : 'none today')
       + stat('Best streak', `×${S.bestStreak}`, 'fast serves in a row'));
     const coach = $('sumCoach'); coach.innerHTML = '';
+    // little moments from the day, before the advice
+    const moments = [];
+    if (S.posts) moments.push(`Tourists posted ${S.posts} photo${S.posts > 1 ? 's' : ''} of your café.`);
+    if (G.up.cat && (S.catVisits || S.pets)) moments.push(`${G.cat.name} sat with ${S.catVisits || 0} guest${S.catVisits === 1 ? '' : 's'}${S.pets ? ` and got ${S.pets} scratch${S.pets > 1 ? 'es' : ''}` : ''}.`);
+    if (moments.length) { const p = document.createElement('p'); p.className = 'moment'; p.textContent = moments.join(' '); coach.appendChild(p); }
     for (const t of coachTips(S, profit)) { const p = document.createElement('p'); p.textContent = t; coach.appendChild(p); }
   },
 
@@ -5546,7 +5551,8 @@ function renderUpdate(dt, alpha) {
   let seatedN = 0; for (const c of customers) if (c.seated) seatedN++;
   audio.setScene(rain.level, seatedN, G.lightHour % 24);
 
-  const simDt = G.phase === 'open' && !G.paused ? dt * settings.speed : dt; // limbs keep pace with fast-forward
+  // limbs keep pace with fast-forward and hold still while the clock is stopped
+  const simDt = G.phase !== 'open' ? dt : G.paused || ui.modalPaused ? 0 : dt * settings.speed;
   for (const c of customers) c.render(alpha, simDt, elapsed);
   for (const w of workers) w.render(alpha, simDt, elapsed);
   cat.render(alpha, simDt, elapsed);
