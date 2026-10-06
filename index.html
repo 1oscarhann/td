@@ -151,6 +151,8 @@
   .float.tip { color: #b8862f; font-size: 17px; }
   .float.big { font-size: 28px; color: #b8862f; }
   .float.bad { color: #b5523a; font-size: 19px; }
+  .float.social { color: #7a68ad; font-size: 16px; }
+  .float.zzz { color: #8792ab; font: italic 700 15px var(--display); }
   @keyframes floatUp { 0% { opacity: 0; transform: translate(-50%, 0) scale(.5); } 14% { opacity: 1; transform: translate(-50%, -18px) scale(1.12); } 28% { transform: translate(-50%, -26px) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -84px) scale(.96); } }
 
   #toasts { position: absolute; top: 88px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; }
@@ -477,6 +479,11 @@
       <div class="themes" id="themes"></div>
       <div class="sec-title">Colours</div>
       <div id="slotRows"></div>
+      <div id="catCustom" hidden>
+        <div class="sec-title">Café cat</div>
+        <label class="fld"><span>Cat's name</span><input id="catName" maxlength="16" spellcheck="false" autocomplete="off"></label>
+        <div class="slot-row"><div class="lbl">Coat</div><div class="chips-floor" id="catCoats"></div></div>
+      </div>
     </div>
     <div class="done-row"><button class="cta" id="customDone">Looks lovely</button></div>
   </div>
@@ -2097,6 +2104,7 @@ const ICONS = {
   machine: `<svg viewBox="0 0 32 32"><rect x="5" y="6" width="22" height="13" rx="4" fill="#c9765a" stroke="${INK}" stroke-width="2"/><rect x="7" y="4" width="18" height="3" rx="1.5" fill="#d0a865" stroke="${INK}" stroke-width="1.6"/><path d="M13 19v3h6v-3" stroke="${INK}" stroke-width="2" fill="none"/><rect x="11" y="23.5" width="10" height="4.5" rx="1.5" fill="#fbf4ea" stroke="${INK}" stroke-width="1.8"/><circle cx="16" cy="12" r="2.6" fill="#fbf4ea" stroke="${INK}" stroke-width="1.6"/></svg>`,
   chair: `<svg viewBox="0 0 32 32"><path d="M8 7.5a8 6 0 0 1 16 0v8H8z" fill="#9fb193" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><rect x="6" y="15" width="20" height="6" rx="3" fill="#9fb193" stroke="${INK}" stroke-width="2"/><path d="M9 21v6M23 21v6" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/></svg>`,
   person: `<svg viewBox="0 0 32 32"><circle cx="16" cy="10" r="5.5" fill="#eec4a6" stroke="${INK}" stroke-width="2"/><path d="M7 28c0-6 4-10 9-10s9 4 9 10z" fill="#c9765a" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M12.5 21.5h7v6.5h-7z" fill="#f2e3cc"/></svg>`,
+  cat: `<svg viewBox="0 0 32 32"><path d="M7.2 13.6 6.6 5.6l6 4.1a11 11 0 0 1 6.8 0l6-4.1-.6 8A10 10 0 0 1 27 18.2c0 5.4-5 8.8-11 8.8S5 23.6 5 18.2a10 10 0 0 1 2.2-4.6z" fill="#e0a26b" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="17.6" r="1.6" fill="${INK}"/><circle cx="20" cy="17.6" r="1.6" fill="${INK}"/><path d="M14.7 20.8h2.6L16 22.3z" fill="#d98a86" stroke="#d98a86" stroke-width="1.2" stroke-linejoin="round"/><path d="M16 22.3c-.6 1.1-1.8 1.5-3 1M16 22.3c.6 1.1 1.8 1.5 3 1" stroke="${INK}" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`,
   plant: `<svg viewBox="0 0 32 32"><path d="M10 19h12l-1.4 8a2 2 0 0 1-2 1.6h-5.2a2 2 0 0 1-2-1.6z" fill="#d08a6c" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><path d="M16 19c0-6-5-9-9-9 0 5 4 9 9 9zM16 19c0-7 4-11 9-11 0 6-4 11-9 11z" fill="#8faa7c" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/></svg>`,
   sign: `<svg viewBox="0 0 32 32"><path d="M10 28l5-23h2l5 23" stroke="${INK}" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="8" y="9" width="16" height="12" rx="2.5" fill="#3a423d" stroke="${INK}" stroke-width="2"/><path d="M11.5 13.5h9M11.5 17h6" stroke="#f3ece0" stroke-width="1.8" stroke-linecap="round"/></svg>`,
   heart: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#fffaf3"/><path d="M20 29c-6-4-9-7-9-10.6a4.6 4.6 0 0 1 9-1.6 4.6 4.6 0 0 1 9 1.6C29 22 26 25 20 29z" fill="#d9776a"/></svg>`,
@@ -2366,7 +2374,30 @@ const CH_GEO = {
   pom: sphereGeo(0.065, 20, 14),
   lens: geo('chLens', () => new THREE.TorusGeometry(0.05, 0.011, 8, 24)),
   apron: geo('chApron', () => rbox(0.34, 0.42, 0.06, 0.03, 3)),
+  screen: geo('chScreen', () => new THREE.PlaneGeometry(0.074, 0.13)),
 };
+MAT.screen = new THREE.MeshBasicMaterial({ color: new THREE.Color(0.62, 0.8, 1).multiplyScalar(1.35) });
+// a furled umbrella hanging from its handle (origin at the hook, shaft down -y)
+function buildFurledUmbrella(canopyMat) {
+  const g = new THREE.Group();
+  const hook = mesh(geo('brollyHook', () => new THREE.TorusGeometry(0.034, 0.011, 8, 16, Math.PI)), MAT.walnut, { cast: false }); hook.position.set(0.034, 0, 0); hook.rotation.z = 0; g.add(hook);
+  const shaft = mesh(cylGeo(0.009, 0.009, 0.62, 6), MAT.darkMetal, { cast: false }); shaft.position.y = -0.31; g.add(shaft);
+  const can = mesh(geo('brollyCanopy', () => new THREE.ConeGeometry(0.055, 0.4, 12, 1, false).rotateX(Math.PI)), canopyMat); can.position.y = -0.33; g.add(can);
+  const band = mesh(geo('brollyBand', () => new THREE.TorusGeometry(0.03, 0.009, 6, 14).rotateX(Math.PI / 2)), canopyMat, { cast: false }); band.position.y = -0.24; g.add(band);
+  return g;
+}
+const BROLLY_COLORS = [0xc9765a, 0x8e9fb4, 0xd7a64f, 0x7f9474, 0x3e4b5b, 0xe8b3a1, 0x8a3e3e];
+// arm/head targets (radians, absolute) for what seated or queuing guests do with their hands
+const POSES = {
+  phone: { a0x: -1.22, a1x: -1.42, a0z: 0.42, a1z: -0.5, hx: 0.34 },
+  book: { a0x: -1.38, a1x: -1.38, a0z: 0.5, a1z: -0.5, hx: 0.2 },
+  notes: { a0x: -1.36, a1x: -1.12, a0z: 0.56, a1z: -0.18, hx: 0.26 },
+  photo: { a0x: -1.6, a1x: -1.6, a0z: 0.52, a1z: -0.52, hx: 0.08 },
+  impatient: { a0x: -0.8, a1x: -0.8, a0z: 0.86, a1z: -0.86, hx: -0.04 },
+  chat: {},
+};
+const PROP_OF = { phone: 'phone', book: 'book', notes: 'book' };
+const BOOK_HOLD = { book: [0, 0.65, 0.37, -1.22, 0], notes: [-0.07, 0.62, 0.38, -1.02, 0.22] }; // x, y, z, tilt, roll
 
 class Character {
   constructor() {
@@ -2427,18 +2458,25 @@ class Character {
     acc.visor = mesh(boxGeo(0.25, 0.022, 0.17, 0.01, 2), MAT.linen); acc.visor.position.set(0, 0.11, 0.23); acc.visor.rotation.x = 0.28; this.head.add(acc.visor);
     // props for seated guests (reading, scrolling)
     acc.book = new THREE.Group();
-    for (const sd of [-1, 1]) { const pg = mesh(boxGeo(0.13, 0.015, 0.18, 0.006, 2), MAT.linen, { cast: false }); pg.position.x = sd * 0.065; pg.rotation.z = sd * 0.18; acc.book.add(pg); }
-    acc.bookCover = mesh(boxGeo(0.28, 0.012, 0.19, 0.006, 2), MAT.terracotta, { cast: false }); acc.bookCover.position.y = -0.012; acc.book.add(acc.bookCover);
-    acc.book.position.set(0, 0.42, 0.42); acc.book.rotation.x = -0.75; this.torso.add(acc.book);
-    acc.phone = mesh(boxGeo(0.075, 0.13, 0.014, 0.012, 2), MAT.darkMetal, { cast: false }); acc.phone.position.set(0.08, 0.5, 0.38); acc.phone.rotation.x = -0.6; this.torso.add(acc.phone);
-    for (const k in acc) if (acc[k].isObject3D && k !== 'sunBand' && k !== 'bookCover') acc[k].visible = false;
+    for (const sd of [-1, 1]) { const pg = mesh(boxGeo(0.16, 0.02, 0.23, 0.008, 2), MAT.linen, { cast: false }); pg.position.set(sd * 0.078, 0.008, 0); pg.rotation.z = sd * 0.2; acc.book.add(pg); }
+    acc.bookCover = mesh(boxGeo(0.34, 0.016, 0.245, 0.008, 2), MAT.terracotta, { cast: false }); acc.bookCover.position.y = -0.01; acc.book.add(acc.bookCover);
+    this.torso.add(acc.book);
+    acc.phone = mesh(boxGeo(0.09, 0.155, 0.016, 0.014, 2), MAT.darkMetal, { cast: false }); acc.phone.position.set(0.03, 0.66, 0.36); acc.phone.rotation.x = 0.62; this.torso.add(acc.phone); // screen tilted up toward the face
+    { const scr = mesh(CH_GEO.screen, MAT.screen, { cast: false }); scr.position.z = -0.0075; scr.rotation.y = Math.PI; acc.phone.add(scr); }
+    acc.umbrella = buildFurledUmbrella(MAT.linen); acc.umbrella.position.set(0.0, -0.36, 0.03); acc.umbrella.rotation.y = Math.PI / 2; this.arms[0].add(acc.umbrella);
+    acc.umbrellaCanopy = acc.umbrella.children[2];
+    for (const k in acc) if (acc[k].isObject3D && k !== 'sunBand' && k !== 'bookCover' && k !== 'umbrellaCanopy') acc[k].visible = false;
     // animation state
     this.phase = rand(TAU); this.walk = 0; this.sit = 0; this.seatY = 0.5;
     this.bounce = 0; this.bounceV = 0; this.seed = rand(100); this.sip = 0; this.mood = 'neutral';
     this.moving = false; this.speed = 1.8; this.stomp = 1; this.carry = false;
     this.headWorldY = 1.6;
+    // what a guest is doing with their hands while they wait: see POSES
+    this.activity = null; this.talking = false; this.lookYaw = 0; this.mouthY = 0.8;
+    this.pose = { a0x: 0, a1x: 0, a0z: 0, a1z: 0, hx: 0, hy: 0, tap: 0, photo: 0 };
+    this.prop = null; this.propS = 0;
   }
-  dress({ skin, outfit, pants, hairColor, style, glasses = false, scale = 1, apron = null, hat = null, backpack = null, tie = null, camera = false, scarf = null, headwear = null, cap = null }) {
+  dress({ skin, outfit, pants, hairColor, style, glasses = false, scale = 1, apron = null, hat = null, backpack = null, tie = null, camera = false, scarf = null, headwear = null, cap = null, notebook = false }) {
     if (headwear && (style === 'beanie' || style === 'cap' || style === 'curly' || style === 'bun')) style = 'short';
     const s = skinMat(skin), o = fabricMat(outfit), p = fabricMat(pants), h = hairMat(hairColor);
     this.body.material = o; this.headMesh.material = s;
@@ -2463,7 +2501,11 @@ class Character {
     A.sunHat.visible = headwear === 'sun'; A.beret.visible = headwear === 'beret';
     if (headwear === 'sun') { const st = fabricMat(0xe9d3a3); A.sunHat.children.forEach((m) => { m.material = st; }); A.sunBand.material = fabricMat(pick([0xc9765a, 0x8e9fb4, 0x7f9474])); }
     if (headwear === 'beret') { const bm = fabricMat(0x5a2f33); A.beret.children.forEach((m) => { m.material = bm; }); }
-    A.book.visible = false; A.phone.visible = false;
+    A.book.visible = false; A.phone.visible = false; A.umbrella.visible = false; A.camera.position.set(0.02, 0.5, 0.29); A.camera.rotation.set(0, 0, 0);
+    A.phone.material = fabricMat(pick([0x2f2b28, 0xc9765a, 0x8e9fb4, 0x9fb193, 0xe8b3a1, 0xd7a64f]));
+    A.bookCover.material = fabricMat(notebook ? 0x2f2b28 : pick([0xc9765a, 0x8e9fb4, 0x7f9474, 0xd7a64f, 0x8a3e3e, 0xe8b3a1]));
+    this.activity = null; this.talking = false; this.prop = null; this.propS = 0;
+    for (const k in this.pose) this.pose[k] = 0;
     this.glasses.visible = glasses;
     this.apron.visible = !!apron; if (apron) this.apron.material = fabricMat(apron);
     this.root.scale.setScalar(scale);
@@ -2487,7 +2529,7 @@ class Character {
       if (chance(0.72)) o.headwear = 'sun';
       o.camera = chance(0.8); o.outfit = pick([0xe2cdb0, 0xe8b3a1, 0xd7a64f, 0xf1e6d6, 0x8e9fb4, 0x9fb193]);
     } else if (type === 'critic') {
-      o.headwear = 'beret'; o.glasses = true; o.scarf = 0x8a3e3e; o.outfit = 0x3b3733; o.pants = 0x2f2b28; o.style = pick(['short', 'bob']); o.scale = rand(0.95, 1.04);
+      o.headwear = 'beret'; o.glasses = true; o.notebook = true; o.scarf = 0x8a3e3e; o.outfit = 0x3b3733; o.pants = 0x2f2b28; o.style = pick(['short', 'bob']); o.scale = rand(0.95, 1.04);
     } else {
       if (chance(0.2)) o.scarf = pick([0xc9765a, 0xd7a64f, 0x9fb193, 0xe8b3a1, 0x8e9fb4]);
       if (chance(0.12)) o.style = 'cap';
@@ -2501,7 +2543,8 @@ class Character {
     for (const e of this.happyEyes) e.visible = happy;
     this.mouth.rotation.z = m === 'angry' || m === 'sad' ? 0 : Math.PI;
     this.mouth.position.y = m === 'angry' || m === 'sad' ? -0.085 : -0.06;
-    this.mouth.scale.set(happy ? 1.25 : 1, happy ? 1.1 : 0.8, 1);
+    this.mouthY = happy ? 1.1 : 0.8;
+    this.mouth.scale.set(happy ? 1.25 : 1, this.mouthY, 1);
     for (const c of this.cheeks) c.scale.setScalar(m === 'angry' ? 1.45 : happy ? 1.15 : 1);
   }
   kick(amount = 1) { this.bounceV += 2.4 * amount; }
@@ -2528,13 +2571,46 @@ class Character {
     this.sip = Math.max(0, this.sip - dt * 0.6);
     const sipLift = Math.sin(clamp(this.sip, 0, 1) * Math.PI);
     const armBase = lerp(0, -0.75, sit);
-    this.arms[0].rotation.x = -s * 0.55 * w + armBase + (this.carry ? -0.9 : 0);
-    this.arms[1].rotation.x = s * 0.55 * w + armBase - sipLift * 1.1 + (this.carry ? -1.1 : 0);
-    this.arms[0].rotation.z = -0.14 - (this.mood === 'angry' ? 0.2 : 0);
-    this.arms[1].rotation.z = 0.14 + (this.mood === 'angry' ? 0.2 : 0);
-    this.head.rotation.y = Math.sin(t * 0.7 + this.seed) * 0.12 * (1 - w);
+    // activity pose: absolute targets, blended in as offsets so sitting and standing both work
+    const P = this.pose, act = w < 0.3 ? this.activity : null, tgt = act && POSES[act];
+    const k = 1 - Math.exp(-7 * dt);
+    let a0x = 0, a1x = 0, a0z = 0, a1z = 0, hx = 0, hy = 0;
+    if (tgt) {
+      if (tgt.a0x !== undefined) { a0x = tgt.a0x - armBase; a1x = tgt.a1x - armBase; a0z = tgt.a0z; a1z = tgt.a1z; }
+      hx = tgt.hx || 0;
+      if (act === 'phone') a1x += Math.max(0, Math.sin(t * 1.3 + this.seed)) ** 8 * -0.12; // thumb flick
+      if (act === 'book') hy = Math.sin(t * 0.9 + this.seed) * 0.1;
+      if (act === 'notes') { a1x += Math.sin(t * 9 + this.seed) * 0.05; a1z += Math.sin(t * 4.5) * 0.06; }
+    }
+    if (act === 'chat' || act === 'impatient') hy = this.lookYaw;
+    if (act === 'chat' && this.talking) { a0x = lerp(-0.45, -1.05, 0.5 + 0.5 * Math.sin(t * 2.1 + this.seed)) - armBase; a0z = 0.2; hx = Math.sin(t * 5.3 + this.seed) * 0.05; }
+    else if (act === 'chat') hx = Math.max(0, Math.sin(t * 1.7 + this.seed)) ** 6 * 0.16; // listening nods
+    P.a0x += (a0x - P.a0x) * k; P.a1x += (a1x - P.a1x) * k; P.a0z += (a0z - P.a0z) * k; P.a1z += (a1z - P.a1z) * k;
+    P.hx += (hx - P.hx) * k; P.hy += (hy - P.hy) * k;
+    P.tap += ((act === 'impatient' ? 1 : 0) - P.tap) * k;
+    P.photo += ((act === 'photo' ? 1 : 0) - P.photo) * k;
+    if (P.tap > 0.01) this.legs[1].rotation.x += Math.max(0, Math.sin(t * 11 + this.seed)) * 0.16 * P.tap;
+    this.arms[0].rotation.x = -s * 0.55 * w + armBase + (this.carry ? -0.9 : 0) + P.a0x;
+    this.arms[1].rotation.x = s * 0.55 * w + armBase - sipLift * 1.1 + (this.carry ? -1.1 : 0) + P.a1x;
+    this.arms[0].rotation.z = -0.14 - (this.mood === 'angry' ? 0.2 : 0) + P.a0z;
+    this.arms[1].rotation.z = 0.14 + (this.mood === 'angry' ? 0.2 : 0) + P.a1z;
+    this.head.rotation.y = Math.sin(t * 0.7 + this.seed) * 0.12 * (1 - w) * (1 - Math.min(1, Math.abs(P.hy) * 3)) + P.hy;
     this.head.rotation.z = (this.mood === 'happy' ? Math.sin(t * 3 + this.seed) * 0.08 : 0);
-    this.head.rotation.x = -sipLift * 0.25;
+    this.head.rotation.x = -sipLift * 0.25 + P.hx;
+    this.mouth.scale.y = this.talking && act === 'chat' ? this.mouthY * (0.55 + 0.9 * Math.abs(Math.sin(t * 10 + this.seed))) : this.mouthY;
+    // props pop in and out with a little scale, never mid-air at full size
+    const want = act ? PROP_OF[act] || null : null;
+    if (this.prop !== want) {
+      this.propS = damp(this.propS, 0, 16, dt);
+      if (this.propS < 0.06 || !this.prop) { if (this.prop) this.acc[this.prop].visible = false; this.prop = want; this.propS = 0; if (want) this.acc[want].visible = true; }
+    } else if (want) this.propS = damp(this.propS, 1, 9, dt);
+    if (this.prop) this.acc[this.prop].scale.setScalar(Math.max(0.001, this.propS));
+    if (this.prop === 'book') { const h = BOOK_HOLD[act] || BOOK_HOLD.book, b = this.acc.book; b.position.set(h[0], h[1], h[2]); b.rotation.set(h[3], 0, h[4]); }
+    if (P.photo > 0.01 || this.acc.camera.position.y !== 0.5) {
+      const c = this.acc.camera, f = smooth(clamp(P.photo, 0, 1));
+      c.position.set(0.02 * (1 - f), lerp(0.5, 1.02, f), lerp(0.29, 0.36, f));
+      if (P.photo < 0.01) c.position.y = 0.5;
+    }
     this.headWorldY = this.root.position.y + (hipY + 1.04 * squash + 0.26) * this.scale;
   }
 }
@@ -2553,9 +2629,9 @@ const priceRange = (k) => [Math.ceil(UNIT_COST[k] / PRICE_STEP) * PRICE_STEP, Ma
 const DAY_START = 7, OPEN_FROM = 7.2, OPEN_UNTIL = 20, DAY_END = 20.5, HOURS_PER_SEC = 14 / 170;
 const G = {
   phase: 'title', day: 1, time: DAY_START, money: 0, rep: 2.0, paused: false,
-  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0 },
+  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0, cat: 0 },
   prices: { latte: 3.5, matcha: 5, pastry: 3 }, staff: [], history: [], // opening prices sit a little under fair
-  streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0 },
+  streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0, pets: 0 }, cat: { name: '', coat: '' },
   spawnTimer: 1.2, lightHour: 8.4, closing: false, stats: null, bought: 0,
 };
 const perItem = () => ({ latte: 0, matcha: 0, pastry: 0 });
@@ -2588,7 +2664,7 @@ function menuIndex() { // weighted price ratio across the menu, roughly by how o
 // footfall multiplier: cheap menus pull people in (capped), pricey ones scare them off fast
 const footfall = () => { const r = menuIndex(); return r <= 1 ? 1 + Math.min(0.3, (1 - r) * 0.75) : Math.exp(-1.25 * (r - 1)); };
 const rentToday = () => 10 + 4 * tableCount();
-const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
+const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 + 0.06 * G.up.cat) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
 function nextSpawnInterval() {
   // word of mouth lags: footfall follows the reputation you opened the day with
   const r = clamp(((G.stats ? G.stats.repStart : G.rep) - 0.5) / 4.5, 0, 1);
@@ -2946,6 +3022,10 @@ function makeOrder(type) {
   return items;
 }
 
+// how likely each kind of guest is to pull out a phone or a book while they wait
+const ACT_PHONE = { regular: 0.38, student: 0.5, commuter: 0.62, tourist: 0.28, critic: 0 };
+const ACT_BOOK = { regular: 0.24, student: 0.3, commuter: 0.08, tourist: 0.1, critic: 0 };
+
 // placeholders until the reviews & goals systems below are defined
 let leaveReview = () => {};
 let goals = { onServed() {}, onStorm() {}, update() {} };
@@ -2990,7 +3070,7 @@ class Walker {
 }
 
 class Party {
-  constructor(type, size) { this.type = type; this.size = size; this.members = []; this.table = null; this.queueIdx = -1; this.arrived = 0; this.qPatience = 24; this.state = 'enter'; this.done = false; }
+  constructor(type, size) { this.type = type; this.size = size; this.members = []; this.table = null; this.queueIdx = -1; this.arrived = 0; this.qPatience = 24; this.state = 'enter'; this.done = false; this.talker = 0; this.talkT = 2; }
   get leader() { return this.members[0]; }
   get label() { const T = GUEST_TYPES[this.type]; return this.size > 1 ? `2 ${T.plural}` : T.name; }
 }
@@ -3014,6 +3094,9 @@ class Customer extends Walker {
     this.setPath([DOOR_IN.clone().add(V3(idx * 0.4, 0, -idx * 0.25))]);
     this.state = 'enter';
     this.order = makeOrder(this.type); this.table = null; this.seat = 0; this.timer = 0; this.waited = 0; this.paid = false;
+    this.actT = rand(1, 3); this.snapped = false; this.flashed = true; this.catVisited = false;
+    this.brolly = today.weather === 'rainy' && Math.random() < 0.7;
+    if (this.brolly) { const A = this.ch.acc, m = fabricMat(pick(BROLLY_COLORS)); A.umbrella.visible = true; A.umbrellaCanopy.material = m; A.umbrella.children[3].material = m; }
     this.patienceMax = basePatience() * GUEST_TYPES[this.type].patience * today.patience; this.patience = this.patienceMax;
     this.bubble.shown = false; this.bubble.el.classList.add('hidden'); this.bubble.lastFrac = -1;
     this.bubble.el.classList.toggle('critic', this.type === 'critic');
@@ -3040,7 +3123,7 @@ class Customer extends Walker {
       case 'toQueue': if (this.follow(dt)) this.state = 'queue'; break;
       case 'queue': this.faceTo(0.5, dt, 4); break;
       case 'toSeat':
-        if (this.follow(dt)) { this.state = 'sitting'; this.timer = 0; this.ch.seatY = this.table.seatY; }
+        if (this.follow(dt)) { this.state = 'sitting'; this.timer = 0; this.ch.seatY = this.table.seatY; this.ch.acc.umbrella.visible = false; }
         break;
       case 'sitting':
         this.timer += dt;
@@ -3055,10 +3138,10 @@ class Customer extends Walker {
         break;
       case 'eat':
         this.timer -= dt;
-        if (Math.random() < dt * 0.5 && this.ch.sip <= 0) this.ch.sip = 1;
+        if (Math.random() < dt * 0.5 && this.ch.sip <= 0 && !this.handsBusy) this.ch.sip = 1;
         if (this.timer <= 0) { this.state = 'done'; partyMaybeLeave(P); }
         break;
-      case 'done': if (Math.random() < dt * 0.3 && this.ch.sip <= 0) this.ch.sip = 1; break;
+      case 'done': if (Math.random() < dt * 0.3 && this.ch.sip <= 0 && !this.handsBusy) this.ch.sip = 1; break;
       case 'standing':
         this.timer += dt;
         this.ch.sit = 1 - smooth(clamp(this.timer / 0.35, 0, 1));
@@ -3068,6 +3151,64 @@ class Customer extends Walker {
         if (this.follow(dt)) this.despawn();
         break;
     }
+    if (this.party) this.tickActivity(dt);
+  }
+  get handsBusy() { return !!POSES[this.ch.activity]?.a0x; }
+  mate() { return this.party.members.find((m) => m !== this && m.state === this.state || (m !== this && m.seated && this.seated)) || null; }
+  // little lives while they wait: phones, books, chatter, and glaring at the counter when it drags
+  tickActivity(dt) {
+    const ch = this.ch, st = this.state;
+    const calm = st === 'wait' || st === 'eat' || st === 'done' || st === 'settled' || st === 'queue' || st === 'arrived';
+    if (!calm) { ch.activity = null; ch.talking = false; return; }
+    const frac = st === 'wait' ? this.patience / this.patienceMax : 1;
+    if (frac < 0.34 && ch.activity !== 'impatient') this.actT = 0;
+    this.actT -= dt;
+    if (this.actT <= 0) this.pickActivity(frac);
+    const mate = this.mate();
+    if (ch.activity === 'chat') {
+      if (mate) {
+        if (this.idx === 0) { const P = this.party; P.talkT -= dt; if (P.talkT <= 0) { P.talker = mate.ch.activity === 'chat' ? 1 - P.talker : 0; P.talkT = rand(1.4, 3.8); } }
+        ch.talking = this.party.talker === this.idx && mate.ch.activity === 'chat';
+        const dx = mate.pos.x - this.pos.x, dz = mate.pos.z - this.pos.z;
+        let a = Math.atan2(dx, dz) - this.yaw; a = Math.atan2(Math.sin(a), Math.cos(a));
+        ch.lookYaw = clamp(a, -1.1, 1.1);
+        if (ch.talking && Math.random() < dt * 0.04) { ch.kick(0.5); if (mate.seated) mate.ch.kick(0.4); }
+      } else { ch.activity = null; ch.talking = false; }
+    } else ch.talking = false;
+    if (ch.activity === 'impatient') {
+      const dx = 0.6 - this.pos.x, dz = -3.4 - this.pos.z; // the counter
+      let a = Math.atan2(dx, dz) - this.yaw; a = Math.atan2(Math.sin(a), Math.cos(a));
+      ch.lookYaw = clamp(a, -1.15, 1.15);
+    }
+    if (ch.activity === 'photo' && !this.flashed && this.actT < 1.2) {
+      this.flashed = true;
+      const p = ch.acc.camera.getWorldPosition(V3());
+      burstSparkles(p.add(V3(0, 0.05, 0.1)), 10, [1, 1, 1], 0.22);
+      sfx.shutter();
+      if (this.sat >= 0.7) { // a happy tourist posts it: a sliver of reputation, more with nicer decor
+        addRep(0.012 * (1 + 0.5 * G.up.decor));
+        ui.float('Posted ♥', V3(this.pos.x, this.headY() + 0.35, this.pos.z), 'social');
+        G.stats.posts = (G.stats.posts || 0) + 1;
+      }
+    }
+  }
+  pickActivity(frac) {
+    const ch = this.ch, st = this.state, T = this.type, r = Math.random();
+    const mate = this.mate();
+    let a = null;
+    if (frac < 0.34) a = 'impatient';
+    else if (T === 'critic' && (st === 'wait' || st === 'eat')) a = 'notes';
+    else if (T === 'tourist' && st === 'eat' && !this.snapped && ch.acc.camera.visible && this.timer > 2.4) { a = 'photo'; this.snapped = true; this.flashed = false; }
+    else if (mate && r < (st === 'eat' ? 0.7 : 0.55)) a = 'chat';
+    else {
+      const ph = ACT_PHONE[T] || 0, bk = st === 'queue' || st === 'arrived' ? 0 : ACT_BOOK[T] || 0, q = Math.random();
+      if (st === 'eat') a = q < ph * 0.3 ? 'phone' : null;
+      else a = q < ph ? 'phone' : q < ph + bk ? 'book' : null;
+    }
+    if (a === 'phone' && this.brolly && !this.seated) a = null; // one hand is full of wet umbrella
+    if (a === 'chat' && mate && mate.ch.activity !== 'chat' && mate.ch.activity !== 'impatient' && mate.ch.activity !== 'photo' && mate.type !== 'critic') { mate.ch.activity = 'chat'; mate.actT = rand(4, 8); }
+    ch.activity = a;
+    this.actT = a === 'photo' ? 2.6 : a === 'impatient' ? 3 : rand(4, 9);
   }
   showBubble() {
     this.bubble.shown = true;
@@ -3119,6 +3260,7 @@ class Customer extends Walker {
     ui.float(`+$${total.toFixed(2)}`, head, '');
     sfx.coins(false);
     this.state = 'eat'; this.timer = rand(5.2, 7.2) * today.eat;
+    this.actT = Math.min(this.actT, rand(0.5, 1.5)); // put the book down, the food's here
     this.sat = sat; this.speedScore = speed; this.valueScoreAvg = value;
     this.ch.setMood(sat >= 0.48 ? 'happy' : 'neutral'); this.ch.kick(sat >= 0.48 ? 1.3 : 0.5);
     this.hideBubble();
@@ -3128,6 +3270,7 @@ class Customer extends Walker {
     tutorial.onServed();
   }
   angry() {
+    this.ch.activity = null; this.ch.talking = false;
     this.ch.setMood('angry');
     this.hideBubble();
     showEmote(V3(this.pos.x, this.headY(), this.pos.z), 'angry', 1.8);
@@ -3135,7 +3278,8 @@ class Customer extends Walker {
     this.speed = 2.7; this.ch.stomp = 1.25;
   }
   standUp() {
-    this.state = 'standing'; this.timer = 0;
+    this.state = 'standing'; this.timer = 0; this.ch.activity = null; this.ch.talking = false;
+    if (this.brolly) this.ch.acc.umbrella.visible = true;
     const t = this.table;
     const back = t.pathToSeat(this.seat).reverse(); back.shift();
     this.setPath([...back, DOOR_IN.clone(), DOOR_OUT.clone()]);
@@ -3335,6 +3479,7 @@ function rollDay() {
     today.event = ev; EVENTS[ev].apply();
   }
   rain.setActive(W.rain > 0);
+  umbrellaStand.visible = W.rain > 0;
   ui.dayChipsDirty = true;
 }
 
@@ -3351,6 +3496,7 @@ const REVIEW_LINES = {
   student: ['Perfect study spot, wifi and a {item}.', 'Cheap enough for my student budget.'],
   tourist: ['A must-visit when in town!', 'Found this gem on our trip.'],
   commuter: ['In and out in minutes. Love it.', 'My morning {item} stop now.'],
+  cat: ['{cat} the cat sat with me. 10/10.', 'Came for the {item}, stayed for {cat}.', 'The café cat approved of my {item}. So did I.'],
 };
 const CRITIC_PAPERS = ['The Daily Grind', 'Brew Weekly', 'The Saucer', 'Crema Times'];
 function leaveReviewImpl(g, sat, speed, value, reason) {
@@ -3363,10 +3509,11 @@ function leaveReviewImpl(g, sat, speed, value, reason) {
   else if (reason === 'storm') pool = REVIEW_LINES.storm;
   else if (speed < 0.45 && speed <= value) pool = REVIEW_LINES.slow;
   else if (value < 0.45) pool = REVIEW_LINES.pricey;
+  else if (g.catVisited && sat >= 0.6 && Math.random() < 0.6) pool = REVIEW_LINES.cat;
   else if (sat >= 0.78 && Math.random() < 0.35 && REVIEW_LINES[g.type]) pool = REVIEW_LINES[g.type];
   else if (value > 0.92 && Math.random() < 0.5) pool = REVIEW_LINES.cheap;
   else pool = sat >= 0.75 ? REVIEW_LINES.great : REVIEW_LINES.good;
-  const text = pick(pool).replace('{item}', ITEM_NAMES[item].toLowerCase()).replace('{price}', price);
+  const text = pick(pool).replace('{item}', ITEM_NAMES[item].toLowerCase()).replace('{price}', price).replace('{cat}', G.cat.name || 'The cat');
   const r = { stars, text, type: g.type, day: G.day, name: critic ? pick(CRITIC_PAPERS) : `${pick(REVIEW_NAMES)} ${String.fromCharCode(65 + ((Math.random() * 26) | 0))}.`, critic };
   G.reviews.unshift(r); if (G.reviews.length > 40) G.reviews.pop();
   const S = G.stats; S.reviewSum = (S.reviewSum || 0) + stars; S.reviewN = (S.reviewN || 0) + 1;
@@ -3433,6 +3580,7 @@ const MILESTONES = [
   { id: 'profit200', name: 'In the black', desc: 'Make $200 profit in one day', reward: 60 },
   { id: 'profit500', name: 'Money machine', desc: 'Make $500 profit in one day', reward: 150 },
   { id: 'critic5', name: 'Rave review', desc: 'Get 5★ from a food critic', reward: 100 },
+  { id: 'catperson', name: 'Cat person', desc: 'Give the café cat 15 scratches', reward: 25 },
   { id: 'allgoals', name: 'Overachiever', desc: 'Finish all daily goals in a day', reward: 50 },
   { id: 'menu', name: 'Full menu', desc: 'Offer lattes, matcha and pastries', reward: 30 },
   { id: 'maxed', name: 'Gold standard', desc: 'Max out a multi-level upgrade', reward: 60 },
@@ -3464,6 +3612,19 @@ const milestones = {
     if (UPGRADES.some((u) => u.costs.length > 1 && G.up[u.id] >= u.costs.length)) this.unlock('maxed');
   },
 };
+
+// ---- umbrella stand by the door: only comes out when it rains ----
+const umbrellaStand = (() => {
+  const g = new THREE.Group();
+  const pot = mesh(geo('brollyPot', () => lathe([[0, 0], [0.13, 0], [0.145, 0.02], [0.14, 0.46], [0.152, 0.5], [0.12, 0.5], [0.12, 0.06], [0, 0.06]], 32)), MAT.terracotta); g.add(pot);
+  const ring = mesh(torGeo(0.142, 0.012, 8, 32), MAT.brass, { cast: false }); ring.rotation.x = Math.PI / 2; ring.position.y = 0.36; g.add(ring);
+  [[0xc9765a, 0.05, 0.03, -0.12], [0x8e9fb4, -0.05, -0.02, 0.16], [0xd7a64f, 0.0, 0.05, 0.02]].forEach(([c, x, z, tilt], i) => {
+    const u = buildFurledUmbrella(fabricMat(c)); u.position.set(x, 0.92 + i * 0.05, z); u.rotation.set(tilt * 0.6, i * 2.1, tilt); g.add(u);
+  });
+  g.position.set(ROOM.door.x - 1.05, 0, ROOM.z0 + 0.32); g.visible = false;
+  world.add(g);
+  return g;
+})();
 
 // ---- rain: streaks falling outside the walls (the room itself has a roof, honest) ----
 const rain = (() => {
@@ -3502,6 +3663,204 @@ const rain = (() => {
       im.instanceMatrix.needsUpdate = true;
     },
   };
+})();
+
+// ---- the café cat: naps on the bench, wanders, sits with guests, loves a scratch ----
+const CAT_COATS = {
+  ginger: { label: 'Ginger', fur: 0xd8925c, belly: 0xf4e2c8, ear: 0xe7a98a },
+  tabby: { label: 'Grey tabby', fur: 0x8e8a86, belly: 0xebe6df, ear: 0xd9a8a0 },
+  tuxedo: { label: 'Tuxedo', fur: 0x3a3532, belly: 0xf3eee6, ear: 0xc99a94 },
+  cream: { label: 'Cream', fur: 0xe2bf8e, belly: 0xfaf1e2, ear: 0xeab3a6 },
+};
+const CAT_NAMES = ['Biscuit', 'Mochi', 'Pip', 'Nutmeg', 'Miso', 'Crumpet', 'Olive', 'Toast'];
+const BENCH_X = ROOM.x0 + 0.55, BENCH_Y = 0.53, BENCH_FLOOR_X = ROOM.x0 + 1.35;
+const CAT_SPOTS = [ // x, y, z, kind
+  [BENCH_X, BENCH_Y, -1.55, 'nap'], [BENCH_X, BENCH_Y, 0.45, 'nap'],
+  [-4.75, 0, -0.75, 'sit'], [-5.3, 0, 4.25, 'sit'], [-4.6, 0, 1.4, 'sit'], [-5.4, 0, -1.85, 'sit'],
+];
+const cat = (() => {
+  const root = new THREE.Group(); root.visible = false; world.add(root);
+  const model = new THREE.Group(); root.add(model); root.scale.setScalar(1.25); // a touch bigger than life so it reads from the default zoom
+  // own materials (fabricMat is shared by colour) with the same shader recipe, so the coat can be recoloured
+  const furMat = (hexc) => phys({ color: hexc, roughness: 0.82, sheen: 0.8, sheenColor: new THREE.Color(hexc).lerp(new THREE.Color(0xffffff), 0.55), sheenRoughness: 0.45, bumpMap: TEX.weave, bumpScale: 0.12 });
+  const fur = furMat(0xd8925c), belly = furMat(0xf4e2c8), ear = furMat(0xe7a98a);
+  const noseMat = fabricMat(0xd98a86);
+  // body pivots at the hips so sitting just pitches it up
+  const body = new THREE.Group(); body.position.set(0, 0.17, -0.13); model.add(body);
+  const torso = mesh(geo('catBody', () => new THREE.CapsuleGeometry(0.115, 0.24, 8, 18).rotateX(Math.PI / 2)), fur); torso.position.set(0, 0.02, 0.15); torso.scale.set(1, 0.95, 1); body.add(torso);
+  const chest = mesh(sphereGeo(0.095, 20, 14), belly, { cast: false }); chest.position.set(0, -0.01, 0.31); chest.scale.set(0.95, 1, 0.7); body.add(chest);
+  const head = new THREE.Group(); head.position.set(0, 0.13, 0.34); body.add(head);
+  const skull = mesh(sphereGeo(0.125, 28, 20), fur); skull.scale.set(1.08, 0.95, 0.98); head.add(skull);
+  const muzzle = mesh(sphereGeo(0.058, 18, 12), belly, { cast: false }); muzzle.position.set(0, -0.04, 0.095); muzzle.scale.set(1.3, 0.8, 0.8); head.add(muzzle);
+  const nose = mesh(sphereGeo(0.016, 10, 8), noseMat, { cast: false }); nose.position.set(0, -0.012, 0.14); head.add(nose);
+  const ears = [-1, 1].map((s) => {
+    const e = new THREE.Group(); e.position.set(0.068 * s, 0.09, 0.0); e.rotation.set(-0.15, 0, -0.32 * s); head.add(e);
+    const outer = mesh(geo('catEar', () => new THREE.ConeGeometry(0.048, 0.1, 12)), fur); outer.position.y = 0.04; e.add(outer);
+    const inner = mesh(geo('catEarIn', () => new THREE.ConeGeometry(0.03, 0.065, 10)), ear, { cast: false }); inner.position.set(0, 0.032, 0.016); e.add(inner);
+    return e;
+  });
+  const eyes = [-1, 1].map((s) => { const e = mesh(CH_GEO.eye, MAT.eye, { cast: false }); e.scale.setScalar(0.62); e.position.set(0.05 * s, 0.018, 0.112); head.add(e); return e; });
+  const shut = [-1, 1].map((s) => { const e = mesh(CH_GEO.happyEye, MAT.eye, { cast: false }); e.scale.setScalar(0.62); e.rotation.z = Math.PI; e.position.set(0.05 * s, 0.022, 0.116); e.visible = false; head.add(e); return e; });
+  const legGeo = geo('catLeg', () => new THREE.CapsuleGeometry(0.034, 0.08, 6, 10).translate(0, -0.06, 0));
+  const front = [-1, 1].map((s) => { const l = mesh(legGeo, fur); l.position.set(0.058 * s, -0.03, 0.27); body.add(l); return l; });
+  const back = [-1, 1].map((s) => { const l = mesh(legGeo, fur); l.position.set(0.065 * s, 0.14, -0.13); model.add(l); return l; });
+  const paws = [...front, ...back].map((l) => { const p = mesh(sphereGeo(0.038, 12, 8), belly, { cast: false }); p.position.y = -0.115; p.scale.set(1, 0.7, 1.2); l.add(p); return p; });
+  const tail = new THREE.Group(); tail.position.set(0, 0.05, -0.07); body.add(tail);
+  { const curve = new THREE.CatmullRomCurve3([V3(0, 0, 0), V3(0, 0.06, -0.12), V3(0, 0.2, -0.2), V3(0, 0.34, -0.17)]);
+    const tm = mesh(geo('catTail', () => new THREE.TubeGeometry(curve, 20, 0.03, 8, false)), fur); tail.add(tm);
+    const tip = mesh(sphereGeo(0.032, 10, 8), fur); tip.position.set(0, 0.34, -0.17); tail.add(tip); }
+  model.traverse((m) => { if (m.isMesh) m.userData.keep = true; });
+  // click target follows the cat around
+  const proxy = new THREE.Mesh(sphereGeo(0.4, 10, 8), proxyMat); proxy.position.set(0, 0.32, 0.05); proxy.visible = false; root.add(proxy);
+
+  const pos = V3(), prev = V3();
+  const self = {
+    title: 'Café cat', model, root, proxy, unlocked: false, pos,
+    state: 'sit', timer: 2, yaw: 0, prevYaw: 0, y: 0, prevY: 0, path: [], seg: null, guest: null,
+    petCD: 0, visitCD: 10, sit: 1, nap: 0, walk: 0, phase: 0, bounce: 0, bounceV: 0, zT: 0, lastSpot: -1,
+    get name() { return G.cat.name; },
+    setCoat(key) {
+      const c = CAT_COATS[key] || CAT_COATS.ginger;
+      for (const [m, h] of [[fur, c.fur], [belly, c.belly], [ear, c.ear]]) { m.color.setHex(h); m.sheenColor.setHex(h).lerp(new THREE.Color(0xffffff), 0.55); }
+    },
+    adopt(animate) {
+      if (!CAT_COATS[G.cat.coat]) G.cat.coat = pick(Object.keys(CAT_COATS));
+      if (!G.cat.name) G.cat.name = pick(CAT_NAMES);
+      this.unlocked = true; root.visible = true; this.setCoat(G.cat.coat);
+      const s = CAT_SPOTS[0]; pos.set(s[0], s[1], s[2]); prev.copy(pos); this.y = this.prevY = s[1];
+      this.yaw = this.prevYaw = Math.PI / 2; this.state = 'nap'; this.timer = animate ? 3 : 8; this.nap = 1; this.sit = 0;
+      if (animate) { popIn(model, 0.1, 0.8); burstSparkles(V3(pos.x, 1, pos.z), 30, [1, 0.8, 0.6], 0.6); }
+    },
+    // path of {x, y, z}; a change of y is a hop
+    goTo(x, y, z) {
+      const pts = [];
+      if (this.y > 0.2 && y < 0.2) pts.push({ x: BENCH_FLOOR_X, y: 0, z: clamp(pos.z, -2.6, 1.6) });
+      if (y > 0.2 && !(this.y > 0.2)) pts.push({ x: BENCH_FLOOR_X, y: 0, z });
+      else if (y > 0.2 && this.y > 0.2) { pts.push({ x: BENCH_FLOOR_X, y: 0, z: clamp(pos.z, -2.6, 1.6) }); pts.push({ x: BENCH_FLOOR_X, y: 0, z }); }
+      pts.push({ x, y, z });
+      this.path = pts; this.state = 'walk'; this.seg = null;
+    },
+    decide() {
+      const r = Math.random();
+      const open = G.phase === 'open' && !G.closing && G.time < OPEN_UNTIL - 0.3;
+      const company = open && this.visitCD <= 0 ? customers.filter((c) => c.table && (c.state === 'wait' || c.state === 'eat') && !c.catVisited) : [];
+      if (company.length && r < 0.5) {
+        const g = pick(company), sp = g.table.seats[g.seat], side = Math.random() < 0.5 ? 1 : -1;
+        // sit beside the chair, a little toward the table
+        const yaw = sp.yaw, ox = Math.cos(yaw) * 0.62 * side, oz = -Math.sin(yaw) * 0.62 * side;
+        this.guest = g; this.after = 'visit';
+        this.goTo(sp.pos.x + ox + Math.sin(yaw) * 0.2, 0, sp.pos.z + oz + Math.cos(yaw) * 0.2);
+        return;
+      }
+      let i;
+      if (!open || Math.random() < 0.5) i = Math.random() < 0.5 ? 0 : 1; // the bench is the best spot, obviously
+      else do { i = 2 + ((Math.random() * (CAT_SPOTS.length - 2)) | 0); } while (i === this.lastSpot);
+      if (i === this.lastSpot && i < 2) i = 1 - i;
+      this.lastSpot = i; this.guest = null;
+      const s = CAT_SPOTS[i]; this.after = s[3];
+      this.goTo(s[0] + rand(-0.12, 0.12), s[1], s[2] + rand(-0.15, 0.15));
+    },
+    arrive() {
+      if (this.after === 'visit' && this.guest && this.guest.table && this.guest.party) {
+        const g = this.guest;
+        this.state = 'visit'; this.timer = rand(7, 11);
+        g.catVisited = true; g.ch.kick(0.6);
+        if (g.state === 'wait') g.patience = Math.min(g.patienceMax, g.patience + g.patienceMax * 0.12);
+        showEmote(V3(g.pos.x, g.headY(), g.pos.z), 'heart', 1.3);
+        this.visitCD = rand(16, 28);
+        G.stats.catVisits = (G.stats.catVisits || 0) + 1;
+      } else if (this.after === 'nap') { this.state = 'nap'; this.timer = G.phase === 'open' ? rand(10, 20) : 60; this.yaw = Math.random() < 0.5 ? 0 : Math.PI; }
+      else { this.state = 'sit'; this.timer = rand(6, 12); }
+    },
+    pet() {
+      if (!this.unlocked) return;
+      audio.unlock(); sfx.purr();
+      this.bounceV += 3.2;
+      burstSparkles(V3(pos.x, this.y + 0.55, pos.z), 12, [1, 0.62, 0.6], 0.35);
+      showEmote(V3(pos.x, this.y + 0.62, pos.z), 'heart', 1.2);
+      G.stats.pets = (G.stats.pets || 0) + 1; G.lifetime.pets = (G.lifetime.pets || 0) + 1;
+      if (this.petCD <= 0) {
+        this.petCD = 20;
+        let n = 0;
+        for (const c of customers) if (c.state === 'wait') { c.patience = Math.min(c.patienceMax, c.patience + c.patienceMax * 0.08); n++; }
+        ui.float(n ? 'Purr… everyone relaxes' : 'Purrrr', V3(pos.x, this.y + 0.75, pos.z), 'social');
+      }
+      if (this.state === 'walk') { this.path = []; this.seg = null; }
+      if (this.state !== 'visit') { this.resume = this.state === 'nap' ? 'nap' : 'sit'; this.state = 'pet'; this.timer = 2.2; }
+      if (G.lifetime.pets >= 15) milestones.unlock('catperson');
+    },
+    fixed(dt) {
+      if (!this.unlocked) return;
+      prev.copy(pos); this.prevYaw = this.yaw; this.prevY = this.y;
+      this.petCD -= dt; this.visitCD -= dt;
+      switch (this.state) {
+        case 'sit': case 'nap': this.timer -= dt; if (this.timer <= 0) this.decide(); break;
+        case 'pet': this.timer -= dt; if (this.timer <= 0) { this.state = this.resume || 'sit'; this.timer = this.state === 'nap' ? rand(8, 16) : rand(3, 6); } break;
+        case 'visit': {
+          const g = this.guest;
+          this.timer -= dt;
+          if (g && g.party) this.face(Math.atan2(g.pos.x - pos.x, g.pos.z - pos.z), dt, 5);
+          if (this.timer <= 0 || !g || !g.party || !g.table) this.decide();
+          break;
+        }
+        case 'walk': this.step(dt); break;
+      }
+    },
+    face(target, dt, k) { let d = target - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); this.yaw += d * (1 - Math.exp(-k * dt)); },
+    step(dt) {
+      if (!this.seg) {
+        const t = this.path.shift();
+        if (!t) { this.arrive(); return; }
+        const d = Math.hypot(t.x - pos.x, t.z - pos.z);
+        this.seg = { t, x0: pos.x, z0: pos.z, y0: this.y, d, f: 0, hop: Math.abs(t.y - this.y) > 0.1 };
+      }
+      const S = this.seg, speed = S.hop ? 1.5 : 1.15;
+      S.f = S.d < 1e-3 ? 1 : Math.min(1, S.f + (speed * dt) / Math.max(S.d, S.hop ? 0.5 : 0.01));
+      pos.x = lerp(S.x0, S.t.x, S.f); pos.z = lerp(S.z0, S.t.z, S.f);
+      this.y = S.hop ? lerp(S.y0, S.t.y, S.f) + Math.sin(S.f * Math.PI) * 0.32 : S.t.y;
+      if (S.d > 0.02) this.face(Math.atan2(S.t.x - S.x0, S.t.z - S.z0), dt, 9);
+      if (S.f >= 1) { this.seg = null; if (S.hop) this.bounceV -= 1.6; }
+    },
+    render(alpha, dt, t) {
+      if (!this.unlocked) return;
+      root.position.lerpVectors(prev, pos, alpha); root.position.y = lerp(this.prevY, this.y, alpha);
+      let d = this.yaw - this.prevYaw; d = Math.atan2(Math.sin(d), Math.cos(d));
+      root.rotation.y = this.prevYaw + d * alpha;
+      const st = this.state, moving = st === 'walk';
+      const hop = moving && this.seg && this.seg.hop;
+      this.walk = damp(this.walk, moving && !hop ? 1 : 0, 10, dt);
+      this.sit = damp(this.sit, st === 'sit' || st === 'visit' || (st === 'pet' && this.resume !== 'nap') ? 1 : 0, 6, dt);
+      this.nap = damp(this.nap, st === 'nap' || (st === 'pet' && this.resume === 'nap') ? 1 : 0, 4, dt);
+      this.phase += dt * 11 * this.walk;
+      this.bounceV += (-this.bounce * 180 - this.bounceV * 11) * dt; this.bounce += this.bounceV * dt;
+      const w = this.walk, sit = this.sit, nap = this.nap, s = Math.sin(this.phase);
+      body.rotation.x = -0.62 * sit + (hop ? -0.25 : 0);
+      body.position.y = 0.17 - 0.07 * sit - 0.07 * nap + Math.abs(s) * 0.015 * w;
+      const breathe = 1 + Math.sin(t * (nap > 0.5 ? 1.6 : 2.6)) * (nap > 0.5 ? 0.035 : 0.015);
+      const sq = 1 + this.bounce * 0.5;
+      model.scale.set(1 / Math.sqrt(sq), sq * breathe, 1 / Math.sqrt(sq));
+      front[0].rotation.x = s * 0.7 * w + 0.62 * sit; front[1].rotation.x = -s * 0.7 * w + 0.62 * sit;
+      back[0].rotation.x = -s * 0.7 * w - 1.2 * sit; back[1].rotation.x = s * 0.7 * w - 1.2 * sit;
+      const tuck = 1 - 0.75 * nap;
+      for (const l of front) l.scale.y = tuck * (1 + 0.62 * sit); for (const l of back) l.scale.y = tuck * (1 - 0.35 * sit);
+      for (const l of back) l.position.y = 0.14 - 0.04 * sit - 0.05 * nap;
+      head.rotation.x = 0.35 * nap + 0.5 * sit + (st === 'visit' ? -0.3 : 0);
+      head.rotation.y = (st === 'sit' ? Math.sin(t * 0.5 + 1.3) * 0.5 : 0) + 0.7 * nap;
+      head.rotation.z = st === 'pet' ? Math.sin(t * 7) * 0.12 : st === 'visit' ? 0.18 : 0;
+      head.position.y = 0.13 - 0.06 * nap;
+      tail.rotation.x = lerp(lerp(lerp(0.1, 0.25, w), -0.55, sit), -1.35, nap);
+      tail.rotation.y = 1.1 * nap;
+      tail.rotation.z = Math.sin(t * (st === 'pet' ? 6 : 2) + 0.4) * (0.35 * (1 - nap) + 0.04);
+      const closed = nap > 0.5 || st === 'pet';
+      for (const e of eyes) e.visible = !closed; for (const e of shut) e.visible = closed;
+      // ear flick now and then
+      const flick = Math.max(0, Math.sin(t * 0.9 + 2)) ** 30;
+      ears[1].rotation.z = 0.32 + flick * 0.5;
+      if (st === 'nap' && G.phase === 'open') { this.zT -= dt; if (this.zT <= 0) { this.zT = 2.4; ui.float('z', V3(pos.x + 0.1, this.y + 0.55, pos.z), 'zzz'); } }
+    },
+  };
+  proxy.userData.owner = self; interactables.push(self);
+  return self;
 })();
 
 // ---- staff: every hired worker is a Worker; their role decides what they do ----
@@ -3792,6 +4151,8 @@ const UPGRADES = [
     desc: (l) => ['Plants everywhere: reputation grows faster.', 'String lights: guests linger happily.', 'Maximum hygge.'][l] },
   { id: 'sign', name: 'Sidewalk Sign', icon: 'sign', tint: '#e4e1db', costs: [120, 260],
     desc: (l) => ['Chalkboard sign: guests arrive more often.', 'Fresh specials daily: even more foot traffic.', 'The whole street knows you.'][l] },
+  { id: 'cat', name: 'Café Cat', icon: 'cat', tint: '#f3e0cc', costs: [150],
+    desc: (l) => (l ? `${G.cat.name || 'Your cat'} runs the place now. Click for a scratch.` : 'Adopt a resident cat: guests wait a little longer, and a scratch calms the room.') },
 ];
 const upgradeCost = (u) => u.costs[G.up[u.id]];
 const upgradeMaxed = (u) => G.up[u.id] >= u.costs.length;
@@ -3844,6 +4205,11 @@ function applyUpgrade(id, animate) {
       if (G.up.decor >= 1) { DECOR.plants.visible = true; if (animate && G.up.decor === 1) DECOR.plants.children.forEach((p, i) => popIn(p, i * 0.1)); }
       if (G.up.decor >= 2) { DECOR.lights.visible = true; if (animate && G.up.decor === 2) for (let i = 0; i < 10; i++) burstSparkles(V3(-6.9 + i * 1.5, 3.9, ROOM.z0 + 0.3), 6, [1, 0.85, 0.55], 0.4); }
       focus.set(-2, 2, -2);
+      break;
+    }
+    case 'cat': {
+      cat.adopt(animate); focus.set(cat.pos.x + 1, 0.6, cat.pos.z);
+      if (animate) ui.toast(`Meet ${G.cat.name}, your new café cat!`, 'cat', 3400);
       break;
     }
     case 'sign': {
@@ -3974,7 +4340,7 @@ function interact(obj) {
     else if (r === 'full') { sfx.nope(); ui.toast(`${obj.title} queue is full`, 'warn', 1500, 'qfull' + obj.kind); }
   } else if (obj instanceof Table) {
     clickTable(obj);
-  }
+  } else if (obj === cat) cat.pet();
 }
 
 canvas.addEventListener('pointerdown', (e) => {
@@ -4170,6 +4536,19 @@ const sfx = {
   angry() { if (!audio.ok()) return; audio.tone(240, 0.5, { gain: 0.07, type: 'sawtooth', glide: 130, filter: 800 }); audio.hiss(0.25, { gain: 0.05, freq: 300, type: 'lowpass' }); },
   nope() { if (!audio.ok()) return; audio.tone(330, 0.09, { gain: 0.05, type: 'square', filter: 1200 }); audio.tone(247, 0.14, { gain: 0.05, type: 'square', filter: 1200, when: 0.09 }); },
   upgrade() { if (!audio.ok()) return; [523.3, 659.3, 784, 1046.5, 1318.5].forEach((f, i) => audio.tone(f, 0.5, { gain: 0.06, type: 'triangle', when: i * 0.07 })); audio.hiss(0.6, { gain: 0.02, freq: 7000, type: 'highpass', when: 0.2 }); },
+  shutter() { if (!audio.ok()) return; audio.hiss(0.035, { gain: 0.035, freq: 4200, q: 1.2 }); audio.hiss(0.05, { gain: 0.03, freq: 2600, q: 1.4, when: 0.07 }); },
+  purr() {
+    if (!audio.ok()) return;
+    const ctx = audio.ctx, t = ctx.currentTime;
+    const src = ctx.createBufferSource(); src.buffer = audio.noise;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 210;
+    const am = ctx.createGain(); am.gain.value = 0.55;
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 24; const lg = ctx.createGain(); lg.gain.value = 0.45; lfo.connect(lg); lg.connect(am.gain);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.18); g.gain.setValueAtTime(0.3, t + 1.0); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.6);
+    src.connect(f); f.connect(am); am.connect(g); g.connect(audio.sfxBus);
+    src.start(t); src.stop(t + 1.7); lfo.start(t); lfo.stop(t + 1.7);
+    audio.tone(560, 0.22, { gain: 0.035, type: 'triangle', glide: 820, filter: 1800, when: 0.04 }); // mrrp
+  },
   doorbell() { if (!audio.ok()) return; audio.tone(1318.5, 0.9, { gain: 0.045 }); audio.tone(1046.5, 1.1, { gain: 0.04, when: 0.16 }); },
   streak(n) { if (!audio.ok()) return; const f = 660 * Math.pow(2, Math.min(n, 10) / 12); audio.tone(f, 0.18, { gain: 0.05, type: 'triangle' }); audio.tone(f * 1.5, 0.22, { gain: 0.035, type: 'triangle', when: 0.06 }); },
   dayEnd() { if (!audio.ok()) return; [392, 493.9, 587.3, 784].forEach((f, i) => audio.tone(f, 1.6, { gain: 0.05, type: 'triangle', when: i * 0.12 })); },
@@ -4545,6 +4924,16 @@ const ui = {
       const t = e.target; if (t.type !== 'color' || !HEX_RE.test(t.value)) return;
       style[t.dataset.key] = t.value.toLowerCase(); style.theme = 'custom'; this.styleChanged();
     });
+    // the cat's name and coat (once adopted); saved with the rest of the café at closing
+    const hex = (n) => '#' + n.toString(16).padStart(6, '0');
+    $('catCoats').innerHTML = Object.entries(CAT_COATS).map(([k, c]) => `<button data-coat="${k}"><i style="background:${hex(c.fur)}"></i>${c.label}</button>`).join('');
+    $('catCoats').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      G.cat.coat = b.dataset.coat; cat.setCoat(G.cat.coat); cat.bounceV += 2.5; this.syncCustomise(); sfx.tick();
+    });
+    const cn = $('catName');
+    cn.addEventListener('input', () => { G.cat.name = cleanName(cn.value).slice(0, 16) || 'Kitty'; this.shopDirty = true; });
+    cn.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') cn.blur(); });
   },
   styleChanged() { applyStyle(); saveStyle(); this.syncCustomise(); sfx.tick(); },
   syncCustomise() {
@@ -4555,7 +4944,12 @@ const ui = {
       for (const b of row.querySelectorAll('button')) b.classList.toggle('on', b.dataset.c === style[key]);
       row.querySelector('input').value = style[key];
     }
-    for (const b of document.querySelectorAll('.chips-floor button')) b.classList.toggle('on', b.dataset.floor === style.floor);
+    for (const b of document.querySelectorAll('#slotRows .chips-floor button')) b.classList.toggle('on', b.dataset.floor === style.floor);
+    $('catCustom').hidden = !G.up.cat;
+    if (G.up.cat) {
+      for (const b of $('catCoats').children) b.classList.toggle('on', b.dataset.coat === G.cat.coat);
+      if (document.activeElement !== $('catName')) $('catName').value = G.cat.name;
+    }
   },
   // ---------- HUD: weather/event chips, goal list, streak, morning card ----------
   renderDayChips() {
@@ -4651,6 +5045,7 @@ const ui = {
         sub = need.length ? `Click to serve: ${need.join(' + ')}` : P.members.some((g) => g.state === 'wait') ? 'On its way…' : P.members.some((g) => g.state === 'eat' || g.state === 'done') ? 'Enjoying their order' : 'Settling in…';
       }
     }
+    if (obj === cat) { title = G.cat.name; sub = cat.state === 'nap' ? 'Napping · click for a gentle scratch' : cat.petCD > 0 ? 'Purring away' : 'Click for a scratch · calms waiting guests'; }
     const html = `${title}<small>${sub}</small>`;
     if (html !== this.ttHtml) { tt.innerHTML = html; this.ttHtml = html; }
     tt.style.transform = `translate(${pointer.x + 16}px, ${pointer.y + 18}px)`;
@@ -4882,7 +5277,7 @@ function saveGame() {
   try {
     localStorage.setItem('bb-save', JSON.stringify({
       v: 2, day: G.day, money: G.money, rep: G.rep, up: G.up, prices: G.prices, history: G.history,
-      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, weather: today.weather, event: today.event,
+      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, weather: today.weather, event: today.event, cat: G.cat,
       staff: G.staff.map(({ role, level, name, skin, hair, scale }) => ({ role, level, name, skin, hair, scale })),
     }));
   } catch (_) { /* storage may be unavailable */ }
@@ -4910,7 +5305,8 @@ function loadGame() {
     G.history = Array.isArray(d.history) ? d.history.filter((h) => h && Number.isFinite(h.profit)).slice(-30) : [];
     if (Array.isArray(d.reviews)) G.reviews = d.reviews.filter((r) => r && typeof r.text === 'string').slice(0, 40).map((r) => ({ stars: clamp(r.stars | 0, 1, 5), text: String(r.text).slice(0, 120), type: GUEST_TYPES[r.type] ? r.type : 'regular', day: r.day | 0, name: String(r.name || '').slice(0, 24), critic: !!r.critic }));
     if (d.milestones && typeof d.milestones === 'object') for (const m of MILESTONES) if (d.milestones[m.id]) G.milestones[m.id] = d.milestones[m.id] | 0;
-    if (d.lifetime) G.lifetime = { served: num(d.lifetime.served, 0), profit: num(d.lifetime.profit, 0) };
+    if (d.lifetime) G.lifetime = { served: num(d.lifetime.served, 0), profit: num(d.lifetime.profit, 0), pets: num(d.lifetime.pets, 0) };
+    if (d.cat) G.cat = { name: String(d.cat.name || '').slice(0, 16), coat: CAT_COATS[d.cat.coat] ? d.cat.coat : '' };
     return true;
   } catch (_) { return false; }
 }
@@ -4979,6 +5375,7 @@ function fixedUpdate(dt) {
   for (let i = customers.length - 1; i >= 0; i--) customers[i].fixed(dt);
   updateParties(dt);
   for (let i = workers.length - 1; i >= 0; i--) workers[i].fixed(dt);
+  cat.fixed(dt);
   updateFlights(dt);
   G.tick = (G.tick || 0) + dt;
   if (G.tick >= 0.5) { G.tick = 0; goals.update(); milestones.check(); }
@@ -5004,6 +5401,7 @@ function renderUpdate(dt, alpha) {
 
   for (const c of customers) c.render(alpha, dt, elapsed);
   for (const w of workers) w.render(alpha, dt, elapsed);
+  cat.render(alpha, dt, elapsed);
   renderFlights(alpha);
   updateTweens(dt);
   for (const st of stationList) st.render(dt, elapsed);
@@ -5052,7 +5450,7 @@ document.body.classList.add('title');
 DECOR.plants.visible = false; DECOR.lights.visible = false; DECOR.sign.visible = false;
 const resumed = loadGame();
 tables.forEach((t, i) => { if (i < tableCount()) t.activate(furnitureLevel(), false); });
-for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign']) if (G.up[id] > 0) applyUpgrade(id, false);
+for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign', 'cat']) if (G.up[id] > 0) applyUpgrade(id, false);
 for (const st of G.staff) spawnWorker(st, false);
 applyStyle();
 updateMenuBoard();
@@ -5087,7 +5485,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.__booted = true;
 requestAnimationFrame(frame);
-window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, parties, today, rain, weatherFx, ui, goals, slots, workers, clickTable, clearTable, spawnParty, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
+window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, parties, today, rain, weatherFx, ui, goals, slots, workers, clickTable, clearTable, spawnParty, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality, cat, milestones, umbrellaStand };
 
 </script>
 </body>
