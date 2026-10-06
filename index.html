@@ -19,6 +19,10 @@
     --glass-strong: rgba(255, 249, 240, 0.78);
     --line: rgba(255, 255, 255, 0.65);
     --terracotta: #c9765a;
+    --accent-hi: #d88a6d;
+    --accent-lo: #a5563c;
+    --good: #4f7a43;
+    --bad: #a64b33;
     --sage: #8fa486;
     --brass: #c9a35e;
     --shadow: 0 12px 34px rgba(74, 46, 28, 0.16), 0 2px 6px rgba(74, 46, 28, 0.08);
@@ -45,14 +49,15 @@
 
   #dayPanel { position: absolute; left: 18px; top: 16px; padding: 12px 16px 13px; min-width: 214px; }
   .brand { font-family: var(--display); font-weight: 600; font-size: 19px; display: flex; align-items: center; gap: 9px; letter-spacing: .1px; }
-  .brand .logo { width: 26px; height: 26px; border-radius: 9px; background: linear-gradient(160deg, #d68a6c, #b9664a); display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); }
+  .brand .logo { width: 26px; height: 26px; border-radius: 9px; background: linear-gradient(160deg, var(--accent-hi), var(--terracotta)); flex: none; display: grid; place-items: center; box-shadow: inset 0 -2px 0 rgba(0,0,0,.12); }
   .clock { font-weight: 700; font-size: 13.5px; color: var(--ink-soft); margin-top: 6px; display: flex; gap: 7px; align-items: center; }
   .clock svg { width: 16px; height: 16px; }
   .daybar { height: 6px; border-radius: 6px; background: rgba(74,52,40,.12); margin-top: 8px; overflow: hidden; }
-  .daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ebc68c, #c9765a); border-radius: 6px; transition: width .4s linear; }
+  .daybar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ebc68c, var(--terracotta)); border-radius: 6px; transition: width .4s linear; }
 
   #moneyPanel { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); padding: 9px 22px 9px 11px; display: flex; align-items: center; gap: 11px; }
   #money { font-family: var(--display); font-weight: 600; font-size: 29px; min-width: 70px; font-variant-numeric: tabular-nums; }
+  #money.neg { color: var(--bad); }
   .coin { width: 32px; height: 32px; border-radius: 50%; background: radial-gradient(circle at 34% 30%, #f8e3ae, #d4ad68 52%, #a98140); box-shadow: inset 0 -2px 0 rgba(0,0,0,.14), 0 3px 8px rgba(150,100,40,.3); display: grid; place-items: center; color: #7a5626; font: 700 16px var(--display); }
   #moneyPanel.bump { animation: bump .38s cubic-bezier(.3,1.6,.5,1); }
   @keyframes bump { 0% { scale: 1; } 45% { scale: 1.09; } 100% { scale: 1; } }
@@ -77,7 +82,7 @@
   #shopBtn.glow { animation: glowPulse 1.6s ease-in-out infinite; }
   @keyframes glowPulse { 0%,100% { box-shadow: var(--shadow); } 50% { box-shadow: var(--shadow), 0 0 0 6px rgba(201,118,90,.18); } }
 
-  #shop { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 372px; max-width: calc(100vw - 24px); transform: translateX(calc(100% + 30px)); transition: transform .5s cubic-bezier(.2,.85,.2,1); display: flex; flex-direction: column; border-radius: 26px; background: var(--glass-strong); z-index: 3; }
+  #shop { position: absolute; top: 12px; right: 12px; bottom: 12px; width: 404px; max-width: calc(100vw - 24px); transform: translateX(calc(100% + 30px)); transition: transform .5s cubic-bezier(.2,.85,.2,1); display: flex; flex-direction: column; border-radius: 26px; background: var(--glass-strong); z-index: 3; }
   #shop.open { transform: none; }
   .shop-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 10px 22px; }
   .shop-head h2 { margin: 0; font: 600 24px var(--display); }
@@ -96,9 +101,9 @@
   .pips { display: flex; gap: 4px; margin-top: 7px; }
   .pips i { width: 16px; height: 5px; border-radius: 3px; background: rgba(74,52,40,.14); }
   .pips i.on { background: var(--terracotta); }
-  .buy { font: 600 15px var(--display); padding: 8px 12px; min-width: 70px; border-radius: 12px; border: 0; background: linear-gradient(180deg, #d88a6d, #c26b4e); color: #fff8ef; cursor: pointer; box-shadow: 0 3px 0 #a5563c, 0 6px 14px rgba(160,80,50,.25); transition: transform .12s, filter .2s; }
+  .buy { font: 600 15px var(--display); padding: 8px 12px; min-width: 70px; border-radius: 12px; border: 0; background: linear-gradient(180deg, var(--accent-hi), var(--terracotta)); color: #fff8ef; cursor: pointer; box-shadow: 0 3px 0 var(--accent-lo), 0 6px 14px rgba(110,70,50,.22); transition: transform .12s, filter .2s; }
   .buy:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
-  .buy:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #a5563c; }
+  .buy:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--accent-lo); }
   .buy:disabled { background: rgba(74,52,40,.1); color: rgba(74,52,40,.42); box-shadow: none; cursor: default; }
   .buy.maxed { background: rgba(143,164,134,.25); color: #5d7a52; }
 
@@ -165,7 +170,7 @@
 
   .modal-wrap { position: absolute; inset: 0; display: grid; place-items: center; background: radial-gradient(ellipse at center, rgba(70,45,30,.08), rgba(70,45,30,.28)); pointer-events: auto; transition: opacity .5s; z-index: 4; }
   .modal-wrap.hidden { opacity: 0; pointer-events: none; }
-  .modal { width: min(460px, calc(100vw - 28px)); padding: 28px 28px 24px; border-radius: 28px; text-align: center; background: var(--glass-strong); transition: transform .5s cubic-bezier(.2,.85,.2,1); }
+  .modal { width: min(480px, calc(100vw - 28px)); max-height: calc(100vh - 24px); overflow-y: auto; padding: 28px 28px 24px; border-radius: 28px; text-align: center; background: var(--glass-strong); transition: transform .5s cubic-bezier(.2,.85,.2,1); }
   .modal-wrap.hidden .modal { transform: translateY(18px) scale(.97); }
   .modal h1 { font: 700 42px/1.02 var(--display); margin: 6px 0 0; letter-spacing: -.5px; }
   .modal h2 { font: 600 30px var(--display); margin: 0; }
@@ -178,13 +183,12 @@
   .stat b { display: block; font: 600 23px var(--display); }
   .stat span { font-size: 11px; color: var(--ink-soft); font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
   .stat.wide { grid-column: span 2; display: flex; align-items: center; justify-content: space-between; }
-  .cta { font: 600 19px var(--display); padding: 14px 28px; border-radius: 17px; border: 0; color: #fff8ef; background: linear-gradient(180deg, #d88a6d, #c26b4e); box-shadow: 0 4px 0 #a5563c, 0 12px 26px rgba(160,80,50,.32); cursor: pointer; transition: transform .12s, filter .2s; }
+  .cta { font: 600 19px var(--display); padding: 14px 28px; border-radius: 17px; border: 0; color: #fff8ef; background: linear-gradient(180deg, var(--accent-hi), var(--terracotta)); box-shadow: 0 4px 0 var(--accent-lo), 0 12px 26px rgba(110,70,50,.28); cursor: pointer; transition: transform .12s, filter .2s; }
   .cta:hover { filter: brightness(1.05); transform: translateY(-1px); }
-  .cta:active { transform: translateY(3px); box-shadow: 0 1px 0 #a5563c; }
+  .cta:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--accent-lo); }
   .seg { display: inline-flex; gap: 4px; margin-top: 16px; padding: 4px; border-radius: 13px; background: rgba(74,52,40,.07); }
   .seg button { border: 0; background: transparent; font: 700 12px var(--body); color: var(--ink-soft); padding: 6px 10px; border-radius: 9px; cursor: pointer; }
   .seg button.on { background: #fffaf3; color: var(--ink); box-shadow: 0 2px 6px rgba(74,46,28,.12); }
-  .link-btn { margin-top: 12px; border: 0; background: none; font: 700 12.5px var(--body); color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
   .muted-note { font-size: 12px; color: var(--ink-soft); font-weight: 600; margin-top: 10px; }
   #loading { position: fixed; inset: 0; display: grid; place-items: center; background: #efe3d2; z-index: 10; transition: opacity .8s; font: 600 18px var(--display); color: var(--ink-soft); }
   #loading.done { opacity: 0; pointer-events: none; }
@@ -193,7 +197,139 @@
   #pauseBadge { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 14px 22px; font: 600 22px var(--display); display: none; }
   body.paused #pauseBadge { display: block; }
 
+  /* ---------- Manage drawer: tabs, overview, menu, staff ---------- */
+  .tabs { display: flex; gap: 4px; margin: 0 14px 8px; padding: 4px; border-radius: 14px; background: rgba(74,52,40,.07); }
+  .tabs button { flex: 1; border: 0; background: transparent; font: 800 12.5px var(--body); color: var(--ink-soft); padding: 8px 2px; border-radius: 10px; cursor: pointer; transition: background .2s, color .2s; }
+  .tabs button.on { background: #fffaf3; color: var(--ink); box-shadow: 0 2px 6px rgba(74,46,28,.12); }
+  .tabs button:focus-visible, .buy:focus-visible, .ghost-btn:focus-visible, .theme:focus-visible { outline: 2px solid var(--terracotta); outline-offset: 2px; }
+  .sec { background: rgba(255,255,255,.58); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,.7); }
+  .sec h5 { margin: 0 0 8px; font: 600 15px var(--display); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .sec h5 small { font: 700 11.5px var(--body); color: var(--ink-soft); }
+  .ov-hero .lbl { font-size: 12.5px; font-weight: 800; color: var(--ink-soft); }
+  .ov-hero .big { font: 600 46px/1.05 var(--display); margin-top: 2px; letter-spacing: -.5px; }
+  .ov-hero .big.neg, .sum-hero b.neg { color: var(--bad); }
+  .delta { font-size: 12.5px; font-weight: 800; margin-top: 3px; }
+  .delta.up { color: var(--good); } .delta.down { color: var(--bad); } .delta.flat { color: var(--ink-soft); }
+  .ov-hero .sub { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-top: 6px; line-height: 1.35; }
+  .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+  .tile { background: rgba(255,255,255,.62); border-radius: 13px; padding: 8px 10px; min-width: 0; }
+  .tile span { display: block; font-size: 11px; font-weight: 800; color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile b { display: block; font: 600 17px var(--display); margin-top: 1px; white-space: nowrap; }
+  .tile small { display: block; font-size: 10.5px; color: var(--ink-soft); font-weight: 700; white-space: nowrap; }
+  .mrow { display: grid; grid-template-columns: 58px 1fr 38px; gap: 8px; align-items: center; font-size: 12px; font-weight: 800; margin-top: 7px; color: var(--ink-soft); }
+  .mrow b { text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .meter { height: 8px; border-radius: 5px; background: rgba(143,164,134,.2); overflow: hidden; }
+  .meter i { display: block; height: 100%; border-radius: 5px; background: #7f9a6f; transition: width .4s; }
+  .meter.warn i { background: #c9963c; } .meter.bad i { background: #c26b4e; }
+  .meter.warn { background: rgba(201,150,60,.18); } .meter.bad { background: rgba(194,107,78,.16); }
+  .sat-line { display: flex; align-items: center; gap: 10px; }
+  .sat-line .face { width: 34px; height: 34px; flex: none; }
+  .sat-line b { font: 600 24px var(--display); }
+  .sat-line span { font-size: 12.5px; font-weight: 800; color: var(--ink-soft); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { padding: 4px 9px; border-radius: 999px; background: rgba(74,52,40,.07); font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+  .chip b { color: var(--ink); }
+  .chart { position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .bar { transition: opacity .15s; }
+  .chart .hit { fill: transparent; cursor: default; }
+  .chart .hit:hover + .bar, .chart .hit:focus + .bar { opacity: .75; }
+  .chart-tip { position: absolute; pointer-events: none; background: #fffaf3; border-radius: 10px; padding: 6px 9px; box-shadow: 0 6px 18px rgba(74,46,28,.18); font-size: 11.5px; font-weight: 700; color: var(--ink-soft); opacity: 0; transition: opacity .12s; white-space: nowrap; transform: translate(-50%, -100%); }
+  .chart-tip b { display: block; font: 600 15px var(--display); color: var(--ink); }
+  .chart-empty { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); padding: 18px 4px; text-align: center; }
+  table.hist { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  table.hist th { text-align: right; font-size: 10px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .06em; font-weight: 800; padding: 4px; }
+  table.hist td { text-align: right; padding: 5px 4px; border-top: 1px solid rgba(74,52,40,.08); font-weight: 700; }
+  table.hist th:first-child, table.hist td:first-child { text-align: left; }
+  table.hist td.neg { color: var(--bad); }
+  .menu-note { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin: 2px 4px 10px; line-height: 1.4; }
+  .menu-note b { color: var(--ink); }
+  .price-card { background: rgba(255,255,255,.6); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,.7); }
+  .price-card.locked { opacity: .55; }
+  .pc-head { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; }
+  .pc-head .ico { width: 44px; height: 44px; border-radius: 13px; background: #f3e6d4; padding: 7px; }
+  .pc-head .ico svg { width: 30px; height: 30px; }
+  .pc-head h4 { margin: 0; font: 600 16px var(--display); }
+  .pc-head p { margin: 1px 0 0; font-size: 12px; color: var(--ink-soft); font-weight: 700; }
+  .pc-price { font: 600 26px var(--display); min-width: 74px; text-align: right; }
+  .pc-ctrl { display: grid; grid-template-columns: 30px 1fr 30px; gap: 8px; align-items: center; margin: 10px 0 8px; }
+  .step-btn { width: 30px; height: 30px; border-radius: 10px; border: 0; background: rgba(74,52,40,.08); font: 700 17px var(--body); color: var(--ink); cursor: pointer; line-height: 1; }
+  .step-btn:hover { background: rgba(74,52,40,.14); }
+  input[type=range].price { width: 100%; margin: 0; accent-color: var(--terracotta); cursor: pointer; }
+  .vbar { position: relative; height: 8px; border-radius: 5px; background: linear-gradient(90deg, #8fb07e 0%, #c3d1a2 22%, #eadfc3 42%, #e7bf8c 64%, #d4876a 82%, #b85c47 100%); }
+  .vbar i { position: absolute; top: -5px; width: 5px; height: 18px; border-radius: 3px; background: var(--ink); transform: translateX(-50%); box-shadow: 0 0 0 2px #fffaf3; transition: left .25s; }
+  .vlabels { display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; margin-top: 5px; }
+  .pc-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 9px; font-size: 12px; font-weight: 700; color: var(--ink-soft); flex-wrap: wrap; }
+  .pc-foot b { color: var(--ink); }
+  .feel { display: inline-flex; gap: 5px; align-items: center; padding: 3px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 800; }
+  .feel svg { width: 13px; height: 13px; }
+  .feel.good { background: rgba(127,163,108,.2); color: var(--good); }
+  .feel.ok { background: rgba(74,52,40,.08); color: var(--ink); }
+  .feel.warn { background: rgba(201,150,60,.2); color: #85601c; }
+  .feel.bad { background: rgba(194,107,78,.18); color: var(--bad); }
+  .staff-card { display: grid; grid-template-columns: 46px 1fr auto; gap: 11px; align-items: center; padding: 12px; border-radius: 18px; background: rgba(255,255,255,.58); margin-bottom: 9px; border: 1px solid rgba(255,255,255,.7); }
+  .staff-card.locked { opacity: .55; }
+  .avatar { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; padding: 9px; }
+  .avatar svg { width: 100%; height: 100%; }
+  .staff-card h4 { margin: 0; font: 600 16px var(--display); }
+  .staff-card h4 small { font: 700 11.5px var(--body); color: var(--ink-soft); margin-left: 4px; }
+  .staff-card p { margin: 2px 0 0; font-size: 12px; font-weight: 700; color: var(--ink-soft); line-height: 1.3; }
+  .staff-actions { display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+  .ghost-btn { font: 800 11.5px var(--body); border: 0; border-radius: 10px; padding: 6px 10px; background: rgba(74,52,40,.08); color: var(--ink); cursor: pointer; white-space: nowrap; }
+  .ghost-btn:hover:not(:disabled) { background: rgba(74,52,40,.14); }
+  .ghost-btn:disabled { opacity: .45; cursor: default; }
+  .ghost-btn.danger { color: var(--bad); }
+  .role-title { font: 800 11px var(--body); text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); margin: 12px 4px 7px; }
+
+  /* ---------- Customise drawer ---------- */
+  #custom { position: absolute; top: 12px; left: 12px; bottom: 12px; width: 360px; max-width: calc(100vw - 24px); transform: translateX(calc(-100% - 30px)); transition: transform .5s cubic-bezier(.2,.85,.2,1); display: flex; flex-direction: column; border-radius: 26px; background: var(--glass-strong); z-index: 3; }
+  #custom.open { transform: none; }
+  body.custom-open #dayPanel, body.custom-open #hint { opacity: 0; pointer-events: none; }
+  .fld { display: block; margin: 2px 2px 16px; }
+  .fld span, .sec-title { display: block; font-size: 11.5px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .07em; }
+  .sec-title { margin: 4px 2px 8px; }
+  .fld input { width: 100%; margin-top: 7px; font: 600 21px var(--display); padding: 10px 13px; border-radius: 14px; border: 1.5px solid rgba(74,52,40,.15); background: #fffaf3; color: var(--ink); outline: none; }
+  .fld input:focus { border-color: var(--terracotta); }
+  .themes { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 16px; }
+  .theme { border: 0; text-align: left; padding: 9px 10px; border-radius: 14px; background: rgba(255,255,255,.6); cursor: pointer; font: 800 12px var(--body); color: var(--ink); }
+  .theme.on { box-shadow: inset 0 0 0 2px var(--ink); }
+  .theme .dots { display: flex; margin-top: 6px; }
+  .theme .dots i { width: 17px; height: 17px; border-radius: 50%; margin-right: -4px; box-shadow: 0 0 0 2px #fffaf3; }
+  .slot-row { margin-bottom: 13px; }
+  .slot-row .lbl { font-size: 12.5px; font-weight: 800; margin: 0 2px 6px; display: flex; justify-content: space-between; }
+  .slot-row .lbl code { font: 700 11px var(--body); color: var(--ink-soft); }
+  .sw { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .sw button { width: 27px; height: 27px; border-radius: 50%; border: 0; cursor: pointer; box-shadow: inset 0 0 0 1px rgba(0,0,0,.1); padding: 0; }
+  .sw button.on { box-shadow: 0 0 0 2px #fffaf3, 0 0 0 4px var(--ink); }
+  .sw label.pick { width: 27px; height: 27px; border-radius: 50%; cursor: pointer; background: conic-gradient(#e9a0a0, #e7d29a, #a8d1a0, #9fc6d6, #b6a6d6, #e9a0a0); position: relative; display: grid; place-items: center; font: 800 14px var(--body); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.3); }
+  .sw label.pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .chips-floor { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips-floor button { border: 0; border-radius: 999px; padding: 5px 11px 5px 5px; display: flex; gap: 7px; align-items: center; font: 800 12px var(--body); background: rgba(255,255,255,.6); cursor: pointer; color: var(--ink); }
+  .chips-floor button i { width: 20px; height: 20px; border-radius: 50%; }
+  .chips-floor button.on { box-shadow: inset 0 0 0 2px var(--ink); }
+  .done-row { padding: 10px 16px 16px; }
+  .done-row .cta { width: 100%; padding: 12px; font-size: 17px; }
+  .link-btn { margin-top: 12px; border: 0; background: none; font: 700 12.5px var(--body); color: var(--ink-soft); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+  /* ---------- day summary ---------- */
+  .sum-hero { margin: 12px 0 2px; }
+  .sum-hero span { font-size: 11.5px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .07em; }
+  .sum-hero b { display: block; font: 600 48px/1.05 var(--display); letter-spacing: -.5px; }
+  .stats.three { grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 12px; }
+  .stats.three .stat { padding: 8px 10px; }
+  .stats.three .stat b { font-size: 18px; }
+  .stats.three .stat span { font-size: 10px; }
+  .coach { text-align: left; background: rgba(143,164,134,.16); border-radius: 15px; padding: 10px 12px 10px 40px; margin: 0 0 18px; font-size: 13px; font-weight: 700; line-height: 1.4; position: relative; }
+  .coach::before { content: ''; position: absolute; left: 12px; top: 11px; width: 18px; height: 18px; border-radius: 50%; background: #7f9a6f; box-shadow: inset 0 0 0 5px #a9bd9b; }
+  .coach p { margin: 0; } .coach p + p { margin-top: 6px; }
+
   @media (max-width: 720px) {
+    #custom { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-width: none; height: 58vh; border-radius: 22px 22px 0 0; transform: translateY(105%); }
+    #custom.open { transform: none; }
+    #shop { top: auto; height: 78vh; left: 0; right: 0; bottom: 0; width: auto; max-width: none; border-radius: 22px 22px 0 0; transform: translateY(105%); }
+    #shop.open { transform: none; }
+    .tiles { grid-template-columns: 1fr 1fr; }
+    .stats.three { grid-template-columns: 1fr 1fr; }
     #dayPanel { left: 10px; top: 10px; min-width: 0; padding: 9px 12px; }
     .brand { font-size: 15px; } .brand .logo { width: 22px; height: 22px; }
     #moneyPanel { top: auto; bottom: 10px; left: 10px; transform: none; padding: 7px 16px 7px 8px; }
@@ -234,7 +370,7 @@
   <div id="labels"></div>
 
   <div id="dayPanel" class="glass top">
-    <div class="brand"><span class="logo" data-icon="logo"></span>Bean &amp; Bloom</div>
+    <div class="brand"><span class="logo" data-icon="logo"></span><span id="brandName">Bean &amp; Bloom</span></div>
     <div class="clock"><span id="sunIcon" data-icon="sun"></span><span id="dayLabel">Day 1</span><span>·</span><span id="clockLabel">7:00 AM</span></div>
     <div class="daybar"><i id="dayFill"></i></div>
   </div>
@@ -249,6 +385,8 @@
   <div id="toolbar">
     <button class="icon-btn glass ia" id="pauseBtn" title="Pause (P)" data-icon="pause"></button>
     <button class="icon-btn glass ia" id="muteBtn" title="Sound (M)" data-icon="sound"></button>
+    <button class="icon-btn glass ia" id="customBtn" title="Customise your café (C)" data-icon="palette"></button>
+    <button class="icon-btn glass ia" id="bizBtn" title="Business overview (B)" data-icon="chart"></button>
     <button class="icon-btn glass ia" id="qualityBtn" title="Graphics quality"><span class="q" id="qualityLabel">AUTO</span></button>
   </div>
 
@@ -262,11 +400,29 @@
     <div class="slots" id="slots"></div>
   </div>
 
-  <button id="shopBtn" class="glass ia"><span data-icon="shop" style="width:24px;height:24px;display:grid"></span>Upgrades<span class="badge" id="shopBadge">0</span></button>
+  <button id="shopBtn" class="glass ia"><span data-icon="shop" style="width:24px;height:24px;display:grid"></span>Manage<span class="badge" id="shopBadge">0</span></button>
 
-  <div id="shop" class="glass ia">
-    <div class="shop-head"><div><h2>Upgrades</h2><p>Grow your cosy little café</p></div><button class="close-btn" id="shopClose" data-icon="close"></button></div>
-    <div class="shop-list" id="shopList"></div>
+  <div id="shop" class="glass ia" role="dialog" aria-label="Manage your café">
+    <div class="shop-head"><div><h2>Manage</h2><p id="mgSub">Run the numbers, run the café</p></div><button class="close-btn" id="shopClose" data-icon="close" aria-label="Close"></button></div>
+    <div class="tabs" id="mgTabs" role="tablist">
+      <button role="tab" data-tab="overview" class="on">Overview</button><button role="tab" data-tab="menu">Menu</button><button role="tab" data-tab="staff">Staff</button><button role="tab" data-tab="upgrades">Upgrades</button>
+    </div>
+    <div class="shop-list" id="tab-overview" role="tabpanel"></div>
+    <div class="shop-list" id="tab-menu" role="tabpanel" hidden></div>
+    <div class="shop-list" id="tab-staff" role="tabpanel" hidden></div>
+    <div class="shop-list" id="shopList" role="tabpanel" hidden></div>
+  </div>
+
+  <div id="custom" class="glass ia" role="dialog" aria-label="Customise your café">
+    <div class="shop-head"><div><h2>Make it yours</h2><p>Name your café and paint it</p></div><button class="close-btn" id="customClose" data-icon="close" aria-label="Close"></button></div>
+    <div class="shop-list">
+      <label class="fld"><span>Café name</span><input id="nameInput" maxlength="24" spellcheck="false" autocomplete="off"></label>
+      <div class="sec-title">Themes</div>
+      <div class="themes" id="themes"></div>
+      <div class="sec-title">Colours</div>
+      <div id="slotRows"></div>
+    </div>
+    <div class="done-row"><button class="cta" id="customDone">Looks lovely</button></div>
   </div>
 
   <div id="toasts"></div>
@@ -278,7 +434,9 @@
     <div class="modal glass">
       <div class="tag" id="sumKicker">Closing time</div>
       <h2 id="sumTitle">Day 1 wrap-up</h2>
-      <div class="stats" id="sumStats"></div>
+      <div class="sum-hero" id="sumHero"></div>
+      <div class="stats three" id="sumStats"></div>
+      <div class="coach" id="sumCoach"></div>
       <button class="cta" id="nextDayBtn">Open Day 2</button>
     </div>
   </div>
@@ -286,14 +444,14 @@
   <div id="startWrap" class="modal-wrap">
     <div class="modal glass">
       <div class="tag">a tiny café tycoon</div>
-      <h1>Bean &amp; Bloom</h1>
+      <h1 id="titleName">Bean &amp; Bloom</h1>
       <div class="howto">
         <div><span class="n">1</span>Click the espresso machine to brew a latte.</div>
         <div><span class="n">2</span>Click a customer's table to serve them fast.</div>
         <div><span class="n">3</span>Spend tips on upgrades &amp; grow your reputation.</div>
       </div>
       <button class="cta" id="startBtn">Open the café</button>
-      <div><button class="link-btn" id="resetBtn" hidden>Start a new café instead</button></div>
+      <div><button class="link-btn" id="customiseStart">Name &amp; paint your café</button> <button class="link-btn" id="resetBtn" hidden>· start a new café</button></div>
       <div><div class="seg" id="qualitySeg"><button data-q="auto" class="on">Auto</button><button data-q="high">High</button><button data-q="medium">Medium</button><button data-q="low">Low</button></div></div>
       <div class="muted-note">Drag to look around · scroll to zoom · keys 1 2 3 brew</div>
     </div>
@@ -304,7 +462,7 @@
 // =====================================================================
 //  BEAN & BLOOM — a tiny 3D café tycoon
 //  Sections:
-//    1. Imports, palette, helpers          12. Entities: Machine, Table, Customer, Barista
+//    1. Imports, palette, helpers          12. Entities: Machine, Table, Customer, Worker
 //    2. Renderer, quality tiers, post      13. Upgrades
 //    3. Camera rig                         14. Day / night lighting
 //    4. Lighting & environment             15. Interaction (picking, outlines, input)
@@ -675,13 +833,18 @@ function shade(hexColor, f) {
 }
 
 // Oak plank floor: colour + bump drawn from one shared plank layout
-function makePlankTextures() {
+// Plank floor: one seeded layout, redrawable in any wood tone (the café style can change it)
+const plankCanvas = { col: makeCanvas(1024), bump: makeCanvas(1024) };
+function makePlankTextures(tones) {
+  drawPlanks(tones, true);
+  return { map: toTexture(plankCanvas.col), bump: toTexture(plankCanvas.bump, { srgb: false }) };
+}
+function drawPlanks(tones, withBump) {
   const S = 1024, rows = 8, rh = S / rows;
   const rng = mulberry32(11);
-  const col = makeCanvas(S), bump = makeCanvas(S);
-  const c = col.getContext('2d'), b = bump.getContext('2d');
-  b.fillStyle = '#1a1a1a'; b.fillRect(0, 0, S, S);
-  const tones = ['#b98a62', '#b2835b', '#c19169', '#ab7d57', '#bd8e66', '#b5875f'];
+  const col = plankCanvas.col, bump = plankCanvas.bump;
+  const c = col.getContext('2d'), b = withBump ? bump.getContext('2d') : null;
+  if (b) { b.fillStyle = '#1a1a1a'; b.fillRect(0, 0, S, S); }
   for (let r = 0; r < rows; r++) {
     let x = -rng() * 400;
     while (x < S) {
@@ -717,7 +880,7 @@ function makePlankTextures() {
         c.fillStyle = 'rgba(70,42,24,0.55)';
         c.fillRect(x + ox, y, 2, rh);
         // bump
-        b.fillStyle = '#d8d8d8'; b.fillRect(x + ox + 2, y + 2, len - 4, rh - 4);
+        if (b) { b.fillStyle = '#d8d8d8'; b.fillRect(x + ox + 2, y + 2, len - 4, rh - 4); }
       };
       drawPlank(0);
       if (x + len > S) drawPlank(-S);
@@ -725,8 +888,7 @@ function makePlankTextures() {
     }
     c.fillStyle = 'rgba(70,42,24,0.6)'; c.fillRect(0, r * rh, S, 2);
   }
-  b.filter = 'blur(1.5px)'; b.drawImage(bump, 0, 0); b.filter = 'none';
-  return { map: toTexture(col), bump: toTexture(bump, { srgb: false }) };
+  if (b) { b.filter = 'blur(1.5px)'; b.drawImage(bump, 0, 0); b.filter = 'none'; }
 }
 
 // generic fine noise for bump (plaster, clay, ceramic micro-texture)
@@ -810,7 +972,7 @@ function makeMarbleTexture(size = 512) {
 }
 
 const TEX = {};
-TEX.plank = makePlankTextures();
+TEX.plank = makePlankTextures(['#b98a62', '#b2835b', '#c19169', '#ab7d57', '#bd8e66', '#b5875f']);
 TEX.plank.map.repeat.set(14.4 / 4.2, 11.4 / 4.2); TEX.plank.bump.repeat.copy(TEX.plank.map.repeat);
 TEX.plaster = makeNoiseTexture(256, 6, 5, 3, 1.0);
 TEX.plaster.repeat.set(0.22, 0.22);
@@ -856,40 +1018,43 @@ function makeWeaveTexture(size = 128) {
 }
 TEX.weave = makeWeaveTexture();
 
-function makeRugTexture() {
-  const W = 1024, H = 820, cv = makeCanvas(W, H), c = cv.getContext('2d');
-  c.fillStyle = '#c67a5c'; c.fillRect(0, 0, W, H);
-  const n = makeNoise(31, 32);
-  // cream border bands
+// sRGB hex helpers for derived shades
+const hexRGB = (h) => { const n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; };
+const rgbHex = (r, g, b) => '#' + [r, g, b].map((v) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0')).join('');
+const darkenHex = (h, f) => { const [r, g, b] = hexRGB(h); return rgbHex(r * f, g * f, b * f); };
+const mixHex = (a, b, t) => { const x = hexRGB(a), y = hexRGB(b); return rgbHex(lerp(x[0], y[0], t), lerp(x[1], y[1], t), lerp(x[2], y[2], t)); };
+
+// Rug: shapes are redrawn per colour scheme; the woolly mottling is computed once and overlaid
+const rugCanvas = makeCanvas(1024, 820);
+let rugGrain = null;
+function drawRug(field, dots) {
+  const W = 1024, H = 820, c = rugCanvas.getContext('2d');
+  c.globalCompositeOperation = 'source-over';
+  c.fillStyle = field; c.fillRect(0, 0, W, H);
   c.strokeStyle = '#f1e2cc'; c.lineWidth = 26; roundRect(c, 40, 40, W - 80, H - 80, 90); c.stroke();
-  c.strokeStyle = '#e6c29a'; c.lineWidth = 8; roundRect(c, 82, 82, W - 164, H - 164, 60); c.stroke();
-  // central medallion: soft arches + dots
-  c.fillStyle = '#a95d42';
-  for (let i = 0; i < 7; i++) for (let j = 0; j < 5; j++) {
-    const x = 170 + i * 115, y = 170 + j * 120;
-    c.beginPath(); c.ellipse(x, y, 30, 30, 0, 0, TAU); c.fill();
-  }
+  c.strokeStyle = mixHex(field, '#f1e2cc', 0.55); c.lineWidth = 8; roundRect(c, 82, 82, W - 164, H - 164, 60); c.stroke();
+  c.fillStyle = darkenHex(field, 0.84);
+  for (let i = 0; i < 7; i++) for (let j = 0; j < 5; j++) { c.beginPath(); c.ellipse(170 + i * 115, 170 + j * 120, 30, 30, 0, 0, TAU); c.fill(); }
   c.fillStyle = '#e8d3b5';
   for (let i = 0; i < 7; i++) for (let j = 0; j < 5; j++) {
     const x = 170 + i * 115, y = 170 + j * 120;
     c.beginPath(); c.moveTo(x - 14, y + 10); c.lineTo(x - 14, y); c.arc(x, y, 14, Math.PI, 0); c.lineTo(x + 14, y + 10); c.closePath(); c.fill();
   }
-  c.fillStyle = '#9fb193';
-  for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) {
-    const x = 227 + i * 115, y = 230 + j * 120;
-    c.beginPath(); c.arc(x, y, 7, 0, TAU); c.fill();
+  c.fillStyle = dots;
+  for (let i = 0; i < 6; i++) for (let j = 0; j < 4; j++) { c.beginPath(); c.arc(227 + i * 115, 230 + j * 120, 7, 0, TAU); c.fill(); }
+  if (!rugGrain) {
+    rugGrain = makeCanvas(W, H);
+    const g = rugGrain.getContext('2d'), img = g.createImageData(W, H), n = makeNoise(31, 32);
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const v = 128 + (n.fbm(x / 64, y / 64, 3) - 0.5) * 60 + (Math.random() - 0.5) * 18, i = (y * W + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255;
+    }
+    g.putImageData(img, 0, 0);
   }
-  // woolly mottling
-  const img = c.getImageData(0, 0, W, H);
-  for (let y = 0; y < H; y += 1) for (let x = 0; x < W; x += 1) {
-    const v = (n.fbm(x / 64, y / 64, 3) - 0.5) * 34 + (Math.random() - 0.5) * 10;
-    const i = (y * W + x) * 4;
-    img.data[i] += v; img.data[i + 1] += v; img.data[i + 2] += v;
-  }
-  c.putImageData(img, 0, 0);
-  return toTexture(cv, { wrap: false });
+  c.globalCompositeOperation = 'overlay'; c.drawImage(rugGrain, 0, 0); c.globalCompositeOperation = 'source-over';
 }
-TEX.rug = makeRugTexture();
+drawRug('#c67a5c', '#9fb193');
+TEX.rug = toTexture(rugCanvas, { wrap: false });
 
 // latte art & matcha foam tops
 function makeFoamTexture(kind) {
@@ -975,6 +1140,72 @@ Object.assign(MAT, {
   indicator: new THREE.MeshStandardMaterial({ color: 0x9fb193, emissive: 0x9fd18a, emissiveIntensity: 1.5 }),
 });
 MAT.glassCase = phys({ color: 0xffffff, roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.18, thickness: 0.05, ior: 1.45, envMapIntensity: 1.4, depthWrite: false });
+
+// ---------------------------------------------------------------------
+// 5b. CAFÉ STYLE — name & colour scheme, applied live to materials, textures and UI
+// ---------------------------------------------------------------------
+const FLOOR_TONES = {
+  honey: { label: 'Honey oak', tones: ['#b98a62', '#b2835b', '#c19169', '#ab7d57', '#bd8e66', '#b5875f'] },
+  ash: { label: 'Pale ash', tones: ['#d8c6ad', '#d1bea3', '#dccbb4', '#cbb89d', '#d5c3a9', '#cfbca1'] },
+  smoked: { label: 'Smoked oak', tones: ['#a08a76', '#98826e', '#a6907c', '#927c69', '#9d8773', '#a38d79'] },
+  walnut: { label: 'Walnut', tones: ['#7d5640', '#74503b', '#845d45', '#6d4a37', '#7a543f', '#80593f'] },
+};
+const THEMES = [
+  { id: 'classic', name: 'Terracotta & Sage', walls: '#f2e7d8', trim: '#9fb193', counter: '#c9765a', floor: 'honey', upholstery: '#93a886', rug: '#c67a5c' },
+  { id: 'blush', name: 'Blush & Mint', walls: '#f6ebe6', trim: '#a9c4b4', counter: '#d99c92', floor: 'ash', upholstery: '#e3b2a8', rug: '#cf9a90' },
+  { id: 'midnight', name: 'Midnight Brass', walls: '#ebe4d8', trim: '#46566a', counter: '#3e4b5b', floor: 'walnut', upholstery: '#5d7186', rug: '#8a5444' },
+  { id: 'matcha', name: 'Matcha Latte', walls: '#efebdc', trim: '#82996d', counter: '#a7b68b', floor: 'honey', upholstery: '#6f8a5e', rug: '#b39a6c' },
+  { id: 'lavender', name: 'Lavender Haze', walls: '#f2eef2', trim: '#b4a7c6', counter: '#9a88b2', floor: 'ash', upholstery: '#c2b4d4', rug: '#a891b6' },
+  { id: 'mocha', name: 'Mocha', walls: '#ead9c4', trim: '#8a6a52', counter: '#70503c', floor: 'walnut', upholstery: '#b08b6a', rug: '#9a6a4e' },
+  { id: 'nordic', name: 'Nordic', walls: '#f5f3ef', trim: '#c5ccd1', counter: '#8ea2ae', floor: 'ash', upholstery: '#d6d0c6', rug: '#a6b3ba' },
+  { id: 'sunny', name: 'Sunday Market', walls: '#f6eedd', trim: '#d7a64f', counter: '#c8694a', floor: 'smoked', upholstery: '#e2b65c', rug: '#7f9474' },
+];
+const STYLE_SLOTS = [
+  { key: 'walls', label: 'Walls' }, { key: 'trim', label: 'Trim & panels' }, { key: 'counter', label: 'Counter & lamps' },
+  { key: 'upholstery', label: 'Upholstery' }, { key: 'rug', label: 'Rug' },
+];
+const DEFAULT_NAME = 'Bean & Bloom';
+const HEX_RE = /^#[0-9a-f]{6}$/i;
+const cleanName = (n) => String(n || '').replace(/\s+/g, ' ').trim().slice(0, 24);
+const style = { ...THEMES[0], name: DEFAULT_NAME, theme: 'classic' };
+delete style.id;
+try {
+  const d = JSON.parse(localStorage.getItem('bb-style') || 'null');
+  if (d) {
+    if (cleanName(d.name)) style.name = cleanName(d.name);
+    for (const { key } of STYLE_SLOTS) if (HEX_RE.test(d[key] || '')) style[key] = d[key].toLowerCase();
+    if (FLOOR_TONES[d.floor]) style.floor = d.floor;
+    style.theme = typeof d.theme === 'string' ? d.theme : 'custom';
+  }
+} catch (_) { /* storage may be unavailable */ }
+let saveStyleTimer = 0;
+function saveStyle() {
+  clearTimeout(saveStyleTimer);
+  saveStyleTimer = setTimeout(() => {
+    try { localStorage.setItem('bb-style', JSON.stringify({ name: style.name, theme: style.theme, floor: style.floor, ...Object.fromEntries(STYLE_SLOTS.map(({ key }) => [key, style[key]])) })); } catch (_) { /* ignore */ }
+  }, 250);
+}
+let lastFloor = 'honey', lastRug = '';
+function applyStyle() {
+  MAT.plaster.color.set(style.walls);
+  MAT.sage.color.set(style.trim); MAT.sageDeep.color.set(darkenHex(style.trim, 0.8));
+  MAT.terracotta.color.set(style.counter); MAT.terracottaGloss.color.set(style.counter);
+  MAT.velvetSage.color.set(style.upholstery); MAT.velvetTerracotta.color.set(darkenHex(style.upholstery, 0.88));
+  if (style.floor !== lastFloor) { lastFloor = style.floor; drawPlanks(FLOOR_TONES[style.floor].tones, false); TEX.plank.map.needsUpdate = true; }
+  const rugKey = style.rug + style.trim;
+  if (rugKey !== lastRug) { lastRug = rugKey; drawRug(style.rug, style.trim); TEX.rug.needsUpdate = true; }
+  // UI accent follows the counter colour, clamped so white button text stays readable
+  const hsl = {}; new THREE.Color(style.counter).getHSL(hsl, THREE.SRGBColorSpace);
+  const sat = Math.min(hsl.s, 0.55), lit = clamp(hsl.l, 0.36, 0.5);
+  const hsl2hex = (h, s, l) => '#' + new THREE.Color().setHSL(h, s, l, THREE.SRGBColorSpace).getHexString(THREE.SRGBColorSpace);
+  const root = document.documentElement.style;
+  root.setProperty('--terracotta', hsl2hex(hsl.h, sat, lit));
+  root.setProperty('--accent-hi', hsl2hex(hsl.h, sat, Math.min(0.62, lit + 0.07)));
+  root.setProperty('--accent-lo', hsl2hex(hsl.h, sat * 0.95, lit - 0.12));
+  // the name lives on the HUD, the title card, the tab and the chalkboard
+  document.title = `${style.name} · Café Tycoon`;
+  for (const id of ['brandName', 'titleName']) { const el = document.getElementById(id); if (el) el.textContent = style.name; }
+}
 
 // ---------------------------------------------------------------------
 // 6. ASSET BUILDERS
@@ -1512,8 +1743,10 @@ function drawChalkboard(items) {
   const rng = mulberry32(99);
   for (let i = 0; i < 40; i++) { c.fillStyle = `rgba(255,255,255,${0.012 + rng() * 0.02})`; c.beginPath(); c.ellipse(rng() * W, rng() * H, 40 + rng() * 120, 14 + rng() * 40, rng() * 3, 0, TAU); c.fill(); }
   c.fillStyle = '#f3ece0'; c.textAlign = 'center';
-  c.font = '700 92px Caveat, "Comic Sans MS", cursive';
-  c.fillText('Bean & Bloom', W / 2, 108);
+  let fs = 92;
+  c.font = `700 ${fs}px Caveat, "Comic Sans MS", cursive`;
+  while (c.measureText(style.name).width > 860 && fs > 40) { fs -= 4; c.font = `700 ${fs}px Caveat, "Comic Sans MS", cursive`; }
+  c.fillText(style.name, W / 2, 108);
   c.strokeStyle = 'rgba(243,236,224,0.7)'; c.lineWidth = 4; c.beginPath(); c.moveTo(300, 132); c.quadraticCurveTo(W / 2, 148, 724, 132); c.stroke();
   c.textAlign = 'left'; c.font = '600 64px Caveat, "Comic Sans MS", cursive';
   let y = 230;
@@ -1816,6 +2049,15 @@ const ICONS = {
   dots: `<svg viewBox="0 0 48 48"><circle cx="14" cy="24" r="3.6" fill="#b49b88"/><circle cx="24" cy="24" r="3.6" fill="#b49b88"/><circle cx="34" cy="24" r="3.6" fill="#b49b88"/></svg>`,
   coin: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#d4ad68" stroke="#a98140" stroke-width="1.6"/><path d="M12 7.5v9M14.4 9.6c-.6-.8-1.4-1.1-2.4-1.1-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.4 5 4 0 1.1-1.1 1.8-2.6 1.8-1.1 0-2-.4-2.6-1.2" stroke="#7a5626" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
   check: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#8fa486"/><path d="M7.5 12.5l3 3 6-6.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  palette: `<svg viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.3 0 1.9-.8 1.9-1.7 0-1.1-.9-1.4-.9-2.4 0-.9.7-1.6 1.7-1.6h2.1a3.7 3.7 0 0 0 3.7-3.7C20.5 7 16.7 3.5 12 3.5z" fill="#f3e6d4" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="7.6" cy="11.3" r="1.5" fill="#c9765a"/><circle cx="10" cy="7.6" r="1.5" fill="#d7a64f"/><circle cx="14.4" cy="7.6" r="1.5" fill="#8fa486"/><circle cx="17" cy="10.8" r="1.4" fill="#8e9fb4"/></svg>`,
+  chart: `<svg viewBox="0 0 24 24"><path d="M4 19.5h16" stroke="${INK}" stroke-width="1.8" stroke-linecap="round"/><rect x="5.5" y="11" width="3.2" height="7" rx="1.2" fill="#8fa486"/><rect x="10.4" y="6.5" width="3.2" height="11.5" rx="1.2" fill="#c9765a"/><rect x="15.3" y="13" width="3.2" height="5" rx="1.2" fill="#d7a64f"/></svg>`,
+  tray: `<svg viewBox="0 0 32 32"><path d="M6 22h20" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/><path d="M8 20.5a8 8 0 0 1 16 0z" fill="#d7a64f" stroke="${INK}" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="10.3" r="1.9" fill="${INK}"/><path d="M12 16.5c1-1.6 2.4-2.4 4-2.4" stroke="#f3d79a" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`,
+  smile: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#fffaf3"/><circle cx="20" cy="20" r="11" fill="#f1d9b8" stroke="${INK}" stroke-width="2"/><circle cx="16.3" cy="18" r="1.5" fill="${INK}"/><circle cx="23.7" cy="18" r="1.5" fill="${INK}"/><path d="M15.5 22.5c2.6 2.6 6.4 2.6 9 0" stroke="${INK}" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  pricey: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#fffaf3"/><circle cx="18" cy="21" r="9.5" fill="#d4ad68" stroke="#a98140" stroke-width="1.8"/><path d="M18 15.5v11M20.6 17.6c-.6-.8-1.5-1.2-2.6-1.2-1.5 0-2.6.7-2.6 1.9 0 2.8 5.4 1.5 5.4 4.3 0 1.2-1.2 1.9-2.8 1.9-1.2 0-2.2-.4-2.8-1.3" stroke="#7a5626" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M29.5 9.5c1.6 2.3 2.4 3.6 2.4 4.7a2.4 2.4 0 0 1-4.8 0c0-1.1.8-2.4 2.4-4.7z" fill="#8eb6d4"/></svg>`,
+  slow: `<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#fffaf3"/><circle cx="20" cy="20" r="10.5" fill="#f1d9b8" stroke="${INK}" stroke-width="2"/><path d="M20 14v6.5l4 2.5" stroke="${INK}" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  faceGood: `<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#c9dbb8"/><circle cx="12.5" cy="14.5" r="1.8" fill="${INK}"/><circle cx="21.5" cy="14.5" r="1.8" fill="${INK}"/><path d="M11 19.5c3.4 3.6 8.6 3.6 12 0" stroke="${INK}" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`,
+  faceOk: `<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#efe0bf"/><circle cx="12.5" cy="14.5" r="1.8" fill="${INK}"/><circle cx="21.5" cy="14.5" r="1.8" fill="${INK}"/><path d="M12 21h10" stroke="${INK}" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+  faceBad: `<svg viewBox="0 0 34 34"><circle cx="17" cy="17" r="15" fill="#efc2b0"/><circle cx="12.5" cy="14.5" r="1.8" fill="${INK}"/><circle cx="21.5" cy="14.5" r="1.8" fill="${INK}"/><path d="M11.5 23c3.2-3 7.8-3 11 0" stroke="${INK}" stroke-width="2.2" fill="none" stroke-linecap="round"/></svg>`,
   warn: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#c9765a"/><path d="M12 7v6" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1.4" fill="#fff"/></svg>`,
 };
 document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = ICONS[el.dataset.icon] || ''; });
@@ -2094,7 +2336,9 @@ class Character {
       this.hair.curls.push(c); this.head.add(c);
     }
     const top = mesh(CH_GEO.curl, MAT.linen); top.position.set(0, 0.23, -0.04); top.scale.setScalar(1.25); this.hair.curls.push(top); this.head.add(top);
-    for (const k of ['short', 'bob', 'bun', 'rim', 'pom']) this.head.add(this.hair[k]);
+    this.hair.chefBand = mesh(cylGeo(0.215, 0.215, 0.13, 32), MAT.linen); this.hair.chefBand.position.y = 0.2;
+    this.hair.chefTop = mesh(sphereGeo(0.235, 32, 20), MAT.linen); this.hair.chefTop.position.y = 0.33; this.hair.chefTop.scale.set(1.05, 0.72, 1.05);
+    for (const k of ['short', 'bob', 'bun', 'rim', 'pom', 'chefBand', 'chefTop']) this.head.add(this.hair[k]);
     this.glasses = new THREE.Group();
     for (const s of [-1, 1]) { const l = mesh(CH_GEO.lens, MAT.darkMetal, { cast: false }); l.position.set(0.088 * s, 0.03, 0.235); this.glasses.add(l); }
     const bridge = mesh(cylGeo(0.008, 0.008, 0.06, 6), MAT.darkMetal, { cast: false }); bridge.rotation.z = Math.PI / 2; bridge.position.set(0, 0.04, 0.245); this.glasses.add(bridge);
@@ -2112,13 +2356,14 @@ class Character {
     for (const a of this.arms) a.material = o;
     for (const l of this.legs) l.material = p;
     const hm = style === 'beanie' ? fabricMat(hat || pick([0xc9765a, 0xd7a64f, 0x9fb193, 0xe8b3a1])) : h;
-    for (const k of ['short', 'bob', 'bun', 'rim', 'pom']) { this.hair[k].material = hm; this.hair[k].visible = false; }
+    for (const k of ['short', 'bob', 'bun', 'rim', 'pom', 'chefBand', 'chefTop']) { this.hair[k].material = hm; this.hair[k].visible = false; }
     for (const c of this.hair.curls) { c.material = h; c.visible = false; }
     if (style === 'short') this.hair.short.visible = true;
     if (style === 'bob') this.hair.bob.visible = true;
     if (style === 'bun') { this.hair.short.visible = true; this.hair.bun.visible = true; this.hair.short.material = h; this.hair.bun.material = h; }
     if (style === 'beanie') { this.hair.short.visible = true; this.hair.rim.visible = true; this.hair.pom.visible = true; }
     if (style === 'curly') for (const c of this.hair.curls) c.visible = true;
+    if (style === 'chef') { this.hair.short.visible = true; this.hair.chefBand.visible = this.hair.chefTop.visible = true; this.hair.chefBand.material = this.hair.chefTop.material = fabricMat(0xf8f4ee); }
     this.glasses.visible = glasses;
     this.apron.visible = !!apron; if (apron) this.apron.material = fabricMat(apron);
     this.root.scale.setScalar(scale);
@@ -2180,31 +2425,59 @@ class Character {
 // ---------------------------------------------------------------------
 const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
 const STEP = 1 / 60;
-const PRICES = { latte: 4, matcha: 5.5, pastry: 3.5 };
 const ITEM_NAMES = { latte: 'Latte', matcha: 'Matcha', pastry: 'Pastry' };
+const ITEMS = ['latte', 'matcha', 'pastry'];
+const BASE_PRICE = { latte: 4, matcha: 5.5, pastry: 3.5 }; // what feels fair in an average café
+const UNIT_COST = { latte: 1.2, matcha: 1.7, pastry: 1.1 }; // ingredients, paid when an item is made
+const PRICE_STEP = 0.25;
+const priceRange = (k) => [Math.ceil(UNIT_COST[k] / PRICE_STEP) * PRICE_STEP, Math.round((BASE_PRICE[k] * 2.2) / PRICE_STEP) * PRICE_STEP];
 const DAY_START = 7, OPEN_FROM = 7.2, OPEN_UNTIL = 20, DAY_END = 20.5, HOURS_PER_SEC = 14 / 170;
 const G = {
   phase: 'title', day: 1, time: DAY_START, money: 0, rep: 2.0, paused: false,
-  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, barista: 0, decor: 0, sign: 0 },
+  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0 },
+  prices: { latte: 3.5, matcha: 5, pastry: 3 }, staff: [], history: [], // opening prices sit a little under fair
   spawnTimer: 1.2, lightHour: 8.4, closing: false, stats: null, bought: 0,
 };
-function newStats() { return { served: 0, stormed: 0, turned: 0, revenue: 0, tips: 0, bestTip: 0, repStart: G.rep, moneyStart: G.money, bought: 0 }; }
+const perItem = () => ({ latte: 0, matcha: 0, pastry: 0 });
+function newStats() {
+  return {
+    served: 0, stormed: 0, turned: 0, balked: 0, revenue: 0, tips: 0, bestTip: 0,
+    ingredients: 0, wages: 0, rent: 0, hiring: 0, satSum: 0, speedSum: 0, valueSum: 0, waitSum: 0,
+    sold: perItem(), salesBy: perItem(), made: perItem(), repStart: G.rep, moneyStart: G.money, bought: 0,
+  };
+}
 G.stats = newStats();
 const machineLevel = () => 1 + G.up.machine;
 const furnitureLevel = () => G.up.furniture;
 const tableCount = () => 2 + G.up.tables;
-const spendMult = () => (0.85 + 0.07 * G.rep) * (1 + 0.08 * furnitureLevel());
+// ---- pricing: guests judge your prices against what feels fair *here* ----
+// Reputation and a nicer room (furniture, decor) earn you pricing power.
+const ambience = () => (1 + 0.05 * (G.rep - 2.5)) * (1 + 0.06 * furnitureLevel() + 0.04 * G.up.decor);
+const fairPrice = (k) => BASE_PRICE[k] * ambience();
+const priceRatio = (k) => G.prices[k] / fairPrice(k);
+const valueScore = (r) => clamp(1 - (r - 0.85) * 1.6, 0, 1); // 1 = a steal, 0 = a rip-off
+const VALUE_BANDS = [[0.8, 'A steal', 'good'], [0.97, 'Good value', 'good'], [1.12, 'Fair', 'ok'], [1.35, 'Pricey', 'warn'], [Infinity, 'Rip-off', 'bad']];
+const valueBand = (r) => VALUE_BANDS.find((b) => r < b[0]);
+function menuIndex() { // weighted price ratio across the menu, roughly by how often each item is ordered
+  let s = priceRatio('latte'), w = 1;
+  if (G.up.matcha) { s += priceRatio('matcha') * 0.7; w += 0.7; }
+  if (G.up.pastry) { s += priceRatio('pastry') * 0.45; w += 0.45; }
+  return s / w;
+}
+// footfall multiplier: cheap menus pull people in (capped), pricey ones scare them off fast
+const footfall = () => { const r = menuIndex(); return r <= 1 ? 1 + Math.min(0.3, (1 - r) * 0.75) : Math.exp(-1.25 * (r - 1)); };
+const rentToday = () => 10 + 4 * tableCount();
 const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
 function nextSpawnInterval() {
   const r = clamp((G.rep - 0.5) / 4.5, 0, 1);
-  let base = lerp(9.0, 3.1, r) * (1 - 0.14 * G.up.sign);
+  let base = (lerp(8.2, 2.9, r) * (1 - 0.14 * G.up.sign)) / footfall();
   const h = G.time;
   if ((h > 8 && h < 10) || (h > 12 && h < 13.6)) base *= 0.78; // morning & lunch rush
   else if (h > 15 && h < 16.8) base *= 1.18;
   return base * rand(0.72, 1.28);
 }
 function addRep(d) { G.rep = clamp(G.rep + d, 0.5, 5); ui.repDirty = true; }
-function addMoney(d) { G.money = Math.max(0, G.money + d); ui.moneyDirty = true; }
+function addMoney(d) { G.money += d; ui.moneyDirty = true; } // can dip below zero: wages and rent don't wait
 
 // ---------------------------------------------------------------------
 // 11. ITEMS — pooled cups & plates, counter slots, flight tweens
@@ -2270,7 +2543,7 @@ function updateTweens(dt) {
 }
 
 // ---------------------------------------------------------------------
-// 12. ENTITIES — machines (espresso, matcha, pastry), tables, customers, barista
+// 12. ENTITIES — machines (espresso, matcha, pastry), tables, customers, workers
 // ---------------------------------------------------------------------
 const interactables = [];
 const proxyMat = new THREE.MeshBasicMaterial({ visible: false });
@@ -2298,10 +2571,10 @@ class Machine {
   get unlocked() { return this.kind === 'latte' || (this.kind === 'matcha' ? G.up.matcha > 0 : G.up.pastry > 0); }
   get capacity() { return this.kind === 'latte' && machineLevel() >= 3 ? 2 : 1; }
   get brewTime() {
-    const L = machineLevel() - 1;
-    if (this.kind === 'latte') return [3.0, 2.3, 1.85, 1.35][L];
-    if (this.kind === 'matcha') return [3.6, 3.0, 2.5, 2.0][L];
-    return 0.55;
+    const L = machineLevel() - 1, staff = staffSpeed(this.kind);
+    if (this.kind === 'latte') return [3.0, 2.3, 1.85, 1.35][L] * staff;
+    if (this.kind === 'matcha') return [3.6, 3.0, 2.5, 2.0][L] * staff;
+    return 0.55 * staff;
   }
   get maxQueue() { return this.kind === 'pastry' ? 2 : 3; }
   get pending() { return this.queue + this.jobs.length; }
@@ -2328,6 +2601,8 @@ class Machine {
       const used = new Set(this.jobs.map((j) => j.head));
       let head = 0; while (used.has(head)) head++;
       this.queue--;
+      const cost = UNIT_COST[this.kind];
+      addMoney(-cost); G.stats.ingredients += cost; G.stats.made[this.kind]++;
       const m = getItemMesh(this.kind);
       this.headWorld(head, m.position);
       if (this.kind === 'pastry') m.position.add(V3(0, 0, 0.36));
@@ -2472,8 +2747,13 @@ const customerPool = [];
 const queue = [null, null, null];
 
 function makeOrder() {
-  const items = [{ kind: G.up.matcha && Math.random() < 0.42 ? 'matcha' : 'latte', status: 'need' }];
-  if (G.up.pastry && Math.random() < 0.45) items.push({ kind: 'pastry', status: 'need' });
+  let drink = 'latte';
+  if (G.up.matcha) { // relative price nudges the drink choice
+    const wm = 0.42 * clamp(Math.pow(priceRatio('latte') / priceRatio('matcha'), 2.2), 0.25, 2.5);
+    if (Math.random() < wm / (wm + 0.58)) drink = 'matcha';
+  }
+  const items = [{ kind: drink, status: 'need' }];
+  if (G.up.pastry && Math.random() < 0.45 * clamp(2 - priceRatio('pastry'), 0.15, 1.4)) items.push({ kind: 'pastry', status: 'need' });
   return items;
 }
 
@@ -2525,7 +2805,7 @@ class Customer extends Walker {
     this.speed = rand(1.75, 2.05);
     this.setPath([DOOR_IN.clone()]);
     this.state = 'enter';
-    this.order = makeOrder(); this.table = null; this.timer = 0;
+    this.order = makeOrder(); this.table = null; this.timer = 0; this.waited = 0;
     this.patienceMax = basePatience(); this.patience = this.patienceMax; this.qPatience = 22;
     this.bubble.shown = false; this.bubble.el.classList.add('hidden'); this.bubble.lastFrac = -1;
     this.renderBubbleItems();
@@ -2577,10 +2857,18 @@ class Customer extends Walker {
         this.timer += dt;
         this.faceTo(0, dt, 14);
         this.ch.sit = smooth(clamp(this.timer / 0.45, 0, 1));
-        if (this.timer >= 0.45) { this.state = 'wait'; this.showBubble(); }
+        if (this.timer >= 0.45) {
+          // reading the menu: steep prices make some guests walk straight back out
+          const worst = Math.max(...this.order.map((o) => priceRatio(o.kind)));
+          if (Math.random() < clamp((worst - 1.4) * 1.8, 0, 0.9)) this.balk();
+          else {
+            this.state = 'wait'; this.showBubble();
+            if (worst > 1.25) showEmote(V3(this.pos.x, this.headY() + 0.55, this.pos.z), 'pricey', 1.2);
+          }
+        }
         break;
       case 'wait':
-        this.patience -= dt;
+        this.patience -= dt; this.waited += dt;
         if (this.patience <= 0) this.stormOff();
         break;
       case 'eat':
@@ -2623,23 +2911,38 @@ class Customer extends Walker {
     if (this.state === 'wait' && this.order.every((x) => x.status === 'done')) this.pay();
   }
   pay() {
-    const frac = clamp(this.patience / this.patienceMax, 0, 1);
-    const base = this.order.reduce((s, o) => s + PRICES[o.kind], 0) * spendMult();
-    const tip = base * (0.05 + 0.42 * Math.pow(frac, 1.3)) * (1 + 0.3 * furnitureLevel());
-    addMoney(base + tip);
-    G.stats.served++; G.stats.revenue += base; G.stats.tips += tip; G.stats.bestTip = Math.max(G.stats.bestTip, tip);
-    addRep((0.02 + 0.045 * frac) * (1 + 0.25 * G.up.decor) * clamp((5.4 - G.rep) / 3.4, 0.15, 1.2));
+    // satisfaction = how fast it came + how fair the price felt
+    const speed = clamp(this.patience / this.patienceMax, 0, 1);
+    let value = 0, total = 0;
+    for (const o of this.order) { total += G.prices[o.kind]; value += valueScore(priceRatio(o.kind)); }
+    value /= this.order.length;
+    const sat = clamp(0.5 * speed + 0.5 * value, 0, 1);
+    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel());
+    addMoney(total + tip);
+    const S = G.stats;
+    S.served++; S.revenue += total; S.tips += tip; S.bestTip = Math.max(S.bestTip, tip);
+    S.satSum += sat; S.speedSum += speed; S.valueSum += value; S.waitSum += this.waited;
+    for (const o of this.order) { S.sold[o.kind]++; S.salesBy[o.kind] += G.prices[o.kind]; }
+    addRep(sat >= 0.45 ? (sat - 0.45) * 0.13 * (1 + 0.25 * G.up.decor) * clamp((5.4 - G.rep) / 3.4, 0.15, 1.2) : (sat - 0.45) * 0.14);
     const head = V3(this.pos.x, this.headY() + 0.2, this.pos.z);
-    ui.float(`+$${base.toFixed(2)}`, head, '');
-    const big = tip >= 2.2 && frac > 0.7;
+    ui.float(`+$${total.toFixed(2)}`, head, '');
+    const big = tip >= 2.5 && sat > 0.78;
     if (tip >= 0.4) setTimeout(() => ui.float(`+$${tip.toFixed(2)} tip`, head, big ? 'big' : 'tip'), 260);
     sfx.coins(big);
     this.state = 'eat'; this.timer = rand(5.2, 7.2);
-    this.ch.setMood('happy'); this.ch.kick(1.3);
+    this.ch.setMood(sat >= 0.48 ? 'happy' : 'neutral'); this.ch.kick(sat >= 0.48 ? 1.3 : 0.5);
     this.bubble.shown = false; this.bubble.el.classList.add('hidden');
-    showEmote(V3(this.pos.x, this.headY(), this.pos.z), 'heart', 1.3);
-    if (big) { pushCamera(this.pos, 0.1); burstSparkles(V3(this.pos.x, this.headY(), this.pos.z), 26); ui.toast('Big tip! Lightning-fast service ✨', 'coin'); }
+    showEmote(V3(this.pos.x, this.headY(), this.pos.z), sat >= 0.72 ? 'heart' : sat >= 0.48 ? 'smile' : value < speed ? 'pricey' : 'slow', 1.4);
+    if (big) { pushCamera(this.pos, 0.1); burstSparkles(V3(this.pos.x, this.headY(), this.pos.z), 26); ui.toast('Big tip! Fast service at a fair price ✨', 'coin', 2600, 'bigtip'); }
     tutorial.onServed();
+  }
+  balk() {
+    this.ch.setMood('sad');
+    showEmote(V3(this.pos.x, this.headY(), this.pos.z), 'pricey', 1.8);
+    ui.float('Too pricey!', V3(this.pos.x, this.headY() + 0.25, this.pos.z), 'bad');
+    G.stats.balked++; addRep(-0.04);
+    sfx.nope();
+    this.standUp(false);
   }
   stormOff() {
     this.ch.setMood('angry');
@@ -2742,49 +3045,83 @@ function serveTable(table) {
 
 function onItemReady(kind) { tutorial.onReady(kind); }
 
-// ---- barista ----
-class Barista extends Walker {
+// ---- staff: every hired worker is a Worker; their role decides what they do ----
+const ROLES = {
+  barista: { title: 'Barista', kind: 'latte', icon: 'latte', hire: 90, wage: 36, max: 1, apron: 0xc9765a, outfit: 0xf1e6d6, style: 'bun', desc: 'Keeps the espresso machine pulling lattes.' },
+  tea: { title: 'Tea Master', kind: 'matcha', icon: 'matcha', hire: 90, wage: 32, max: 1, needs: 'matcha', apron: 0x8fa486, outfit: 0xe9e0cf, style: 'short', desc: 'Whisks matcha at the tea bar.' },
+  baker: { title: 'Baker', kind: 'pastry', icon: 'pastry', hire: 70, wage: 28, max: 1, needs: 'pastry', apron: 0xe2d4bf, outfit: 0xf7f2ea, style: 'chef', desc: 'Plates pastries from the case.' },
+  server: { title: 'Server', kind: null, icon: 'tray', hire: 110, wage: 34, max: 2, apron: 0xd7a64f, outfit: 0x8e9fb4, style: 'curly', desc: 'Runs ready orders out to tables.' },
+};
+const ROLE_ORDER = ['barista', 'tea', 'baker', 'server'];
+const STAFF_NAMES = ['Ava', 'Milo', 'Juno', 'Theo', 'Iris', 'Remy', 'Noor', 'Kai', 'Lena', 'Ezra', 'Mae', 'Otis', 'Pia', 'Sol', 'Wren', 'Ines', 'Arlo', 'Nia'];
+const TRAIN_COST = [0, 120, 240]; // to go from level 1→2 and 2→3
+const MAX_STAFF_LEVEL = 3;
+const wageOf = (s) => ROLES[s.role].wage * (1 + 0.25 * (s.level - 1));
+const dayFraction = (from, to) => clamp((to - from) / (DAY_END - DAY_START), 0, 1);
+const wageDue = (s, until = DAY_END) => wageOf(s) * Math.max(0.2, dayFraction(Math.max(s.hiredAt, DAY_START), until));
+const Z_FRONT = -2.64;
+const workers = [];
+const workerPool = [];
+const staffLevel = (kind) => { const w = workers.find((x) => x.cfg.kind === kind && x.state !== 'leaving'); return w ? w.data.level : 0; };
+const staffSpeed = (kind) => 1 - 0.08 * staffLevel(kind);
+const demandFor = (kind) => {
+  let n = 0;
+  for (const c of customers) if (c.state === 'wait' || c.state === 'sitting' || c.state === 'toSeat' || c.state === 'queue') for (const o of c.order) if (o.kind === kind && o.status === 'need') n++;
+  return n;
+};
+
+class Worker extends Walker {
   constructor() {
     super();
     this.initWalker();
     this.ch = new Character();
-    this.ch.dress({ skin: 0xdeab86, outfit: 0xf1e6d6, pants: 0x4a4440, hairColor: 0x3a2a22, style: 'bun', apron: 0xc9765a, scale: 1.0 });
     this.ch.root.visible = false;
     world.add(this.ch.root);
-    this.state = 'off'; this.task = null; this.think = 0; this.timer = 0; this.carry = null;
-    this.home = V3(LAYOUT.machine.x + 0.95, 0, Z_LANE);
-    this.exit = V3(-0.42, 0, Z_LANE); this.exit2 = V3(-0.42, 0, Z_A);
+    this.state = 'off'; this.carry = null; this.task = null;
   }
-  get level() { return G.up.barista; }
-  get walkSpeed() { return [0, 2.35, 2.9, 3.5][this.level]; }
-  get workTime() { return [0, 0.55, 0.42, 0.3][this.level]; }
-  hire() {
-    this.ch.root.visible = true;
-    this.pos.copy(DOOR_OUT); this.prev.copy(this.pos);
+  setup(data, arriving) {
+    this.data = data; this.cfg = ROLES[data.role];
+    this.ch.dress({ skin: data.skin, outfit: this.cfg.outfit, pants: 0x4a4440, hairColor: data.hair, style: this.cfg.style, apron: this.cfg.apron, scale: data.scale });
+    this.ch.setMood('neutral'); this.ch.sit = 0; this.ch.carry = false; this.ch.root.visible = true;
+    this.carry = null; this.task = null;
+    this.home = this.homeSpot();
     this.speed = this.walkSpeed;
-    this.walkTo([DOOR_IN.clone(), V3(ROOM.door.x, 0, Z_A), this.exit2.clone(), this.exit.clone(), this.home.clone()], () => this.idle());
+    if (arriving) {
+      this.pos.copy(DOOR_OUT); this.prev.copy(this.pos); this.yaw = this.prevYaw = 0;
+      this.walkTo([DOOR_IN.clone(), V3(ROOM.door.x, 0, Z_A), ...this.entryPath()], () => this.idle());
+    } else {
+      this.pos.copy(this.home); this.prev.copy(this.home); this.yaw = this.prevYaw = 0;
+      this.ch.moving = false; this.idle();
+    }
   }
+  get isServer() { return this.data.role === 'server'; }
+  homeSpot() {
+    switch (this.data.role) {
+      case 'barista': return V3(LAYOUT.machine.x + 0.95, 0, Z_LANE);
+      case 'tea': return V3(LAYOUT.matcha.x + 0.5, 0, Z_LANE);
+      case 'baker': return V3(LAYOUT.pastry.x, 0, Z_LANE);
+      default: { const i = G.staff.filter((s) => s.role === 'server').indexOf(this.data); return V3(i > 0 ? -1.15 : -1.95, 0, Z_FRONT); }
+    }
+  }
+  // brewers slip behind the counter at its open end; servers wait in front of it
+  entryPath() { return this.isServer ? [V3(this.home.x, 0, Z_A), this.home.clone()] : [V3(-0.42, 0, Z_A), V3(-0.42, 0, Z_LANE), this.home.clone()]; }
+  get walkSpeed() { return [0, 2.4, 2.95, 3.5][this.data.level]; }
+  get workTime() { return [0, 0.5, 0.38, 0.28][this.data.level]; }
   walkTo(pts, then) { this.setPath(pts); this.state = 'walk'; this.onArrive = then; }
-  idle() { this.state = 'idle'; this.task = null; this.think = 0.15; }
-  lanePath(x) { return [V3(x, 0, Z_LANE)]; }
-  // path from behind the counter out to a table's serve point
-  outPath(table) {
-    const s = table.serve, pts = [this.exit.clone(), this.exit2.clone()];
-    if (table.row === 0) pts.push(V3(s.x, 0, Z_A));
-    else { const ax = nearestAisle(s.x); pts.push(V3(ax, 0, Z_A), V3(ax, 0, Z_B), V3(s.x, 0, Z_B)); }
-    pts.push(s.clone());
-    return pts;
-  }
+  idle() { this.state = 'idle'; this.task = null; this.think = 0.12; this.ch.moving = false; }
+  work(time, then) { this.state = 'work'; this.timer = time; this.onWork = then; this.ch.moving = false; this.ch.sip = 0.8; }
   fixed(dt) {
     this.prev.copy(this.pos); this.prevYaw = this.yaw;
     if (this.state === 'off') return;
     this.speed = this.walkSpeed;
     switch (this.state) {
-      case 'walk': if (this.follow(dt)) { const f = this.onArrive; this.onArrive = null; if (f) f(); } break;
+      case 'walk': case 'leaving':
+        if (this.follow(dt)) { const f = this.onArrive; this.onArrive = null; if (f) f(); }
+        break;
       case 'idle':
         this.faceTo(0, dt, 6);
         this.think -= dt;
-        if (this.think <= 0) { this.think = 0.3; this.decide(); }
+        if (this.think <= 0) { this.think = 0.3; if (G.phase === 'open') (this.isServer ? this.decideDelivery() : this.decideProduction()); }
         break;
       case 'work':
         this.faceTo(0, dt, 12);
@@ -2793,12 +3130,19 @@ class Barista extends Walker {
         break;
     }
   }
-  work(time, then) { this.state = 'work'; this.timer = time; this.onWork = then; this.ch.moving = false; this.ch.sip = 0.8; }
-  decide() {
-    if (G.phase !== 'open') return;
-    // 1) deliver: most impatient guest with something ready — carry their whole order if possible
+  decideProduction() {
+    const st = stations[this.cfg.kind];
+    if (!st.unlocked || st.pending >= st.maxQueue) return;
+    const short = demandFor(this.cfg.kind) - readyCount(this.cfg.kind) - st.pending;
+    if (short <= 0) return;
+    this.work(this.workTime + 0.15, () => {
+      for (let i = 0; i < short; i++) if (st.request() !== 'ok') break;
+      this.idle();
+    });
+  }
+  decideDelivery() {
+    // most impatient guest first; prefer guests whose whole remaining order is ready
     const waiting = customers.filter((c) => c.state === 'wait').sort((a, b) => a.patience / a.patienceMax - b.patience / b.patienceMax);
-    // prefer guests whose whole remaining order is ready; otherwise only go early if they're getting impatient
     const plans = waiting.map((c) => {
       const picks = [];
       for (const o of c.order) {
@@ -2806,36 +3150,24 @@ class Barista extends Walker {
         const slot = slots.find((s) => s.item && s.item.kind === o.kind && !s.item.reserved && !picks.some((p) => p.slot === s));
         if (slot) picks.push({ slot, item: slot.item, o });
       }
-      const complete = picks.length > 0 && picks.length === c.order.filter((o) => o.status === 'need').length;
+      const needN = c.order.filter((o) => o.status === 'need').length;
       const missingInProduction = c.order.some((o) => o.status === 'need' && !picks.some((p) => p.o === o) && stations[o.kind].pending > 0);
-      return { c, picks, ok: complete || (picks.length > 0 && (!missingInProduction || c.patience / c.patienceMax < 0.45)) };
+      return { c, picks, complete: picks.length > 0 && picks.length === needN, ok: picks.length > 0 && (picks.length === needN || !missingInProduction || c.patience / c.patienceMax < 0.45) };
     });
-    const plan = plans.find((p) => p.ok && p.picks.length === p.c.order.filter((o) => o.status === 'need').length) || plans.find((p) => p.ok);
-    if (plan) {
-      const { c, picks } = plan;
-      for (const p of picks) { p.item.reserved = true; p.o.status = 'incoming'; }
-      const task = (this.task = { type: 'deliver', picks, c, table: c.table });
-      const x = picks.reduce((sum, p) => sum + p.slot.pos.x, 0) / picks.length;
-      this.walkTo(this.lanePath(x), () => this.work(this.workTime, () => this.pickUp(task)));
-      return;
-    }
-    // 2) brew: queue everything a station is short of in one stop
-    for (const kind of ['latte', 'matcha', 'pastry']) {
-      const st = stations[kind];
-      if (!st.unlocked || st.pending >= st.maxQueue) continue;
-      let need = 0;
-      for (const c of customers) if (c.state === 'wait' || c.state === 'sitting' || c.state === 'toSeat') for (const o of c.order) if (o.kind === kind && o.status === 'need') need++;
-      const short = need - readyCount(kind) - st.pending;
-      if (short > 0) {
-        this.task = { type: 'brew' };
-        this.walkTo(this.lanePath(st.pos.x + (kind === 'latte' ? 0.75 : 0)), () => this.work(this.workTime + 0.15, () => {
-          for (let i = 0; i < short; i++) if (st.request() !== 'ok') break;
-          this.idle(); this.think = 0;
-        }));
-        return;
-      }
-    }
-    if (this.pos.distanceTo(this.home) > 0.05) this.walkTo([this.home.clone()], () => this.idle());
+    const plan = plans.find((p) => p.complete) || plans.find((p) => p.ok);
+    if (!plan) { if (this.pos.distanceTo(this.home) > 0.05) this.walkTo([this.home.clone()], () => this.idle()); return; }
+    const { c, picks } = plan;
+    for (const p of picks) { p.item.reserved = true; p.o.status = 'incoming'; }
+    const x = picks.reduce((sum, p) => sum + p.slot.pos.x, 0) / picks.length;
+    const task = (this.task = { picks, c, table: c.table, x });
+    this.walkTo([V3(x, 0, Z_FRONT)], () => this.work(this.workTime, () => this.pickUp(task)));
+  }
+  outPath(table, x) {
+    const s = table.serve, pts = [V3(x, 0, Z_A)];
+    if (table.row === 0) pts.push(V3(s.x, 0, Z_A));
+    else { const ax = nearestAisle(s.x); pts.push(V3(ax, 0, Z_A), V3(ax, 0, Z_B), V3(s.x, 0, Z_B)); }
+    pts.push(s.clone());
+    return pts;
   }
   pickUp(task) {
     task.picks = task.picks.filter((p) => { if (p.slot.item === p.item) return true; if (p.o.status === 'incoming') p.o.status = 'need'; return false; });
@@ -2843,27 +3175,52 @@ class Barista extends Walker {
     for (const p of task.picks) p.slot.item = null;
     ui.traysDirty = true;
     this.carry = task.picks.map((p) => p.item); this.ch.carry = true;
-    this.walkTo(this.outPath(task.table), () => this.deliver(task));
+    this.walkTo(this.outPath(task.table, task.x), () => this.deliver(task));
+  }
+  dropCarry() { // put carried items back on the counter (or bin them)
+    for (const item of this.carry || []) {
+      const slot = freeSlot();
+      if (slot) { slot.claimed = true; fly(item.mesh, item.mesh.position, slot.pos, 0.6, 1.0, () => { slot.claimed = false; slot.item = { kind: item.kind, mesh: item.mesh, reserved: false }; ui.traysDirty = true; }); }
+      else shrinkOut(item.mesh, 0.3, () => releaseItemMesh(item.kind, item.mesh));
+    }
+    this.carry = null; this.ch.carry = false;
+  }
+  releaseTask() { // unreserve items we were walking to collect
+    if (this.task && !this.carry) for (const p of this.task.picks) { if (p.slot.item === p.item) p.item.reserved = false; if (p.o.status === 'incoming') p.o.status = 'need'; }
+    this.task = null;
   }
   deliver(task) {
     const { c, table } = task;
-    this.carry = null; this.ch.carry = false;
-    for (const p of task.picks) {
-      const item = p.item;
+    const carried = this.carry; this.carry = null; this.ch.carry = false;
+    task.picks.forEach((p, i) => {
+      const item = carried[i];
       if (c.table === table && c.state === 'wait') {
         fly(item.mesh, item.mesh.position, spotFor(table, p.o.kind), 0.3, 0.25, () => {
           table.items.push({ kind: item.kind, mesh: item.mesh });
           if (c.table === table && c.state === 'wait') c.receive(p.o); else table.clearItems();
         });
-      } else {
-        // guest left — put it back on the counter if there's room
-        const slot = freeSlot();
-        if (slot) { slot.claimed = true; fly(item.mesh, item.mesh.position, slot.pos, 0.6, 1.0, () => { slot.claimed = false; slot.item = { kind: item.kind, mesh: item.mesh, reserved: false }; ui.traysDirty = true; }); }
-        else shrinkOut(item.mesh, 0.3, () => releaseItemMesh(item.kind, item.mesh));
-      }
-    }
-    const back = this.outPath(table).reverse(); back.shift();
-    this.walkTo([...back, this.home.clone()], () => { this.idle(); this.think = 0; });
+      } else { this.carry = [item]; this.dropCarry(); }
+    });
+    this.task = null;
+    const back = this.outPath(table, task.x).reverse(); back.shift();
+    this.walkTo([...back, V3(this.home.x, 0, Z_A), this.home.clone()], () => { this.idle(); this.think = 0; });
+  }
+  snapHome() { // end of day: tidy up and stand at the post
+    this.releaseTask(); if (this.carry) this.dropCarry();
+    if (this.state === 'leaving') return;
+    this.pos.copy(this.home); this.prev.copy(this.home); this.idle();
+  }
+  leave() {
+    this.releaseTask(); if (this.carry) this.dropCarry();
+    const pts = this.isServer ? [V3(this.pos.x, 0, Z_A)] : [V3(-0.42, 0, Z_LANE), V3(-0.42, 0, Z_A)];
+    this.setPath([...pts, V3(ROOM.door.x, 0, Z_A), DOOR_IN.clone(), DOOR_OUT.clone()]);
+    this.state = 'leaving';
+    this.ch.setMood('sad');
+    this.onArrive = () => {
+      this.state = 'off'; this.ch.root.visible = false;
+      const i = workers.indexOf(this); if (i >= 0) workers.splice(i, 1);
+      workerPool.push(this);
+    };
   }
   render(alpha, dt, t) {
     if (this.state === 'off') return;
@@ -2877,7 +3234,64 @@ class Barista extends Walker {
     }
   }
 }
-const barista = new Barista();
+
+function spawnWorker(data, arriving) {
+  const w = workerPool.pop() || new Worker();
+  workers.push(w);
+  w.setup(data, arriving);
+  return w;
+}
+const workerFor = (data) => workers.find((w) => w.data === data);
+const staffCount = (role) => G.staff.filter((s) => s.role === role).length;
+function canHire(role) {
+  const cfg = ROLES[role];
+  if (cfg.needs && !G.up[cfg.needs]) return 'locked';
+  if (staffCount(role) >= cfg.max) return 'full';
+  return G.money >= cfg.hire ? 'ok' : 'money';
+}
+function hireStaff(role) {
+  const why = canHire(role);
+  if (why !== 'ok') { sfx.nope(); return false; }
+  const cfg = ROLES[role];
+  addMoney(-cfg.hire); G.stats.hiring += cfg.hire;
+  const taken = new Set(G.staff.map((s) => s.name));
+  const data = {
+    role, level: 1, name: pick(STAFF_NAMES.filter((n) => !taken.has(n))) || 'Sam',
+    skin: pick(SKIN_TONES), hair: pick(HAIR_COLORS), scale: rand(0.92, 1.04),
+    hiredAt: G.phase === 'open' ? G.time : DAY_START,
+  };
+  G.staff.push(data);
+  spawnWorker(data, true);
+  sfx.upgrade();
+  ui.toast(`${data.name} joined as your ${cfg.title.toLowerCase()}!`, ROLES[role].icon, 2600);
+  pushCamera(DOOR_IN, 0.08);
+  ui.shopDirty = true; ui.staffDirty = true;
+  tutorial.onHire(role);
+  return true;
+}
+function trainStaff(data) {
+  if (data.level >= MAX_STAFF_LEVEL) return;
+  const cost = TRAIN_COST[data.level];
+  if (G.money < cost) { sfx.nope(); return; }
+  addMoney(-cost); G.stats.hiring += cost;
+  data.level++;
+  const w = workerFor(data);
+  if (w) { burstSparkles(V3(w.pos.x, 1.7, w.pos.z), 22); w.ch.kick(1.2); }
+  sfx.upgrade();
+  ui.toast(`${data.name} trained up to level ${data.level}`, 'spark', 2200);
+  ui.staffDirty = true; ui.shopDirty = true;
+}
+function fireStaff(data) {
+  const i = G.staff.indexOf(data); if (i < 0) return;
+  const owed = G.phase === 'open' ? wageDue(data, G.time) : 0; // pay for the hours they worked today
+  if (owed > 0) { addMoney(-owed); G.stats.wages += owed; }
+  G.staff.splice(i, 1);
+  const w = workerFor(data); if (w) w.leave();
+  for (const o of workers) if (o.isServer && o.state !== 'leaving') o.home = o.homeSpot();
+  sfx.pop();
+  ui.toast(`${data.name} hung up their apron`, ROLES[data.role].icon, 2200);
+  ui.staffDirty = true; ui.shopDirty = true;
+}
 
 // ---------------------------------------------------------------------
 // 13. UPGRADES
@@ -2890,12 +3304,9 @@ const UPGRADES = [
   { id: 'furniture', name: 'Nicer Furniture', icon: 'chair', tint: '#dfe6d6', costs: [110, 240, 450],
     desc: (l) => ['Bentwood bistro chairs: +tips, +patience.', 'Velvet tub chairs & marble tops.', 'Plush armchairs & mushroom lamps.', 'Peak cosiness achieved.'][l] },
   { id: 'matcha', name: 'Matcha Bar', icon: 'matcha', tint: '#e2ead2', costs: [140],
-    desc: (l) => (l ? 'Whisking ceremonial matcha.' : 'A second drink on the menu: matcha at $5.50.') },
+    desc: (l) => (l ? 'Whisking ceremonial matcha.' : 'A second drink on the menu: whisked matcha.') },
   { id: 'pastry', name: 'Pastry Case', icon: 'pastry', tint: '#f6e2c4', costs: [90],
-    desc: (l) => (l ? 'Croissants, muffins & donuts.' : 'Guests add pastries to orders: +$3.50 each.') },
-  { id: 'barista', name: 'Hire Barista', icon: 'person', tint: '#f1d9cf', costs: [220, 200, 380],
-    desc: (l) => ['A helper who brews & serves on their own.', 'Barista training: quicker on their feet.', 'Barista mastery: lightning hands.', 'Your barista is a legend.'][l],
-    title: (l) => (l === 0 ? 'Hire Barista' : 'Barista Training') },
+    desc: (l) => (l ? 'Croissants, muffins & donuts.' : 'Guests add pastries to their orders.') },
   { id: 'decor', name: 'Cosy Decor', icon: 'plant', tint: '#dbe5d3', costs: [70, 160],
     desc: (l) => ['Plants everywhere: reputation grows faster.', 'String lights: guests linger happily.', 'Maximum hygge.'][l] },
   { id: 'sign', name: 'Sidewalk Sign', icon: 'sign', tint: '#e4e1db', costs: [120, 260],
@@ -2911,7 +3322,7 @@ function buyUpgrade(id) {
   if (G.money < cost) { sfx.nope(); return; }
   addMoney(-cost);
   G.up[id]++;
-  G.stats.bought++;
+  G.stats.bought++; G.stats.upgrades = (G.stats.upgrades || 0) + cost;
   applyUpgrade(id, true);
   sfx.upgrade();
   ui.shopDirty = true;
@@ -2948,11 +3359,6 @@ function applyUpgrade(id, animate) {
       updateMenuBoard();
       break;
     }
-    case 'barista': {
-      if (G.up.barista === 1) { barista.hire(); focus.copy(LAYOUT.machine); }
-      else { focus.copy(barista.pos); burstSparkles(V3(barista.pos.x, 1.6, barista.pos.z), 20); }
-      break;
-    }
     case 'decor': {
       if (G.up.decor >= 1) { DECOR.plants.visible = true; if (animate && G.up.decor === 1) DECOR.plants.children.forEach((p, i) => popIn(p, i * 0.1)); }
       if (G.up.decor >= 2) { DECOR.lights.visible = true; if (animate && G.up.decor === 2) for (let i = 0; i < 10; i++) burstSparkles(V3(-6.9 + i * 1.5, 3.9, ROOM.z0 + 0.3), 6, [1, 0.85, 0.55], 0.4); }
@@ -2977,9 +3383,9 @@ function applyUpgrade(id, animate) {
 
 function updateMenuBoard() {
   drawChalkboard([
-    { name: 'Latte', price: PRICES.latte },
-    { name: 'Matcha', price: PRICES.matcha, locked: !G.up.matcha },
-    { name: 'Pastries', price: PRICES.pastry, locked: !G.up.pastry },
+    { name: 'Latte', price: G.prices.latte },
+    { name: 'Matcha', price: G.prices.matcha, locked: !G.up.matcha },
+    { name: 'Pastries', price: G.prices.pastry, locked: !G.up.pastry },
   ]);
 }
 
@@ -3135,10 +3541,14 @@ window.addEventListener('keydown', (e) => {
     if (k === '2' && stations.matcha.unlocked) interact(stations.matcha);
     if (k === '3' && stations.pastry.unlocked) interact(stations.pastry);
   }
-  if (k === 'u' || k === 's') ui.toggleShop();
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (k === 'u' || k === 's') ui.toggleShop(ui.shopOpen && ui.tab === 'upgrades' ? false : true, 'upgrades');
+  if (k === 'b') ui.toggleShop(ui.shopOpen && ui.tab === 'overview' ? false : true, 'overview');
+  if (k === 'c') ui.toggleCustom();
   if (k === 'm') ui.toggleMute();
-  if (k === 'p' || (k === 'escape' && !ui.shopOpen)) ui.togglePause();
+  if (k === 'p' || (k === 'escape' && !ui.shopOpen && !ui.customOpen)) ui.togglePause();
   if (k === 'escape' && ui.shopOpen) ui.toggleShop(false);
+  if (k === 'escape' && ui.customOpen) ui.toggleCustom(false);
 });
 
 function updateHover() {
@@ -3273,12 +3683,46 @@ function toScreen(v) {
   _proj.copy(v).project(camera);
   return { x: (_proj.x * 0.5 + 0.5) * innerWidth, y: (-_proj.y * 0.5 + 0.5) * innerHeight, ok: _proj.z < 1 };
 }
-const fmtMoney = (v) => '$' + (v >= 1000 ? Math.floor(v).toLocaleString('en-US') : v.toFixed(v < 100 ? 2 : 0));
+const fmtAbs = (v) => (v >= 1000 ? Math.floor(v).toLocaleString('en-US') : v.toFixed(v < 100 ? 2 : 0));
+const fmtMoney = (v) => (v < -0.004 ? '−$' : '$') + fmtAbs(Math.abs(v));
+const fmtAmount = (v) => (v < -0.004 ? '−' : '') + fmtAbs(Math.abs(v));
+// today's books: wages and rent are counted in full while open (they fall due at closing)
+function books() {
+  const S = G.stats, closed = G.phase === 'summary' || G.phase === 'transition';
+  const wages = closed ? S.wages : S.wages + G.staff.reduce((a, st) => a + wageDue(st), 0);
+  const rent = closed ? S.rent : rentToday();
+  const costs = S.ingredients + wages + rent;
+  return { sales: S.revenue, tips: S.tips, ingredients: S.ingredients, wages, rent, costs, profit: S.revenue + S.tips - costs, invested: S.hiring + (S.upgrades || 0) };
+}
+// single-series column chart of daily profit: blue above zero, terracotta below (direction + colour)
+function profitChart(days) {
+  const W = 340, H = 150, pl = 40, pr = 6, pt = 18, pb = 22, pw = W - pl - pr, ph = H - pt - pb;
+  let lo = Math.min(0, ...days.map((d) => d.profit)), hi = Math.max(0, ...days.map((d) => d.profit));
+  if (hi - lo < 40) hi = lo + 40;
+  const raw = (hi - lo) / 3, mag = Math.pow(10, Math.floor(Math.log10(raw))), step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((m) => m >= raw);
+  lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
+  const y = (v) => pt + ((hi - v) / (hi - lo)) * ph, y0 = y(0);
+  const slot = pw / Math.max(days.length, 5), bw = Math.min(24, slot * 0.62);
+  let g = '';
+  for (let v = lo; v <= hi + 1e-6; v += step) g += `<line x1="${pl}" x2="${W - pr}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(74,52,40,${v === 0 ? 0.35 : 0.1})" stroke-width="1"/><text x="${pl - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" font-weight="700" fill="#7a5f4e">${v < 0 ? '−' : ''}$${Math.abs(v)}</text>`;
+  days.forEach((d, i) => {
+    const cx = pl + slot * (i + 0.5), x = cx - bw / 2, top = y(Math.max(0, d.profit)), bot = y(Math.min(0, d.profit));
+    const h = Math.max(1, bot - top), r = Math.min(4, h), pos = d.profit >= 0;
+    const path = pos
+      ? `M${x},${bot}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${bot}Z`
+      : `M${x},${top}V${bot - r}Q${x},${bot} ${x + r},${bot}H${x + bw - r}Q${x + bw},${bot} ${x + bw},${bot - r}V${top}Z`;
+    g += `<rect class="hit" data-i="${i}" data-x="${(cx / W) * 100}" data-y="${((pos ? top : bot) / H) * 100 - 4}" tabindex="0" x="${cx - slot / 2}" y="${pt - 10}" width="${slot}" height="${ph + 10}"/>`;
+    g += `<path class="bar" d="${path}" fill="${pos ? '#3d7cc0' : '#c4683f'}" opacity="${d.live ? 0.5 : 1}"/>`;
+    g += `<text x="${cx}" y="${H - 6}" text-anchor="middle" font-size="10" font-weight="800" fill="#7a5f4e">${d.label}</text>`;
+    if (i === days.length - 1) g += `<text x="${cx}" y="${pos ? top - 5 : bot + 12}" text-anchor="middle" font-size="11" font-weight="800" fill="#4a3428">${fmtMoney(d.profit)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily profit, last ${days.length} days">${g}</svg>`;
+}
 const fmtTime = (h) => { const hh = Math.floor(h) % 24, mm = Math.floor((h % 1) * 60 / 10) * 10; const ap = hh >= 12 ? 'PM' : 'AM'; return `${((hh + 11) % 12) + 1}:${String(mm).padStart(2, '0')} ${ap}`; };
 
 const ui = {
-  moneyDirty: true, repDirty: true, shopDirty: true, traysDirty: true,
-  dispMoney: 0, emotes: [], shopOpen: false, toastKeys: new Map(), lastClock: '', lastSun: '', cards: {},
+  moneyDirty: true, repDirty: true, shopDirty: true, traysDirty: true, staffDirty: true,
+  dispMoney: 0, emotes: [], shopOpen: false, customOpen: false, tab: 'overview', tabTimer: 0, toastKeys: new Map(), lastClock: '', lastSun: '', cards: {},
   init() {
     const star = ICONS.star;
     $('stars').querySelector('.base').innerHTML = star.replace('<path', '<path fill="rgba(74,52,40,.14)" stroke="rgba(74,52,40,.0)"').repeat(5);
@@ -3297,6 +3741,19 @@ const ui = {
       this.cards[u.id].btn.addEventListener('click', () => { audio.unlock(); buyUpgrade(u.id); });
     }
     $('shopBtn').addEventListener('click', () => { audio.unlock(); this.toggleShop(); });
+    $('bizBtn').addEventListener('click', () => { audio.unlock(); this.toggleShop(this.shopOpen && this.tab === 'overview' ? false : true, 'overview'); });
+    $('customBtn').addEventListener('click', () => { audio.unlock(); this.toggleCustom(); });
+    $('customiseStart').addEventListener('click', () => { audio.unlock(); this.toggleCustom(true); });
+    $('customClose').addEventListener('click', () => this.toggleCustom(false));
+    $('customDone').addEventListener('click', () => this.toggleCustom(false));
+    $('mgTabs').addEventListener('click', (e) => { const t = e.target.closest('button[data-tab]'); if (t) { this.setTab(t.dataset.tab); sfx.tick(); } });
+    $('tab-staff').addEventListener('click', (e) => this.onStaffClick(e));
+    $('tab-menu').addEventListener('input', (e) => { const k = e.target.dataset && e.target.dataset.k; if (k && e.target.type === 'range') this.setPrice(k, +e.target.value); });
+    $('tab-menu').addEventListener('click', (e) => { const b = e.target.closest('.step-btn'); if (b) this.setPrice(b.dataset.k, G.prices[b.dataset.k] + PRICE_STEP * +b.dataset.d); });
+    $('tab-overview').addEventListener('pointerover', (e) => this.chartHover(e));
+    $('tab-overview').addEventListener('focusin', (e) => this.chartHover(e));
+    $('tab-overview').addEventListener('pointerout', (e) => { if (e.target.classList && e.target.classList.contains('hit')) { const t = $('chartTip'); if (t) t.style.opacity = 0; } });
+    this.initCustomise();
     $('shopClose').addEventListener('click', () => this.toggleShop(false));
     $('muteBtn').addEventListener('click', () => { audio.unlock(); this.toggleMute(); });
     $('pauseBtn').addEventListener('click', () => this.togglePause());
@@ -3328,13 +3785,262 @@ const ui = {
     setQualityMode(order[(order.indexOf(quality.mode) + 1) % order.length]);
     this.toast(`Graphics: ${quality.mode === 'auto' ? `Auto (${QUALITY_TIERS[quality.tier].label})` : QUALITY_TIERS[quality.mode].label}`, 'spark', 1600, 'quality');
   },
-  toggleShop(force) {
+  // ---------- Manage drawer ----------
+  toggleShop(force, tab) {
     if (G.phase === 'title') return;
-    this.shopOpen = force ?? !this.shopOpen;
-    $('shop').classList.toggle('open', this.shopOpen);
-    document.body.classList.toggle('shop-open', this.shopOpen);
-    if (this.shopOpen) { $('shopBtn').classList.remove('glow'); this.shopDirty = true; }
+    if (tab) this.setTab(tab);
+    const open = force ?? !this.shopOpen;
+    if (open && this.customOpen) this.toggleCustom(false);
+    if (open !== this.shopOpen) {
+      this.shopOpen = open;
+      $('shop').classList.toggle('open', open);
+      document.body.classList.toggle('shop-open', open);
+      if (open) $('shopBtn').classList.remove('glow');
+      sfx.pop();
+    }
+    if (open) this.refreshTab(true);
+  },
+  setTab(tab) {
+    this.tab = tab;
+    for (const b of $('mgTabs').children) { const on = b.dataset.tab === tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); }
+    $('tab-overview').hidden = tab !== 'overview'; $('tab-menu').hidden = tab !== 'menu';
+    $('tab-staff').hidden = tab !== 'staff'; $('shopList').hidden = tab !== 'upgrades';
+    this.refreshTab(true);
+  },
+  refreshTab(force) {
+    if (!this.shopOpen) return;
+    // cash now vs. after tonight's wages & rent, so purchases never come as a surprise
+    const due = G.phase === 'open' ? G.staff.reduce((a, st) => a + wageDue(st), 0) + rentToday() : 0;
+    const sub = due > 0 ? `Cash ${fmtMoney(G.money)} · after closing ≈ ${fmtMoney(G.money - due)}` : `Cash ${fmtMoney(G.money)}`;
+    if (sub !== this.subTxt) { this.subTxt = sub; $('mgSub').textContent = sub; }
+    if (this.tab === 'overview') this.renderOverview(force);
+    else if (this.tab === 'menu') this.renderMenu(force);
+    else if (this.tab === 'staff') { if (force || this.staffDirty) this.renderStaff(); }
+    else this.shopDirty = true;
+  },
+
+  // ---------- Overview: today's books, happiness, profit history ----------
+  renderOverview(force) {
+    const el = $('tab-overview');
+    if (force || !el.firstChild) {
+      el.innerHTML = '<div class="sec ov-hero" id="ovHero"></div><div class="sec" id="ovBooks"></div><div class="sec" id="ovHappy"></div><div class="sec" id="ovChartSec"><h5>Profit by day <small>last 7 days</small></h5><div class="chart" id="ovChart"></div><table class="hist" id="ovHist"></table></div><div class="sec" id="ovMenu"></div>';
+      this.chartSig = '';
+    }
+    const S = G.stats, B = books(), last = G.history[G.history.length - 1];
+    const closed = G.phase === 'summary' || G.phase === 'transition';
+    const cmp = closed ? G.history[G.history.length - 2] : last;
+    let delta = '';
+    if (cmp) { const d = B.profit - cmp.profit; delta = `<div class="delta ${Math.abs(d) < 0.5 ? 'flat' : d > 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${fmtMoney(Math.abs(d))} vs Day ${cmp.day}</div>`; }
+    let sub = closed ? 'The books are closed for today.' : 'Wages and rent are due at closing and already counted here.';
+    if (!closed && B.profit < 0) {
+      const m = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => G.prices[k] - UNIT_COST[k]);
+      const avg = m.reduce((a, b) => a + b, 0) / m.length;
+      if (avg > 0) sub += ` Break-even in about ${Math.ceil(-B.profit / avg)} more sales.`;
+    }
+    $('ovHero').innerHTML = `<div class="lbl">${closed ? 'Profit' : 'Today’s profit so far'} · Day ${G.day}</div><div class="big${B.profit < 0 ? ' neg' : ''}">${fmtMoney(B.profit)}</div>${delta}<div class="sub">${sub}</div>`;
+    const sold = ITEMS.reduce((a, k) => a + S.sold[k], 0), made = ITEMS.reduce((a, k) => a + S.made[k], 0);
+    const tile = (l, v, sm) => `<div class="tile"><span>${l}</span><b>${v}</b><small>${sm}</small></div>`;
+    $('ovBooks').innerHTML = `<h5>Today’s books <small>${S.served} guests served</small></h5><div class="tiles">${[
+      tile('Sales', fmtMoney(B.sales), `${sold} items`),
+      tile('Tips', fmtMoney(B.tips), B.sales ? `${Math.round((B.tips / B.sales) * 100)}% on top` : '—'),
+      tile('Avg ticket', S.served ? fmtMoney((B.sales + B.tips) / S.served) : '—', 'per guest'),
+      tile('Ingredients', fmtMoney(-B.ingredients), `${made} made`),
+      tile('Wages', fmtMoney(-B.wages), `${G.staff.length} staff`),
+      tile('Rent & bills', fmtMoney(-B.rent), `${tableCount()} tables`),
+    ].join('')}</div>${B.invested > 0 ? `<div class="chips"><span class="chip">Invested today <b>${fmtMoney(B.invested)}</b></span><span class="chip">Cash <b>${fmtMoney(G.money)}</b></span></div>` : ''}`;
+    // happiness
+    const n = Math.max(1, S.served), sat = S.satSum / n, sp = S.speedSum / n, va = S.valueSum / n;
+    const lvl = (v) => (v >= 0.6 ? '' : v >= 0.4 ? ' warn' : ' bad');
+    const mood = !S.served ? ['faceOk', 'No guests served yet'] : sat >= 0.72 ? ['faceGood', 'Delighted'] : sat >= 0.55 ? ['faceGood', 'Happy'] : sat >= 0.42 ? ['faceOk', 'Lukewarm'] : ['faceBad', 'Grumpy'];
+    const pct = (v) => (S.served ? `${Math.round(v * 100)}%` : '—');
+    $('ovHappy').innerHTML = `<h5>Guest happiness <small>from fast service + fair prices</small></h5>
+      <div class="sat-line"><span class="face">${ICONS[mood[0]]}</span><div><b>${pct(sat)}</b> <span>${mood[1]}</span></div></div>
+      <div class="mrow">Speed<div class="meter${lvl(sp)}"><i style="width:${S.served ? sp * 100 : 0}%"></i></div><b>${pct(sp)}</b></div>
+      <div class="mrow">Value<div class="meter${lvl(va)}"><i style="width:${S.served ? va * 100 : 0}%"></i></div><b>${pct(va)}</b></div>
+      <div class="chips"><span class="chip">Walked out (price) <b>${S.balked}</b></span><span class="chip">Stormed off <b>${S.stormed}</b></span><span class="chip">Turned away <b>${S.turned}</b></span><span class="chip">Avg wait <b>${S.served ? Math.round(S.waitSum / S.served) + 's' : '—'}</b></span></div>`;
+    // chart + table (only re-rendered when the data changes, so hover isn't interrupted)
+    const days = G.history.slice(-7).map((h) => ({ label: `D${h.day}`, name: `Day ${h.day}`, profit: h.profit, served: h.served, sales: h.sales + h.tips, costs: h.costs }));
+    if (!closed && G.phase !== 'title') days.push({ label: 'Today', name: `Day ${G.day} so far`, profit: B.profit, served: S.served, sales: B.sales + B.tips, costs: B.costs, live: true });
+    const show = days.slice(-7);
+    const sig = show.map((d) => `${d.label}:${Math.round(d.profit)}`).join('|');
+    if (sig !== this.chartSig) {
+      this.chartSig = sig;
+      $('ovChart').innerHTML = show.length ? profitChart(show) + '<div class="chart-tip" id="chartTip"></div>' : '<div class="chart-empty">Your first day’s results will show up here.</div>';
+      $('ovHist').innerHTML = show.length ? `<thead><tr><th>Day</th><th>Guests</th><th>Takings</th><th>Costs</th><th>Profit</th></tr></thead><tbody>${show.slice().reverse().map((d) => `<tr><td>${d.name}</td><td>${d.served}</td><td>${fmtMoney(d.sales)}</td><td>${fmtMoney(d.costs)}</td><td class="${d.profit < 0 ? 'neg' : ''}">${fmtMoney(d.profit)}</td></tr>`).join('')}</tbody>` : '';
+      this.chartData = show;
+    }
+    // per-item margins
+    const rows = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => {
+      const p = G.prices[k], m = (p - UNIT_COST[k]) / p;
+      return `<tr><td>${ITEM_NAMES[k]}</td><td>${S.sold[k]}</td><td>${fmtMoney(S.salesBy[k])}</td><td>${fmtMoney(p - UNIT_COST[k])}</td><td>${Math.round(m * 100)}%</td></tr>`;
+    }).join('');
+    $('ovMenu').innerHTML = `<h5>Menu today <small>margin = price − ingredients</small></h5><table class="hist"><thead><tr><th>Item</th><th>Sold</th><th>Sales</th><th>Per item</th><th>Margin</th></tr></thead><tbody>${rows}</tbody></table>`;
+  },
+
+  // ---------- Menu: the pricing sweet spot ----------
+  renderMenu(force) {
+    const el = $('tab-menu');
+    const sig = ITEMS.map((k) => (k === 'latte' || G.up[k] ? 1 : 0)).join('');
+    if (force || this.menuSig !== sig || !el.firstChild) {
+      this.menuSig = sig;
+      el.innerHTML = `<div class="menu-note" id="menuNote"></div>` + ITEMS.map((k) => {
+        const on = k === 'latte' || G.up[k], [lo, hi] = priceRange(k);
+        return `<div class="price-card${on ? '' : ' locked'}">
+          <div class="pc-head"><span class="ico">${ICONS[k]}</span><div><h4>${ITEM_NAMES[k]}</h4><p>${on ? `Costs ${fmtMoney(UNIT_COST[k])} to make` : `Unlock the ${k === 'matcha' ? 'Matcha Bar' : 'Pastry Case'} in Upgrades`}</p></div><div class="pc-price" id="pcp-${k}"></div></div>
+          ${on ? `<div class="pc-ctrl"><button class="step-btn" data-k="${k}" data-d="-1" aria-label="Lower ${ITEM_NAMES[k]} price">−</button><input type="range" class="price" id="pcr-${k}" data-k="${k}" min="${lo}" max="${hi}" step="${PRICE_STEP}" value="${G.prices[k]}" aria-label="${ITEM_NAMES[k]} price"><button class="step-btn" data-k="${k}" data-d="1" aria-label="Raise ${ITEM_NAMES[k]} price">+</button></div>
+          <div class="vbar"><i id="pcm-${k}"></i></div><div class="vlabels"><span>Steal</span><span>Fair</span><span>Rip-off</span></div>
+          <div class="pc-foot"><span class="feel" id="pcf-${k}"></span><span>Margin <b id="pcg-${k}"></b></span><span>Sold today <b id="pcs-${k}"></b></span></div>` : ''}
+        </div>`;
+      }).join('');
+    }
+    const ff = footfall(), ffPct = Math.round((ff - 1) * 100);
+    $('menuNote').innerHTML = `Your prices ${ffPct >= 0 ? 'bring in' : 'scare off'} <b>${Math.abs(ffPct)}% ${ffPct >= 0 ? 'more' : 'fewer'} guests</b>. Guests weigh prices against the vibe: reputation, furniture and decor all raise what feels fair. Cheap fills seats, pricey fattens margins, and both speed and value decide tips.`;
+    for (const k of ITEMS) {
+      const pe = $('pcp-' + k);
+      pe.textContent = fmtMoney(G.prices[k]);
+      if (!(k === 'latte' || G.up[k])) continue;
+      const r = priceRatio(k), band = valueBand(r);
+      $('pcm-' + k).style.left = `${clamp((r - 0.6) / 1.0, 0, 1) * 100}%`;
+      const f = $('pcf-' + k); f.className = `feel ${band[2]}`; f.textContent = `Guests think: ${band[1]}`;
+      $('pcg-' + k).textContent = `${Math.round(((G.prices[k] - UNIT_COST[k]) / G.prices[k]) * 100)}%`;
+      $('pcs-' + k).textContent = G.stats.sold[k];
+      const rng = $('pcr-' + k); if (document.activeElement !== rng && +rng.value !== G.prices[k]) rng.value = G.prices[k];
+    }
+  },
+  setPrice(k, v) {
+    const [lo, hi] = priceRange(k);
+    const p = clamp(Math.round(v / PRICE_STEP) * PRICE_STEP, lo, hi);
+    if (p === G.prices[k]) return;
+    G.prices[k] = p;
+    sfx.tick();
+    this.renderMenu(false);
+    clearTimeout(this.boardTimer);
+    this.boardTimer = setTimeout(updateMenuBoard, 300);
+  },
+
+  // ---------- Staff ----------
+  renderStaff() {
+    this.staffDirty = false;
+    const payroll = G.staff.reduce((a, s) => a + wageOf(s), 0);
+    const avatar = (role, faded) => `<span class="avatar" style="background:${['#f3d2c4', '#dfe6d6', '#f6e2c4', '#dfe3ea'][ROLE_ORDER.indexOf(role)]};${faded ? 'opacity:.6' : ''}">${ICONS[ROLES[role].icon]}</span>`;
+    let html = `<div class="menu-note">Payroll <b>${fmtMoney(payroll)}/day</b>, paid at closing. Brewers keep their station stocked (and it brews 8% faster per level); servers carry orders out. You can still do anything yourself.</div>`;
+    for (const role of ROLE_ORDER) {
+      const cfg = ROLES[role];
+      html += `<div class="role-title">${cfg.title}${cfg.max > 1 ? 's' : ''}</div>`;
+      G.staff.forEach((s, i) => {
+        if (s.role !== role) return;
+        const maxed = s.level >= MAX_STAFF_LEVEL, cost = TRAIN_COST[s.level] || 0;
+        html += `<div class="staff-card">${avatar(role)}<div><h4><span class="nm"></span><small>Lv ${s.level}</small></h4><p>${cfg.desc} ${fmtMoney(wageOf(s))}/day.</p><div class="pips">${[1, 2, 3].map((l) => `<i class="${l <= s.level ? 'on' : ''}"></i>`).join('')}</div></div>
+          <div class="staff-actions"><button class="buy" data-act="train" data-i="${i}" ${maxed || G.money < cost ? 'disabled' : ''}>${maxed ? 'Maxed' : `Train ${fmtMoney(cost)}`}</button><button class="ghost-btn danger" data-act="fire" data-i="${i}">Let go</button></div></div>`;
+      });
+      if (staffCount(role) < cfg.max) {
+        const why = canHire(role);
+        html += `<div class="staff-card${why === 'locked' ? ' locked' : ''}">${avatar(role, true)}<div><h4>Hire a${/^[aeiou]/i.test(cfg.title) ? 'n' : ''} ${cfg.title.toLowerCase()}</h4><p>${why === 'locked' ? `Needs the ${cfg.needs === 'matcha' ? 'Matcha Bar' : 'Pastry Case'} first.` : `${cfg.desc} ${fmtMoney(cfg.wage)}/day.`}</p></div>
+          <div class="staff-actions"><button class="buy" data-act="hire" data-role="${role}" ${why !== 'ok' ? 'disabled' : ''}>${fmtMoney(cfg.hire)}</button></div></div>`;
+      }
+    }
+    const el = $('tab-staff');
+    el.innerHTML = html;
+    // names are player-facing strings: set as text, never markup
+    let j = 0;
+    for (const role of ROLE_ORDER) for (const s of G.staff) if (s.role === role) { const nm = el.querySelectorAll('.nm')[j++]; if (nm) nm.textContent = s.name; }
+  },
+  onStaffClick(e) {
+    const b = e.target.closest('button[data-act]'); if (!b || b.disabled) return;
+    audio.unlock();
+    const act = b.dataset.act, s = G.staff[+b.dataset.i];
+    if (act === 'hire') hireStaff(b.dataset.role);
+    else if (act === 'train' && s) trainStaff(s);
+    else if (act === 'fire' && s) {
+      if (b.dataset.armed) fireStaff(s);
+      else { b.dataset.armed = '1'; b.textContent = 'Sure?'; setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = 'Let go'; } }, 2500); return; }
+    }
+    this.renderStaff();
+  },
+
+  // ---------- Day summary ----------
+  renderSummary(profit, prev, sat) {
+    const S = G.stats, dRep = G.rep - S.repStart;
+    const lost = S.stormed + S.turned + S.balked;
+    $('sumKicker').textContent = profit < 0 ? 'Tough day at the till' : S.stormed === 0 && S.served > 4 ? 'Not a single grumpy guest!' : S.served >= 25 ? 'What a rush!' : 'Another cosy day';
+    $('sumTitle').textContent = `Day ${G.day} wrap-up`;
+    const d = prev ? profit - prev.profit : null;
+    $('sumHero').innerHTML = `<span>Profit</span><b class="${profit < 0 ? 'neg' : ''}">${fmtMoney(profit)}</b>${d === null ? '' : `<div class="delta ${Math.abs(d) < 0.5 ? 'flat' : d > 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${fmtMoney(Math.abs(d))} vs Day ${prev.day}</div>`}`;
+    const stat = (label, val, sm = '') => `<div class="stat"><span>${label}</span><b>${val}</b>${sm ? `<small style="font-size:11px;font-weight:700;color:var(--ink-soft)">${sm}</small>` : ''}</div>`;
+    $('sumStats').innerHTML = [
+      stat('Takings', fmtMoney(S.revenue + S.tips), `incl. ${fmtMoney(S.tips)} tips`),
+      stat('Costs', fmtMoney(S.ingredients + S.wages + S.rent), `wages ${fmtMoney(S.wages)}`),
+      stat('Happiness', S.served ? `${Math.round(sat * 100)}%` : '—', 'speed + value'),
+      stat('Served', S.served, `best tip ${fmtMoney(S.bestTip)}`),
+      stat('Lost guests', lost, `${S.balked} over price`),
+      stat('Reputation', `${G.rep.toFixed(1)}★`, `<span style="color:${dRep >= 0 ? 'var(--good)' : 'var(--bad)'}">${dRep >= 0 ? '+' : ''}${dRep.toFixed(2)} today</span>`),
+    ].join('');
+    const coach = $('sumCoach'); coach.innerHTML = '';
+    for (const t of coachTips(S, profit)) { const p = document.createElement('p'); p.textContent = t; coach.appendChild(p); }
+  },
+
+  // ---------- Customise drawer ----------
+  toggleCustom(force) {
+    const open = force ?? !this.customOpen;
+    if (open === this.customOpen) return;
+    this.customOpen = open;
+    if (open && this.shopOpen) this.toggleShop(false);
+    $('custom').classList.toggle('open', open);
+    document.body.classList.toggle('custom-open', open);
+    if (G.phase === 'title') $('startWrap').classList.toggle('hidden', open);
+    if (open) this.syncCustomise();
     sfx.pop();
+  },
+  initCustomise() {
+    const input = $('nameInput');
+    input.value = style.name;
+    input.addEventListener('input', () => {
+      style.name = cleanName(input.value) || DEFAULT_NAME;
+      applyStyle(); saveStyle();
+      clearTimeout(this.boardTimer); this.boardTimer = setTimeout(updateMenuBoard, 250);
+    });
+    input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') input.blur(); });
+    $('themes').innerHTML = THEMES.map((t) => `<button class="theme" data-theme="${t.id}">${t.name}<span class="dots">${[t.walls, t.trim, t.counter, t.upholstery, t.rug].map((c) => `<i style="background:${c}"></i>`).join('')}</span></button>`).join('');
+    $('themes').addEventListener('click', (e) => {
+      const b = e.target.closest('.theme'); if (!b) return;
+      const t = THEMES.find((x) => x.id === b.dataset.theme);
+      Object.assign(style, { theme: t.id, walls: t.walls, trim: t.trim, counter: t.counter, floor: t.floor, upholstery: t.upholstery, rug: t.rug });
+      this.styleChanged();
+    });
+    const swatches = (key) => [...new Set(THEMES.map((t) => t[key]))];
+    $('slotRows').innerHTML = STYLE_SLOTS.map(({ key, label }) => `<div class="slot-row"><div class="lbl">${label}<code id="hex-${key}"></code></div><div class="sw" data-key="${key}">${swatches(key).map((c) => `<button data-c="${c}" style="background:${c}" aria-label="${label} ${c}"></button>`).join('')}<label class="pick" title="Pick any colour">+<input type="color" data-key="${key}" aria-label="Custom ${label.toLowerCase()} colour"></label></div></div>`).join('')
+      + `<div class="slot-row"><div class="lbl">Floor</div><div class="chips-floor">${Object.entries(FLOOR_TONES).map(([k, f]) => `<button data-floor="${k}"><i style="background:${f.tones[0]}"></i>${f.label}</button>`).join('')}</div></div>`;
+    $('slotRows').addEventListener('click', (e) => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.floor) style.floor = b.dataset.floor;
+      else if (b.dataset.c) style[b.closest('.sw').dataset.key] = b.dataset.c;
+      else return;
+      style.theme = 'custom'; this.styleChanged();
+    });
+    $('slotRows').addEventListener('input', (e) => {
+      const t = e.target; if (t.type !== 'color' || !HEX_RE.test(t.value)) return;
+      style[t.dataset.key] = t.value.toLowerCase(); style.theme = 'custom'; this.styleChanged();
+    });
+  },
+  styleChanged() { applyStyle(); saveStyle(); this.syncCustomise(); sfx.tick(); },
+  syncCustomise() {
+    for (const b of $('themes').children) b.classList.toggle('on', b.dataset.theme === style.theme);
+    for (const { key } of STYLE_SLOTS) {
+      $('hex-' + key).textContent = style[key];
+      const row = document.querySelector(`.sw[data-key="${key}"]`);
+      for (const b of row.querySelectorAll('button')) b.classList.toggle('on', b.dataset.c === style[key]);
+      row.querySelector('input').value = style[key];
+    }
+    for (const b of document.querySelectorAll('.chips-floor button')) b.classList.toggle('on', b.dataset.floor === style.floor);
+  },
+  chartHover(e) {
+    const h = e.target.closest && e.target.closest('.hit'); const tip = $('chartTip');
+    if (!h || !tip || !this.chartData) return;
+    const d = this.chartData[+h.dataset.i]; if (!d) return;
+    tip.innerHTML = `<b></b><span></span>`;
+    tip.querySelector('b').textContent = fmtMoney(d.profit);
+    tip.querySelector('span').textContent = `${d.name} · ${d.served} guests`;
+    tip.style.left = `${h.dataset.x}%`; tip.style.top = `${h.dataset.y}%`; tip.style.opacity = 1;
   },
   flashCard(id) { const el = this.cards[id].el; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); },
   float(text, worldPos, cls = '') {
@@ -3382,10 +4088,13 @@ const ui = {
       const up = G.money > this.dispMoney;
       this.dispMoney = damp(this.dispMoney, G.money, 7, dt);
       if (Math.abs(this.dispMoney - G.money) < 0.02) this.dispMoney = G.money;
-      $('money').textContent = fmtMoney(this.dispMoney).slice(1);
+      $('money').textContent = fmtAmount(this.dispMoney);
+      $('money').classList.toggle('neg', this.dispMoney < -0.004);
       if (up && !this.bumping) { this.bumping = true; const p = $('moneyPanel'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump'); setTimeout(() => { this.bumping = false; }, 380); }
     }
-    if (this.moneyDirty) { this.moneyDirty = false; this.shopDirty = true; }
+    if (this.moneyDirty) { this.moneyDirty = false; this.shopDirty = true; this.staffDirty = true; }
+    this.tabTimer -= dt;
+    if (this.shopOpen && this.tabTimer <= 0) { this.tabTimer = 0.5; this.refreshTab(false); }
     if (this.repDirty) {
       this.repDirty = false;
       $('starFill').style.width = `${(G.rep / 5) * 120}px`;
@@ -3479,16 +4188,23 @@ const tutorial = {
     const msg = {
       matcha: 'Matcha unlocked! Click the <b>matcha bar</b> to whisk one.<small>Shortcut: press 2</small>',
       pastry: 'Pastries unlocked! Click the <b>pastry case</b> to plate one.<small>Shortcut: press 3</small>',
-      barista: G.up.barista === 1 ? 'Your barista will brew and serve on their own.<small>Keep helping when it gets busy</small>' : null,
       tables: 'New table! More guests can sit down at once.',
     }[id];
     if (msg && !this.seen.has(id + G.up[id])) { this.seen.add(id + G.up[id]); this.show(msg, 6500); }
+  },
+  onHire(role) {
+    const msg = {
+      barista: 'Your barista brews lattes when guests need them.<small>Servers carry orders out to tables</small>',
+      tea: 'Your tea master will keep matcha coming.', baker: 'Your baker plates pastries as orders come in.',
+      server: 'Your server runs ready orders out to tables.<small>Staff are paid at closing time</small>',
+    }[role];
+    if (msg && !this.seen.has('hire' + role)) { this.seen.add('hire' + role); this.show(msg, 6500, ROLES[role].icon); }
   },
   update(dt) {
     if (this.timer > 0) { this.timer -= dt; if (this.timer <= 0) this.hide(); }
     if (!this.affordShown && G.phase === 'open' && G.money >= 45 && G.up.tables === 0 && this.step >= 4) {
       this.affordShown = true;
-      this.show('You can afford another table! Open <b>Upgrades</b>.<small>More tables → more guests → more tips</small>', 8000, 'shop');
+      this.show('You can afford another table! Open <b>Manage → Upgrades</b>.<small>More tables → more guests → more tips</small>', 8000, 'shop');
       $('shopBtn').classList.add('glow');
     }
   },
@@ -3506,21 +4222,23 @@ function startGame() {
 }
 function endDay() {
   G.phase = 'summary';
-  if (barista.state !== 'off') { if (barista.carry) { for (const it of barista.carry) releaseItemMesh(it.kind, it.mesh); barista.carry = null; barista.ch.carry = false; } barista.pos.copy(barista.home); barista.prev.copy(barista.home); barista.ch.moving = false; barista.idle(); }
+  for (const w of workers) w.snapHome();
   for (const c of [...customers]) c.despawn();
   queue.fill(null);
-  const s = G.stats;
-  const dRep = G.rep - s.repStart;
-  const kick = s.stormed === 0 && s.served > 4 ? 'Not a single grumpy guest!' : s.served >= 25 ? 'What a rush!' : s.stormed > s.served / 3 ? 'A bit hectic out there…' : 'Another cosy day';
-  $('sumKicker').textContent = kick;
-  $('sumTitle').textContent = `Day ${G.day} wrap-up`;
-  const stat = (label, val, wide) => `<div class="stat${wide ? ' wide' : ''}"><span>${label}</span><b>${val}</b></div>`;
-  $('sumStats').innerHTML = [
-    stat('Guests served', s.served), stat('Stormed off', s.stormed),
-    stat('Sales', fmtMoney(s.revenue)), stat('Tips', fmtMoney(s.tips)),
-    stat('Best tip', fmtMoney(s.bestTip)), stat('Turned away', s.turned),
-    stat('Reputation', `${G.rep.toFixed(1)}★ <small style="font-size:15px;color:${dRep >= 0 ? '#5f8a52' : '#b5523a'}">${dRep >= 0 ? '+' : ''}${dRep.toFixed(2)}</small>`, true),
-  ].join('');
+  const S = G.stats;
+  // close the books: wages and rent fall due at closing time
+  let wages = 0;
+  for (const st of G.staff) { wages += wageDue(st); st.hiredAt = DAY_START; }
+  S.wages += wages; S.rent = rentToday();
+  addMoney(-(wages + S.rent));
+  const sat = S.served ? S.satSum / S.served : 0;
+  const costs = S.ingredients + S.wages + S.rent;
+  const profit = S.revenue + S.tips - costs;
+  const prev = G.history[G.history.length - 1];
+  const r2 = (v) => Math.round(v * 100) / 100;
+  G.history.push({ day: G.day, sales: r2(S.revenue), tips: r2(S.tips), costs: r2(costs), profit: r2(profit), served: S.served, lost: S.stormed + S.turned + S.balked, sat: Math.round(sat * 1000) / 1000, rep: r2(G.rep) });
+  if (G.history.length > 30) G.history.shift();
+  ui.renderSummary(profit, prev, sat);
   $('nextDayBtn').textContent = `Open Day ${G.day + 1}`;
   $('summaryWrap').classList.remove('hidden');
   tutorial.hide();
@@ -3528,6 +4246,26 @@ function endDay() {
   ui.tooltip(null);
   sfx.dayEnd();
   saveGame();
+}
+// a short, specific nudge or two from the numbers
+function coachTips(S, profit) {
+  const tips = [];
+  const served = Math.max(1, S.served);
+  const value = S.valueSum / served, speed = S.speedSum / served;
+  for (const k of ITEMS) {
+    if (k !== 'latte' && !G.up[k]) continue;
+    const r = priceRatio(k), name = ITEM_NAMES[k].toLowerCase();
+    if (r > 1.3) tips.push([5 + (r - 1.3) * 20 + S.balked, `Guests think your ${name} is a rip-off at ${fmtMoney(G.prices[k])}. Easing it down a little would win them back.`]);
+    else if (r < 0.85 && (S.turned >= 3 || S.served >= 18)) tips.push([4 + (0.85 - r) * 20, `Your ${name} is a steal at ${fmtMoney(G.prices[k])} and you were busy. You could charge more.`]);
+  }
+  if (S.balked >= 2) tips.push([6 + S.balked, `${S.balked} guests read the menu and walked straight out. Check your prices in Manage → Menu.`]);
+  if (S.stormed >= 2) tips.push([5 + S.stormed, `${S.stormed} guests gave up waiting. Staff or a faster machine would help.`]);
+  if (S.turned >= 4) tips.push([3 + S.turned * 0.5, `You turned away ${S.turned} guests at the door. More tables would seat them, or higher prices would thin the queue.`]);
+  if (profit < 0) tips.push([9, 'You lost money today. Compare wages and ingredients against sales.']);
+  if (S.wages > (S.revenue + S.tips) * 0.55 && S.wages > 0) tips.push([6, 'Wages ate most of your takings. Make sure every hire is pulling their weight.']);
+  if (!tips.length && value > 0.8 && speed > 0.65) tips.push([1, 'Guests feel they get great value. There is room to nudge prices up.']);
+  if (!tips.length) tips.push([0, 'A smooth day. Keep an eye on the queue as your reputation grows.']);
+  return tips.sort((a, b) => b[0] - a[0]).slice(0, 2).map((t) => t[1]);
 }
 function startNextDay() {
   $('summaryWrap').classList.add('hidden');
@@ -3539,18 +4277,39 @@ function startNextDay() {
 function finishTransition() {
   G.phase = 'open'; G.time = DAY_START; G.spawnTimer = 1.6; G.stats = newStats();
   ui.toast(`Day ${G.day} — good morning!`, 'sun', 2600);
+  if (G.day === 2 && !tutorial.seen.has('prices')) { tutorial.seen.add('prices'); tutorial.show('New day! Set your own prices in <b>Manage → Menu</b>.<small>Too cheap leaves money on the table, too pricey scares guests off</small>', 9000, 'coin'); }
   saveGame();
 }
 
 function saveGame() {
-  try { localStorage.setItem('bb-save', JSON.stringify({ v: 1, day: G.day, money: G.money, rep: G.rep, up: G.up })); } catch (_) { /* storage may be unavailable */ }
+  try {
+    localStorage.setItem('bb-save', JSON.stringify({
+      v: 2, day: G.day, money: G.money, rep: G.rep, up: G.up, prices: G.prices, history: G.history,
+      staff: G.staff.map(({ role, level, name, skin, hair, scale }) => ({ role, level, name, skin, hair, scale })),
+    }));
+  } catch (_) { /* storage may be unavailable */ }
 }
 function loadGame() {
   try {
     const d = JSON.parse(localStorage.getItem('bb-save') || 'null');
-    if (!d || d.v !== 1) return false;
-    G.day = d.day; G.money = d.money; G.rep = d.rep;
-    for (const k of Object.keys(G.up)) G.up[k] = clamp(d.up[k] | 0, 0, UPGRADES.find((u) => u.id === k).costs.length);
+    if (!d || (d.v !== 1 && d.v !== 2)) return false;
+    const num = (v, def) => (Number.isFinite(+v) ? +v : def);
+    G.day = Math.max(1, num(d.day, 1) | 0); G.money = num(d.money, 0); G.rep = clamp(num(d.rep, 2), 0.5, 5);
+    for (const k of Object.keys(G.up)) G.up[k] = clamp(num(d.up && d.up[k], 0) | 0, 0, UPGRADES.find((u) => u.id === k).costs.length);
+    let staff = Array.isArray(d.staff) ? d.staff : [];
+    if (d.v === 1 && d.up && d.up.barista > 0) { // v1 had one barista who brewed and served: split into two roles
+      const lvl = clamp(d.up.barista | 0, 1, MAX_STAFF_LEVEL);
+      staff = [{ role: 'barista', level: lvl }, { role: 'server', level: lvl }];
+    }
+    G.staff = [];
+    for (const st of staff) {
+      if (!ROLES[st.role] || staffCount(st.role) >= ROLES[st.role].max) continue;
+      if (ROLES[st.role].needs && !G.up[ROLES[st.role].needs]) continue;
+      G.staff.push({ role: st.role, level: clamp(num(st.level, 1) | 0, 1, MAX_STAFF_LEVEL), name: String(st.name || pick(STAFF_NAMES)).slice(0, 16),
+        skin: num(st.skin, pick(SKIN_TONES)), hair: num(st.hair, pick(HAIR_COLORS)), scale: clamp(num(st.scale, 1), 0.85, 1.1), hiredAt: DAY_START });
+    }
+    if (d.prices) for (const k of ITEMS) { const [lo, hi] = priceRange(k); G.prices[k] = clamp(Math.round(num(d.prices[k], BASE_PRICE[k]) / PRICE_STEP) * PRICE_STEP, lo, hi); }
+    G.history = Array.isArray(d.history) ? d.history.filter((h) => h && Number.isFinite(h.profit)).slice(-30) : [];
     return true;
   } catch (_) { return false; }
 }
@@ -3617,7 +4376,7 @@ function fixedUpdate(dt) {
   }
   for (const st of stationList) st.fixed(dt);
   for (let i = customers.length - 1; i >= 0; i--) customers[i].fixed(dt);
-  barista.fixed(dt);
+  for (let i = workers.length - 1; i >= 0; i--) workers[i].fixed(dt);
   updateFlights(dt);
   if (G.time >= 21.6) for (const c of [...customers]) c.forceLeave();
   if (G.time >= DAY_END && customers.length === 0 && flights.length === 0) endDay();
@@ -3636,7 +4395,7 @@ function renderUpdate(dt, alpha) {
   applyLighting(G.lightHour);
 
   for (const c of customers) c.render(alpha, dt, elapsed);
-  barista.render(alpha, dt, elapsed);
+  for (const w of workers) w.render(alpha, dt, elapsed);
   renderFlights(alpha);
   updateTweens(dt);
   for (const st of stationList) st.render(dt, elapsed);
@@ -3685,8 +4444,9 @@ document.body.classList.add('title');
 DECOR.plants.visible = false; DECOR.lights.visible = false; DECOR.sign.visible = false;
 const resumed = loadGame();
 tables.forEach((t, i) => { if (i < tableCount()) t.activate(furnitureLevel(), false); });
-for (const id of ['machine', 'matcha', 'pastry', 'barista', 'decor', 'sign']) if (G.up[id] > 0) applyUpgrade(id, false);
-if (G.up.barista > 0) { barista.ch.root.visible = true; barista.pos.copy(barista.home); barista.prev.copy(barista.home); barista.idle(); }
+for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign']) if (G.up[id] > 0) applyUpgrade(id, false);
+for (const st of G.staff) spawnWorker(st, false);
+applyStyle();
 updateMenuBoard();
 if (document.fonts && document.fonts.load) document.fonts.load('700 64px Caveat').then(updateMenuBoard).catch(() => {});
 ui.init();
@@ -3719,7 +4479,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.__booted = true;
 requestAnimationFrame(frame);
-window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, slots, barista, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
+window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, slots, workers, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality };
 
 </script>
 </body>

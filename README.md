@@ -8,11 +8,17 @@ Three.js and its addons load from jsDelivr via an import map, and fonts load fro
 
 1. Guests walk in, grab a free table and show an order bubble. The ring around the bubble is their patience.
 2. Click the espresso machine (or press `1`) to brew. Finished drinks wait on the counter.
-3. Click a guest's table to serve them. Faster service means bigger tips and more reputation.
-4. Spend money in **Upgrades**: more tables, a faster machine, nicer furniture, a matcha bar (`2`), a pastry case (`3`), a barista who brews and serves on their own, cosy decor and a sidewalk sign.
-5. Reputation brings in more guests who spend more. Each day runs from morning gold to lamp-lit evening and ends with a wrap-up screen.
+3. Click a guest's table to serve them. How happy they are depends on **speed** (how fast it arrived) and **value** (how fair the price felt), and happiness drives tips and reputation.
+4. Open **Manage** (`B` for the overview, `U` for upgrades) to run the business:
+   - **Overview:** today's profit (wages and rent are counted up front because they're due at closing), takings, costs, guest happiness, lost guests, a 7-day profit chart with a table, and per-item margins.
+   - **Menu:** set your own prices. Every item costs ingredients to make. Guests judge prices against what feels fair *in your café*, and that rises with reputation, furniture and decor. Cheap prices pull in more guests, pricey ones scare them off (some walk straight out), and the sweet spot moves: charge more when you're packed, less when seats sit empty.
+   - **Staff:** hire a barista, a tea master, a baker and up to two servers. Brewers keep their station stocked (and make it faster); servers carry orders to tables. Everyone draws a daily wage paid at closing, and training makes them quicker. Over-hire and the wages eat your profit.
+   - **Upgrades:** more tables, a faster machine, nicer furniture, a matcha bar (`2`), a pastry case (`3`), cosy decor and a sidewalk sign.
+5. Each day ends with a wrap-up showing profit, costs, happiness and a couple of tips from your numbers.
 
-Drag to orbit (limited), scroll or pinch to zoom, `P` pauses, `M` mutes, `U` opens the shop. Progress saves between days.
+**Make it yours** (`C` or the palette button, also on the title screen): name your café and pick a theme, or set the walls, trim, counter, upholstery, rug and floor yourself. The name shows up on the HUD and the chalkboard menu, and the buttons pick up your counter colour. Your style is saved separately from your progress.
+
+Drag to orbit (limited), scroll or pinch to zoom, `P` pauses, `M` mutes. Progress saves between days.
 
 ## Graphics
 
