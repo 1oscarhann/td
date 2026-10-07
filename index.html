@@ -3523,6 +3523,11 @@ function partyStorm(P) {
   goals.onStorm();
   partyLeave(P);
 }
+// an order that lands after its guest stormed off still needs clearing away
+function landOnTable(t, item) {
+  t.items.push({ kind: item.kind, mesh: item.mesh });
+  if (!t.party && !t.dirty) { t.dirty = true; t.dirtySince = G.time; }
+}
 function partyMaybeLeave(P) { if (P.members.every((m) => m.state === 'done')) partyLeave(P); }
 function partyLeave(P) {
   const t = P.table;
@@ -3585,7 +3590,7 @@ function serveTable(table) {
     const item = slot.item; slot.item = null; any = true;
     o.status = 'incoming';
     fly(item.mesh, item.mesh.position, spotFor(table, o.kind, c.seat), 0.55, 1.1, () => {
-      table.items.push({ kind: item.kind, mesh: item.mesh });
+      landOnTable(table, item);
       if (c.table === table && c.state === 'wait') c.receive(o);
     }, TAU * 0.5);
   }
@@ -3653,17 +3658,19 @@ function updateSurge() {
     }
   }
 }
-function rollDay() {
-  const wkey = G.day === 1 ? 'sunny' : (() => { const r = Math.random(); return r < 0.45 ? 'sunny' : r < 0.78 ? 'cloudy' : 'rainy'; })();
+function rollDay(forced) { // forced: a saved {weather, event, surge} to restore instead of rolling
+  const wkey = forced && WEATHER[forced.weather] ? forced.weather : G.day === 1 ? 'sunny' : (() => { const r = Math.random(); return r < 0.45 ? 'sunny' : r < 0.78 ? 'cloudy' : 'rainy'; })();
   const W = WEATHER[wkey];
   Object.assign(today, { weather: wkey, event: null, footfall: W.footfall, patience: W.patience, eat: W.eat, pair: 1, mix: { ...W.mix }, fair: {}, criticDue: false, criticCame: false });
-  if (G.day >= 2 && Math.random() < (G.day === 3 ? 1 : 0.45)) { // day 3 always brings something to talk about
+  if (forced) { if (EVENTS[forced.event]) { today.event = forced.event; EVENTS[forced.event].apply(); } }
+  else if (G.day >= 2 && Math.random() < (G.day === 3 ? 1 : 0.45)) { // day 3 always brings something to talk about
     const keys = Object.keys(EVENTS);
     const ev = G.day === 3 ? 'critic' : pick(keys);
     today.event = ev; EVENTS[ev].apply();
   }
   today.surge = null;
-  if (G.day >= 2 && Math.random() < 0.4) { const k = pick(Object.keys(SURGES)), S = SURGES[k]; today.surge = { k, at: rand(S.from, S.to), stage: 0 }; }
+  if (forced) { const fs = forced.surge; if (fs && SURGES[fs.k]) today.surge = { k: fs.k, at: clamp(+fs.at || 12, 8, 19), stage: 0 }; }
+  else if (G.day >= 2 && Math.random() < 0.4) { const k = pick(Object.keys(SURGES)), S = SURGES[k]; today.surge = { k, at: rand(S.from, S.to), stage: 0 }; }
   rain.setActive(W.rain > 0);
   umbrellaStand.visible = W.rain > 0;
   ui.dayChipsDirty = true;
@@ -3946,7 +3953,7 @@ const cat = (() => {
         const g = pick(company), sp = g.table.seats[g.seat], side = Math.random() < 0.5 ? 1 : -1;
         // sit beside the chair, a little toward the table
         const yaw = sp.yaw, ox = Math.cos(yaw) * 0.62 * side, oz = -Math.sin(yaw) * 0.62 * side;
-        this.guest = g; this.after = 'visit';
+        this.guest = g; this.guestParty = g.party; this.after = 'visit';
         this.goTo(sp.pos.x + ox + Math.sin(yaw) * 0.2, 0, sp.pos.z + oz + Math.cos(yaw) * 0.2);
         return;
       }
@@ -3959,7 +3966,7 @@ const cat = (() => {
       this.goTo(s[0] + rand(-0.12, 0.12), s[1], s[2] + rand(-0.15, 0.15));
     },
     arrive() {
-      if (this.after === 'visit' && this.guest && this.guest.table && this.guest.party) {
+      if (this.after === 'visit' && this.guest && this.guest.table && this.guest.party && this.guest.party === this.guestParty) {
         const g = this.guest;
         this.state = 'visit'; this.timer = rand(7, 11);
         g.catVisited = true; g.ch.kick(0.6);
@@ -3983,6 +3990,7 @@ const cat = (() => {
         for (const c of customers) if (c.state === 'wait') { c.patience = Math.min(c.patienceMax, c.patience + c.patienceMax * 0.08); n++; }
         ui.float(n ? 'Purr… everyone relaxes' : 'Purrrr', V3(pos.x, this.y + 0.75, pos.z), 'social');
       }
+      if (this.state === 'walk' && this.seg && this.seg.hop) return; // mid-jump: it'll take the fuss once it lands
       if (this.state === 'walk') { this.path = []; this.seg = null; }
       if (this.state !== 'visit') { this.resume = this.state === 'nap' ? 'nap' : 'sit'; this.state = 'pet'; this.timer = 2.2; }
       if (G.lifetime.pets >= 15) milestones.unlock('catperson');
@@ -3998,7 +4006,7 @@ const cat = (() => {
           const g = this.guest;
           this.timer -= dt;
           if (g && g.party) this.face(Math.atan2(g.pos.x - pos.x, g.pos.z - pos.z), dt, 5);
-          if (this.timer <= 0 || !g || !g.party || !g.table) this.decide();
+          if (this.timer <= 0 || !g || !g.party || g.party !== this.guestParty || !g.table) this.decide();
           break;
         }
         case 'walk': this.step(dt); break;
@@ -4236,7 +4244,7 @@ class Worker extends Walker {
       const item = carried[i], c = p.c;
       if (c.table === table && c.state === 'wait') {
         fly(item.mesh, item.mesh.position, spotFor(table, p.o.kind, c.seat), 0.3, 0.25, () => {
-          table.items.push({ kind: item.kind, mesh: item.mesh });
+          landOnTable(table, item);
           if (c.table === table && c.state === 'wait') c.receive(p.o);
         });
       } else { this.carry = [item]; this.dropCarry(); }
@@ -4951,7 +4959,7 @@ const ui = {
     if (open) { this.toggleShop(false); this.toggleCustom(false); }
     $('helpWrap').classList.toggle('hidden', !open);
     if (open) $('helpWrap').querySelector('.modal').scrollTop = 0;
-    if (G.phase === 'title') $('startWrap').classList.toggle('hidden', open);
+    if (G.phase === 'title') $('startWrap').classList.toggle('hidden', open || !!this.settingsOpen);
     sfx.pop();
   },
   toggleMute() { audio.setMuted(!audio.muted); this.updateMuteIcon(); },
@@ -5500,7 +5508,7 @@ function startGame() {
   document.body.classList.remove('title');
   $('startWrap').classList.add('hidden');
   G.phase = 'open'; G.time = DAY_START; G.spawnTimer = 1.4; G.stats = newStats();
-  rollDay(); goals.start(); ui.showDayCard();
+  rollDay(G.savedToday); G.savedToday = null; goals.start(); ui.showDayCard();
   tutorial.start();
   sfx.pop();
 }
@@ -5578,8 +5586,9 @@ function finishTransition() {
 function saveGame() {
   try {
     localStorage.setItem('bb-save', JSON.stringify({
-      v: 2, day: G.day, money: G.money, rep: G.rep, up: G.up, prices: G.prices, history: G.history,
-      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, weather: today.weather, event: today.event, cat: G.cat,
+      v: 2, day: G.phase === 'summary' ? G.day + 1 : G.day, money: G.money, // a finished day is never replayed rep: G.rep, up: G.up, prices: G.prices, history: G.history,
+      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, cat: G.cat,
+      today: G.phase === 'open' ? { weather: today.weather, event: today.event, surge: today.surge && { k: today.surge.k, at: today.surge.at } } : null,
       staff: G.staff.map(({ role, level, name, skin, hair, scale }) => ({ role, level, name, skin, hair, scale })),
     }));
   } catch (_) { /* storage may be unavailable */ }
@@ -5608,6 +5617,7 @@ function loadGame() {
     if (Array.isArray(d.reviews)) G.reviews = d.reviews.filter((r) => r && typeof r.text === 'string').slice(0, 40).map((r) => ({ stars: clamp(r.stars | 0, 1, 5), text: String(r.text).slice(0, 120), type: GUEST_TYPES[r.type] ? r.type : 'regular', day: r.day | 0, name: String(r.name || '').slice(0, 24), critic: !!r.critic }));
     if (d.milestones && typeof d.milestones === 'object') for (const m of MILESTONES) if (d.milestones[m.id]) G.milestones[m.id] = d.milestones[m.id] | 0;
     if (d.lifetime) G.lifetime = { served: num(d.lifetime.served, 0), profit: num(d.lifetime.profit, 0), pets: num(d.lifetime.pets, 0) };
+    if (d.today && typeof d.today === 'object') G.savedToday = d.today;
     if (d.cat) G.cat = { name: String(d.cat.name || '').slice(0, 16), coat: CAT_COATS[d.cat.coat] ? d.cat.coat : '' };
     return true;
   } catch (_) { return false; }
