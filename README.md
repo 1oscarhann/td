@@ -14,7 +14,7 @@ Three.js and its addons load from jsDelivr via an import map, and fonts load fro
    - **Overview:** today's profit (wages and rent are counted up front because they're due at closing), takings, costs, guest happiness, lost guests, today's guest mix, recent reviews, a 7-day profit chart with a table, and per-item margins.
    - **Menu:** set your own prices. Every item costs ingredients to make. Guests judge prices against what feels fair *in your café*, and that rises with reputation, furniture and decor. Cheap prices pull in more guests, pricey ones scare them off (some walk straight out), and the sweet spot moves: charge more when you're packed, less when seats sit empty.
    - **Staff:** hire a barista, a tea master, a baker and up to two servers. Brewers keep their station stocked (and make it faster); servers carry orders to tables and bus dirty ones. Everyone draws a daily wage paid at closing, and training makes them quicker. Over-hire and the wages eat your profit.
-   - **Upgrades:** more tables, a faster machine, nicer furniture, a matcha bar (`2`), a pastry case (`3`), cosy decor, a sidewalk sign and a café cat.
+   - **Upgrades:** more tables, a faster machine, nicer furniture, a matcha bar (`2`), a pastry case (`3`), cosy decor, a sidewalk sign and a café cat. Late-game pieces give you something to save for: a bookshelf (+8% patience, more readers), a record player (+8% tips and vinyl crackle in the music) and a neon cup sign (more guests, especially after 5 pm).
    - **Goals:** today's goals and every milestone you've unlocked or have left to chase.
 6. Each day ends with a wrap-up showing profit, costs, happiness, goals, reviews, your best streak and a couple of tips from your numbers.
 
@@ -36,7 +36,7 @@ While they wait, guests scroll their phones, read, chat with whoever they came w
 - **Events:** some mornings bring a critic in town, market day, exam week, a coffee festival or new offices nearby, each shifting who turns up and what they order. The morning card tells you what's coming.
 - **Goals:** three small goals each morning pay a cash bonus on the spot.
 - **Streak:** serve guests quickly back to back to build a streak worth up to +25% tips.
-- **Milestones:** seventeen long-term achievements, each with a reward.
+- **Milestones:** eighteen long-term achievements, each with a reward, ending with Dream café for owning every upgrade.
 
 ### The café cat
 

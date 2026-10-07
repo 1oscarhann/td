@@ -1259,6 +1259,9 @@ Object.assign(MAT, {
   glowStrip: new THREE.MeshStandardMaterial({ color: 0xffe6c4, emissive: 0xffb36b, emissiveIntensity: 0.4 }),
   indicator: new THREE.MeshStandardMaterial({ color: 0x9fb193, emissive: 0x9fd18a, emissiveIntensity: 1.5 }),
 });
+MAT.vinyl = phys({ color: 0x1d1a19, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.12 });
+MAT.neon = new THREE.MeshStandardMaterial({ color: 0xffd2c4, emissive: 0xff7a5c, emissiveIntensity: 2.4 });
+MAT.neonMint = new THREE.MeshStandardMaterial({ color: 0xd8fff0, emissive: 0x7fe0bf, emissiveIntensity: 2.2 });
 MAT.glassCase = phys({ color: 0xffffff, roughness: 0.05, metalness: 0, transmission: 0, transparent: true, opacity: 0.18, thickness: 0.05, ior: 1.45, envMapIntensity: 1.4, depthWrite: false });
 
 // ---------------------------------------------------------------------
@@ -1968,6 +1971,76 @@ function buildWallArt() {
   return g;
 }
 
+// late-game decor: a bookshelf, a sideboard with a record player, a neon cup sign
+function buildBookshelf() {
+  const g = new THREE.Group();
+  const W = 1.0, H = 2.05, D = 0.34, t = 0.05;
+  for (const s of [-1, 1]) { const side = mesh(boxGeo(t, H, D, 0.015, 2), MAT.walnut); side.position.set(s * (W / 2 - t / 2), H / 2, 0); g.add(side); }
+  const back = mesh(boxGeo(W - 0.02, H - 0.02, 0.02, 0.005, 1), MAT.walnut); back.position.set(0, H / 2, -D / 2 + 0.012); g.add(back);
+  const shelves = [0.07, 0.55, 1.03, 1.51, H - t / 2];
+  for (const y of shelves) { const sh = mesh(boxGeo(W - 0.02, t, D, 0.012, 2), MAT.walnut); sh.position.set(0, y, 0); g.add(sh); }
+  const cloth = (hexc) => phys({ color: hexc, roughness: 0.8, sheen: 0.6, sheenColor: new THREE.Color(hexc).lerp(new THREE.Color(0xffffff), 0.5), sheenRoughness: 0.5 });
+  const spines = [MAT.velvetTerracotta, MAT.mustardFabric, MAT.velvetSage, MAT.linen, cloth(0x8e9fb4), cloth(0x8a3e3e), cloth(0x3e4b5b), cloth(0xe8b3a1)];
+  for (let r = 0; r < 4; r++) {
+    const y0 = shelves[r] + t / 2, end = W / 2 - t - 0.02 - (r === 1 ? 0.3 : r === 3 ? 0.22 : 0);
+    let x = -W / 2 + t + 0.02;
+    while (x < end - 0.04) {
+      const bw = rand(0.035, 0.068), bh = rand(0.27, 0.4), bd = rand(0.2, 0.27);
+      if (x + bw > end) break;
+      const b = mesh(boxGeo(bw, bh, bd, 0.008, 1), pick(spines)); b.position.set(x + bw / 2, y0 + bh / 2, 0.025); g.add(b);
+      x += bw + 0.005;
+      if (Math.random() < 0.07 && x < end - 0.2) { // one leaning over
+        const lb = mesh(boxGeo(0.05, 0.34, 0.24, 0.008, 1), pick(spines)); lb.position.set(x + 0.1, y0 + 0.16, 0.025); lb.rotation.z = -0.38; g.add(lb); x += 0.2;
+      }
+    }
+  }
+  for (let i = 0; i < 3; i++) { const b = mesh(boxGeo(0.26, 0.05, 0.2, 0.008, 1), spines[i * 2]); b.position.set(W / 2 - t - 0.17, shelves[1] + t / 2 + 0.025 + i * 0.052, 0.03); b.rotation.y = (i - 1) * 0.12; g.add(b); }
+  { const p = buildBush(0.42, MAT.potCream); p.position.set(W / 2 - t - 0.13, shelves[3] + t / 2, 0.02); g.add(p); }
+  { const p = buildTrailingPlant(0.55); p.position.set(-0.22, H, 0.04); g.add(p); }
+  return g;
+}
+function buildSideboard() {
+  const g = new THREE.Group();
+  const body = mesh(boxGeo(1.05, 0.6, 0.42, 0.035, 4), MAT.walnut); body.position.y = 0.42; g.add(body);
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const l = mesh(cylGeo(0.022, 0.014, 0.13, 10), MAT.brass); l.position.set(sx * 0.46, 0.065, sz * 0.16); g.add(l); }
+  for (const sx of [-1, 1]) {
+    const door = mesh(boxGeo(0.47, 0.48, 0.02, 0.012, 2), MAT.oak, { cast: false }); door.position.set(sx * 0.252, 0.42, 0.211); g.add(door);
+    const knob = mesh(sphereGeo(0.018, 12, 8), MAT.brass, { cast: false }); knob.position.set(sx * 0.05, 0.44, 0.228); g.add(knob);
+  }
+  // the record player itself
+  const rp = new THREE.Group(); rp.position.set(-0.16, 0.72, 0.01); g.add(rp);
+  const base = mesh(boxGeo(0.5, 0.085, 0.38, 0.022, 3), MAT.oak); base.position.y = 0.042; rp.add(base);
+  const platter = mesh(cylGeo(0.158, 0.158, 0.02, 40), MAT.darkMetal); platter.position.set(-0.05, 0.095, 0); rp.add(platter);
+  const vinyl = new THREE.Group(); vinyl.position.set(-0.05, 0.109, 0); rp.add(vinyl);
+  const disc = mesh(cylGeo(0.148, 0.148, 0.006, 40), MAT.vinyl); vinyl.add(disc);
+  const label = mesh(cylGeo(0.048, 0.048, 0.008, 24), MAT.velvetTerracotta, { cast: false }); vinyl.add(label);
+  const dot = mesh(boxGeo(0.03, 0.006, 0.012, 0.003, 1), MAT.linen, { cast: false }); dot.position.set(0.022, 0.005, 0); vinyl.add(dot);
+  vinyl.traverse((m) => { m.userData.keep = true; });
+  const pivot = mesh(cylGeo(0.024, 0.028, 0.05, 16), MAT.chrome); pivot.position.set(0.17, 0.11, -0.12); rp.add(pivot);
+  const arm = mesh(cylGeo(0.007, 0.007, 0.26, 8), MAT.chrome, { cast: false }); arm.position.set(0.1, 0.135, -0.04); arm.rotation.set(Math.PI / 2, 0, 0.62); arm.rotation.order = 'YXZ'; arm.rotation.y = 0.55; rp.add(arm);
+  const head = mesh(boxGeo(0.03, 0.018, 0.045, 0.006, 1), MAT.darkMetal, { cast: false }); head.position.set(0.03, 0.128, 0.05); head.rotation.y = 0.55; rp.add(head);
+  // records leaning at the end, a little plant
+  for (let i = 0; i < 4; i++) { const sl = mesh(boxGeo(0.012, 0.3, 0.3, 0.004, 1), [MAT.mustardFabric, MAT.velvetSage, MAT.linen, MAT.velvetTerracotta][i], { cast: false }); sl.position.set(0.3 + i * 0.022, 0.87, 0.02); sl.rotation.z = -0.22; g.add(sl); }
+  { const p = buildBush(0.36, MAT.ceramicSage); p.position.set(0.42, 0.72, -0.02); p.scale.setScalar(0.9); g.add(p); }
+  g.userData.vinyl = vinyl;
+  return g;
+}
+function buildNeonSign() {
+  const g = new THREE.Group();
+  const tube = (pts, mat, r = 0.022) => { const c = new THREE.CatmullRomCurve3(pts.map(([x, y]) => new THREE.Vector3(x, y, 0.06))); return mesh(new THREE.TubeGeometry(c, 48, r, 8, false), mat, { cast: false }); };
+  // cup body, rim, handle and saucer in coral; two steam curls in mint
+  g.add(tube([[-0.32, 0.18], [-0.3, -0.06], [-0.2, -0.2], [0, -0.24], [0.2, -0.2], [0.3, -0.06], [0.32, 0.18]], MAT.neon));
+  g.add(tube([[-0.34, 0.18], [0.34, 0.18]], MAT.neon));
+  g.add(tube([[0.3, 0.1], [0.44, 0.1], [0.48, 0.02], [0.44, -0.06], [0.28, -0.08]], MAT.neon));
+  g.add(tube([[-0.44, -0.3], [-0.2, -0.33], [0.2, -0.33], [0.44, -0.3]], MAT.neon));
+  g.add(tube([[-0.1, 0.26], [-0.16, 0.36], [-0.06, 0.46], [-0.14, 0.58]], MAT.neonMint, 0.018));
+  g.add(tube([[0.1, 0.26], [0.04, 0.36], [0.14, 0.46], [0.06, 0.58]], MAT.neonMint, 0.018));
+  // standoffs and a faint backing plate
+  const plate = mesh(boxGeo(1.08, 1.04, 0.02, 0.04, 3), MAT.walnut); plate.position.set(0.02, 0.12, 0.0); g.add(plate);
+  for (const [x, y] of [[-0.42, 0.5], [0.42, 0.5], [-0.42, -0.3], [0.42, -0.3]]) { const sd = mesh(cylGeo(0.012, 0.012, 0.05, 8), MAT.chrome, { cast: false }); sd.rotation.x = Math.PI / 2; sd.position.set(x, y, 0.035); g.add(sd); }
+  return g;
+}
+
 function buildBench(len) {
   const g = new THREE.Group();
   const base = mesh(boxGeo(0.78, 0.4, len, 0.05, 4), MAT.walnut); base.position.y = 0.2; g.add(base);
@@ -2112,7 +2185,7 @@ const LAYOUT = {
   const mon = buildMonstera(1.25); mon.position.set(-6.2, 0, 4.75); world.add(mon);
   const fid = buildFiddle(1.15); fid.position.set(6.25, 0, -4.6); world.add(fid);
   const snake = buildSnakePlant(1.3); snake.position.set(6.35, 0, 4.85); world.add(snake);
-  const bush = buildBush(1.4); bush.position.set(1.25, 0, -4.85); world.add(bush);
+  const bush = buildBush(1.4); bush.position.set(2.62, 0, -4.85); world.add(bush);
   const bushOut = buildBush(1.3); bushOut.position.set(ROOM.door.x + 1.25, 0, ROOM.z0 - 1.0); world.add(bushOut);
 
   // decor-upgrade extras (hidden until bought)
@@ -2126,6 +2199,10 @@ const LAYOUT = {
   DECOR.lights.add(buildStringLights(sagCurve(new THREE.Vector3(ROOM.x0 + 0.12, 4.05, ROOM.z0 + 0.2), new THREE.Vector3(ROOM.x0 + 0.12, 4.05, ROOM.z1 - 0.1), 0.35, 5), 36));
   world.add(DECOR.lights);
   DECOR.sign = buildSidewalkSign(); DECOR.sign.position.set(6.35, 0, 3.3); DECOR.sign.rotation.y = 0.9; world.add(DECOR.sign);
+  DECOR.books = buildBookshelf(); DECOR.books.position.set(ROOM.x0 + 0.2, 0, 2.72); DECOR.books.rotation.y = Math.PI / 2; world.add(DECOR.books);
+  DECOR.records = buildSideboard(); DECOR.records.position.set(1.2, 0, ROOM.z0 + 0.26); world.add(DECOR.records); // left of the queue so it stays in view
+  DECOR.neon = buildNeonSign(); DECOR.neon.position.set(ROOM.door.x + 1.6, 2.55, ROOM.z0 + 0.02); world.add(DECOR.neon);
+  for (const k of ['books', 'records', 'neon']) DECOR[k].visible = false;
 
   // bake everything static into a handful of draw calls
   const staticRoot = new THREE.Group();
@@ -2133,6 +2210,7 @@ const LAYOUT = {
   world.add(staticRoot);
   mergeStatic(staticRoot);
   for (const p of DECOR.plants.children) mergeStatic(p);
+  for (const k of ['books', 'records', 'neon']) mergeStatic(DECOR[k]);
   mergeStatic(DECOR.sign);
   mergeStatic(DECOR.lights);
 
@@ -2170,6 +2248,9 @@ const ICONS = {
   dots: `<svg viewBox="0 0 48 48"><circle cx="14" cy="24" r="3.6" fill="#b49b88"/><circle cx="24" cy="24" r="3.6" fill="#b49b88"/><circle cx="34" cy="24" r="3.6" fill="#b49b88"/></svg>`,
   coin: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#d4ad68" stroke="#a98140" stroke-width="1.6"/><path d="M12 7.5v9M14.4 9.6c-.6-.8-1.4-1.1-2.4-1.1-1.4 0-2.4.7-2.4 1.8 0 2.6 5 1.4 5 4 0 1.1-1.1 1.8-2.6 1.8-1.1 0-2-.4-2.6-1.2" stroke="#7a5626" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>`,
   check: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#8fa486"/><path d="M7.5 12.5l3 3 6-6.5" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  books: `<svg viewBox="0 0 32 32"><path d="M5 27h22" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><rect x="7" y="9" width="4.6" height="18" rx="1.2" fill="#c9765a" stroke="${INK}" stroke-width="1.8"/><rect x="11.6" y="6.5" width="4.6" height="20.5" rx="1.2" fill="#9fb193" stroke="${INK}" stroke-width="1.8"/><rect x="16.2" y="10" width="4.2" height="17" rx="1.2" fill="#e0b65e" stroke="${INK}" stroke-width="1.8"/><path d="m21.4 12.2 3.9-1.2 3.4 15-3.9 1z" fill="#8e9fb4" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
+  record: `<svg viewBox="0 0 32 32"><circle cx="15" cy="17" r="11" fill="#3b3531" stroke="${INK}" stroke-width="2"/><circle cx="15" cy="17" r="7.4" fill="none" stroke="#5a524c" stroke-width="1"/><circle cx="15" cy="17" r="3.6" fill="#c9765a"/><circle cx="15" cy="17" r="1" fill="#fffaf3"/><path d="M27 5.5 22 16.5" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><circle cx="27" cy="5.5" r="2" fill="#d4ad68" stroke="${INK}" stroke-width="1.5"/></svg>`,
+  neon: `<svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="6" fill="#4a3a33"/><path d="M9 14v3.5a7 7 0 0 0 14 0V14zM9 14h14M23 15.5h1.6a2.4 2.4 0 0 1 0 4.8H22.6M8 26h16" stroke="#ff8f73" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11c-1-1.2 1-2.2 0-3.6M18 11c-1-1.2 1-2.2 0-3.6" stroke="#8fe6c6" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
   tag: `<svg viewBox="0 0 24 24"><path d="M4 5.5v5.2c0 .5.2 1 .6 1.4l7.4 7.4a1.6 1.6 0 0 0 2.3 0l5.2-5.2a1.6 1.6 0 0 0 0-2.3L12.1 4.6c-.4-.4-.9-.6-1.4-.6H5.5A1.5 1.5 0 0 0 4 5.5z" fill="#e8c27a" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.5" fill="#fffaf3" stroke="${INK}" stroke-width="1.4"/></svg>`,
   fast: `<svg viewBox="0 0 24 24"><path d="M4.5 6.5 11 12l-6.5 5.5zM12.5 6.5 19 12l-6.5 5.5z" fill="#e2a37c" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
   gear: `<svg viewBox="0 0 24 24"><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9z" fill="#f3e6d6" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.8" fill="#fffaf3" stroke="${INK}" stroke-width="1.7"/></svg>`,
@@ -2692,7 +2773,7 @@ const priceRange = (k) => [Math.ceil(UNIT_COST[k] / PRICE_STEP) * PRICE_STEP, Ma
 const DAY_START = 7, OPEN_FROM = 7.2, OPEN_UNTIL = 20, DAY_END = 20.5, HOURS_PER_SEC = 14 / 170;
 const G = {
   phase: 'title', day: 1, time: DAY_START, money: 0, rep: 2.0, paused: false,
-  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0, cat: 0 },
+  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0, cat: 0, books: 0, records: 0, neon: 0 },
   prices: { latte: 3.5, matcha: 5, pastry: 3 }, staff: [], history: [], // opening prices sit a little under fair
   streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0, pets: 0 }, cat: { name: '', coat: '' },
   spawnTimer: 1.2, lightHour: 8.4, closing: false, stats: null, bought: 0,
@@ -2727,12 +2808,13 @@ function menuIndex() { // weighted price ratio across the menu, roughly by how o
 // footfall multiplier: cheap menus pull people in (capped), pricey ones scare them off fast
 const footfall = () => { const r = menuIndex(); return r <= 1 ? 1 + Math.min(0.3, (1 - r) * 0.75) : Math.exp(-1.25 * (r - 1)); };
 const rentToday = () => 10 + 4 * tableCount();
-const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 + 0.06 * G.up.cat) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
+const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 + 0.06 * G.up.cat) * (1 + 0.08 * G.up.books) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
 function nextSpawnInterval() {
   // word of mouth lags: footfall follows the reputation you opened the day with
   const r = clamp(((G.stats ? G.stats.repStart : G.rep) - 0.5) / 4.5, 0, 1);
   // a party averages ~1.35 guests, so groups arrive a little less often than singles used to
   let base = (lerp(9.8, 3.5, r) * (1 - 0.14 * G.up.sign)) / (footfall() * today.footfall);
+  if (G.up.neon) base /= 1.04 + (G.time >= 17 ? 0.12 : 0); // the neon cup pulls in the evening crowd
   const h = G.time;
   if ((h > 8 && h < 10) || (h > 12 && h < 13.6)) base *= 0.78; // morning & lunch rush
   else if (h > 15 && h < 16.8) base *= 1.18;
@@ -3264,7 +3346,7 @@ class Customer extends Walker {
     else if (T === 'tourist' && st === 'eat' && !this.snapped && ch.acc.camera.visible && this.timer > 2.4) { a = 'photo'; this.snapped = true; this.flashed = false; }
     else if (mate && r < (st === 'eat' ? 0.7 : 0.55)) a = 'chat';
     else {
-      const ph = ACT_PHONE[T] || 0, bk = st === 'queue' || st === 'arrived' ? 0 : ACT_BOOK[T] || 0, q = Math.random();
+      const ph = ACT_PHONE[T] || 0, bk = st === 'queue' || st === 'arrived' ? 0 : (ACT_BOOK[T] || 0) * (G.up.books ? 1.8 : 1), q = Math.random();
       if (st === 'eat') a = q < ph * 0.3 ? 'phone' : null;
       else a = q < ph ? 'phone' : q < ph + bk ? 'book' : null;
     }
@@ -3307,7 +3389,7 @@ class Customer extends Walker {
     value /= this.order.length;
     const sat = clamp(0.5 * speed + 0.5 * value, 0, 1);
     const streakBonus = 1 + 0.05 * Math.min(5, G.streak);
-    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus;
+    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records);
     addMoney(total);
     this.paid = true;
     const S = G.stats;
@@ -3655,6 +3737,7 @@ const MILESTONES = [
   { id: 'profit500', name: 'Money machine', desc: 'Make $500 profit in one day', reward: 150 },
   { id: 'critic5', name: 'Rave review', desc: 'Get 5★ from a food critic', reward: 100 },
   { id: 'catperson', name: 'Cat person', desc: 'Give the café cat 15 scratches', reward: 25 },
+  { id: 'dream', name: 'Dream café', desc: 'Own every upgrade there is', reward: 200 },
   { id: 'allgoals', name: 'Overachiever', desc: 'Finish all daily goals in a day', reward: 50 },
   { id: 'menu', name: 'Full menu', desc: 'Offer lattes, matcha and pastries', reward: 30 },
   { id: 'maxed', name: 'Gold standard', desc: 'Max out a multi-level upgrade', reward: 60 },
@@ -3684,6 +3767,7 @@ const milestones = {
     if (G.staff.length >= 5) this.unlock('fullteam');
     if (G.up.matcha && G.up.pastry) this.unlock('menu');
     if (UPGRADES.some((u) => u.costs.length > 1 && G.up[u.id] >= u.costs.length)) this.unlock('maxed');
+    if (UPGRADES.every((u) => G.up[u.id] >= u.costs.length)) this.unlock('dream');
   },
 };
 
@@ -3695,7 +3779,7 @@ const umbrellaStand = (() => {
   [[0xc9765a, 0.05, 0.03, -0.12], [0x8e9fb4, -0.05, -0.02, 0.16], [0xd7a64f, 0.0, 0.05, 0.02]].forEach(([c, x, z, tilt], i) => {
     const u = buildFurledUmbrella(fabricMat(c)); u.position.set(x, 0.92 + i * 0.05, z); u.rotation.set(tilt * 0.6, i * 2.1, tilt); g.add(u);
   });
-  g.position.set(ROOM.door.x - 1.05, 0, ROOM.z0 + 0.32); g.visible = false;
+  g.position.set(ROOM.door.x + 1.0, 0, ROOM.z0 + 0.32); g.visible = false;
   world.add(g);
   return g;
 })();
@@ -4226,6 +4310,12 @@ const UPGRADES = [
     desc: (l) => ['Plants everywhere: reputation grows faster.', 'String lights: guests linger happily.', 'Maximum hygge.'][l] },
   { id: 'sign', name: 'Sidewalk Sign', icon: 'sign', tint: '#e4e1db', costs: [120, 260],
     desc: (l) => ['Chalkboard sign: guests arrive more often.', 'Fresh specials daily: even more foot traffic.', 'The whole street knows you.'][l] },
+  { id: 'books', name: 'Bookshelf', icon: 'books', tint: '#eadfcd', costs: [220],
+    desc: (l) => (l ? 'Well-thumbed paperbacks for slow afternoons.' : 'Guests browse while they wait: +8% patience, and more of them read.') },
+  { id: 'records', name: 'Record Player', icon: 'record', tint: '#f0d9cc', costs: [260],
+    desc: (l) => (l ? 'Spinning warm vinyl all day.' : 'Warm vinyl crackle puts guests in a generous mood: +8% tips.') },
+  { id: 'neon', name: 'Neon Sign', icon: 'neon', tint: '#f6d6d0', costs: [340],
+    desc: (l) => (l ? 'Glowing away on the back wall.' : 'A glowing cup on the wall: +4% guests all day, +12% after 5 pm.') },
   { id: 'cat', name: 'Café Cat', icon: 'cat', tint: '#f3e0cc', costs: [150],
     desc: (l) => (l ? `${G.cat.name || 'Your cat'} runs the place now. Click for a scratch.` : 'Adopt a resident cat: guests wait a little longer, and a scratch calms the room.') },
 ];
@@ -4280,6 +4370,12 @@ function applyUpgrade(id, animate) {
       if (G.up.decor >= 1) { DECOR.plants.visible = true; if (animate && G.up.decor === 1) DECOR.plants.children.forEach((p, i) => popIn(p, i * 0.1)); }
       if (G.up.decor >= 2) { DECOR.lights.visible = true; if (animate && G.up.decor === 2) for (let i = 0; i < 10; i++) burstSparkles(V3(-6.9 + i * 1.5, 3.9, ROOM.z0 + 0.3), 6, [1, 0.85, 0.55], 0.4); }
       focus.set(-2, 2, -2);
+      break;
+    }
+    case 'books': case 'records': case 'neon': {
+      const d = DECOR[id]; d.visible = true; d.getWorldPosition(focus);
+      if (animate) popIn(d, 0, 0.7);
+      if (id === 'records') audio.setVinyl(true);
       break;
     }
     case 'cat': {
@@ -4351,6 +4447,7 @@ function applyLighting(hour) {
   MAT.bulb.emissiveIntensity = 0.8 + lampFactor * 3.4;
   MAT.lampInner.emissiveIntensity = 0.25 + lampFactor * 1.3;
   MAT.glowStrip.emissiveIntensity = 0.4 + lampFactor * 1.6;
+  MAT.neon.emissiveIntensity = 1.5 + lampFactor * 1.7; MAT.neonMint.emissiveIntensity = 1.3 + lampFactor * 1.6;
   skyUniforms.top.value.copy(a.top).lerp(b.top, k);
   skyUniforms.bottom.value.copy(a.bot).lerp(b.bot, k);
   skyUniforms.glow.value.copy(a.glow).lerp(b.glow, k);
@@ -4560,6 +4657,7 @@ const audio = {
     const g = ctx.createGain(); g.gain.value = 0.018;
     s.connect(f); f.connect(g); g.connect(this.musicBus); s.start();
     this.musicBus.gain.setTargetAtTime(0.55 * settings.music, ctx.currentTime, 2.5);
+    if (this.vinyl) setTimeout(() => this.setVinyl(true), 0);
     // rain: bright hiss; crowd: a soft, wobbling mid-band murmur
     const mk = (type, freq, q) => { const src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true; const fl = ctx.createBiquadFilter(); fl.type = type; fl.frequency.value = freq; fl.Q.value = q; const gn = ctx.createGain(); gn.gain.value = 0; src.connect(fl); fl.connect(gn); gn.connect(this.sfxBus); src.start(0, Math.random()); return { fl, gn }; };
     const r = mk('highpass', 1800, 0.5); this.rainGain = r.gn;
@@ -4576,11 +4674,21 @@ const audio = {
         const ch = chords[bar % chords.length];
         for (const fr of ch) this.pad(fr / 2, next, 4.4);
         for (let b = 0; b < 8; b++) if (Math.random() < 0.32) this.tone(pick(penta), 0.9, { gain: 0.018, when: next - ctx.currentTime + b * 0.5, bus: this.musicBus, type: 'triangle', filter: 2400 });
+        if (this.vinyl) for (let i = 0; i < 5; i++) this.hiss(0.008, { gain: 0.05, freq: rand(1800, 5200), q: 2, when: next - ctx.currentTime + Math.random() * 4, bus: this.musicBus }); // pops and ticks
         next += 4; bar++;
       }
     };
     schedule();
     setInterval(schedule, 500);
+  },
+  setVinyl(on) {
+    this.vinyl = on;
+    if (!this.ctx || !this.ambientOn || this.crackle || !on) return;
+    const ctx = this.ctx, src = ctx.createBufferSource(); src.buffer = this.noise; src.loop = true; src.playbackRate.value = 0.5;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 0.6;
+    const g = ctx.createGain(); g.gain.value = 0.012;
+    src.connect(f); f.connect(g); g.connect(this.musicBus); src.start();
+    this.crackle = g;
   },
   applyVolumes() {
     if (!this.ctx) return;
@@ -5241,7 +5349,7 @@ const ui = {
         c.h.textContent = u.title ? u.title(Math.min(lvl, u.costs.length - 1)) : u.name;
         c.p.textContent = u.desc(lvl);
         c.pips.forEach((p, i) => p.classList.toggle('on', i < lvl));
-        if (maxed) { c.btn.textContent = 'Maxed'; c.btn.disabled = true; c.btn.classList.add('maxed'); }
+        if (maxed) { c.btn.textContent = u.costs.length > 1 ? 'Maxed' : 'Owned'; c.btn.disabled = true; c.btn.classList.add('maxed'); }
         else { const cost = upgradeCost(u); c.btn.textContent = `$${cost}`; c.btn.disabled = G.money < cost; c.btn.classList.remove('maxed'); if (G.money >= cost) afford++; }
       }
       const b = $('shopBadge'); b.textContent = afford; b.classList.toggle('on', afford > 0);
@@ -5556,6 +5664,7 @@ function renderUpdate(dt, alpha) {
   for (const c of customers) c.render(alpha, simDt, elapsed);
   for (const w of workers) w.render(alpha, simDt, elapsed);
   cat.render(alpha, simDt, elapsed);
+  if (G.up.records) DECOR.records.userData.vinyl.rotation.y -= simDt * 3.5; // 33⅓ rpm, near enough
   renderFlights(alpha);
   updateTweens(dt);
   for (const st of stationList) st.render(dt, elapsed);
@@ -5604,7 +5713,7 @@ document.body.classList.add('title');
 DECOR.plants.visible = false; DECOR.lights.visible = false; DECOR.sign.visible = false;
 const resumed = loadGame();
 tables.forEach((t, i) => { if (i < tableCount()) t.activate(furnitureLevel(), false); });
-for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign', 'cat']) if (G.up[id] > 0) applyUpgrade(id, false);
+for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign', 'cat', 'books', 'records', 'neon']) if (G.up[id] > 0) applyUpgrade(id, false);
 for (const st of G.staff) spawnWorker(st, false);
 applyStyle();
 updateMenuBoard();
