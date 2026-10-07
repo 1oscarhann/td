@@ -273,6 +273,11 @@
   table.hist td { text-align: right; padding: 5px 4px; border-top: 1px solid rgba(74,52,40,.08); font-weight: 700; }
   table.hist th:first-child, table.hist td:first-child { text-align: left; }
   table.hist td.neg { color: var(--bad); }
+  .ad-card p.eff { color: var(--ink); margin-top: 3px; }
+  .ad-card.on { background: rgba(255,250,240,.86); box-shadow: inset 0 0 0 2px rgba(201,118,90,.35); }
+  .switch { width: 50px; height: 28px; border-radius: 999px; border: 0; background: rgba(74,52,40,.16); position: relative; cursor: pointer; transition: background .2s; padding: 0; }
+  .switch i { position: absolute; left: 3px; top: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fffaf3; box-shadow: 0 1px 3px rgba(74,46,28,.3); transition: transform .2s cubic-bezier(.3,.8,.3,1); }
+  .switch.on { background: var(--terracotta); } .switch.on i { transform: translateX(22px); }
   .menu-note { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); margin: 2px 4px 10px; line-height: 1.4; }
   .menu-note b { color: var(--ink); }
   .price-card { background: rgba(255,255,255,.6); border-radius: 18px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,.7); }
@@ -489,11 +494,12 @@
   <div id="shop" class="glass ia" role="dialog" aria-label="Manage your café">
     <div class="shop-head"><div><h2>Manage</h2><p id="mgSub">Run the numbers, run the café</p></div><button class="close-btn" id="shopClose" data-icon="close" aria-label="Close"></button></div>
     <div class="tabs" id="mgTabs" role="tablist">
-      <button role="tab" data-tab="overview" class="on">Overview</button><button role="tab" data-tab="menu">Menu</button><button role="tab" data-tab="staff">Staff</button><button role="tab" data-tab="upgrades">Upgrades</button><button role="tab" data-tab="goals">Goals</button>
+      <button role="tab" data-tab="overview" class="on">Overview</button><button role="tab" data-tab="menu">Menu</button><button role="tab" data-tab="staff">Staff</button><button role="tab" data-tab="ads">Ads</button><button role="tab" data-tab="upgrades">Upgrades</button><button role="tab" data-tab="goals">Goals</button>
     </div>
     <div class="shop-list" id="tab-overview" role="tabpanel"></div>
     <div class="shop-list" id="tab-menu" role="tabpanel" hidden></div>
     <div class="shop-list" id="tab-staff" role="tabpanel" hidden></div>
+    <div class="shop-list" id="tab-ads" role="tabpanel" hidden></div>
     <div class="shop-list" id="shopList" role="tabpanel" hidden></div>
     <div class="shop-list" id="tab-goals" role="tabpanel" hidden></div>
   </div>
@@ -817,7 +823,7 @@ window.addEventListener('resize', () => resize());
 // 3. CAMERA RIG — fixed three-quarter view, limited orbit, damped zoom
 // ---------------------------------------------------------------------
 const rig = {
-  target: new THREE.Vector3(0.2, 0.9, 0.3),
+  target: new THREE.Vector3(2.4, 0.9, -0.3),
   baseAz: THREE.MathUtils.degToRad(38),
   az: THREE.MathUtils.degToRad(38), pol: THREE.MathUtils.degToRad(53), dist: 29,
   goal: { az: THREE.MathUtils.degToRad(38), pol: THREE.MathUtils.degToRad(53), dist: 29 },
@@ -930,7 +936,7 @@ scene.add(sky);
 
 const groundShadow = new THREE.Mesh(new THREE.PlaneGeometry(160, 160), new THREE.ShadowMaterial({ color: 0x5a3a26, opacity: 0.22 }));
 groundShadow.rotation.x = -Math.PI / 2;
-groundShadow.position.y = -0.62;
+groundShadow.position.y = -0.69;
 groundShadow.receiveShadow = true;
 groundShadow.userData.noAO = true;
 scene.add(groundShadow);
@@ -1104,6 +1110,32 @@ TEX.grain = makeGrainTexture('#7a5238', 512, 5);
 TEX.grainLight = makeGrainTexture('#c89d72', 512, 6);
 TEX.tile = makeTileTextures();
 TEX.marble = makeMarbleTexture(512);
+// street surfaces: running-bond stone pavers and speckled asphalt (UVs are in world units, see worldUV)
+function makePaverTextures() {
+  const S = 512, n = 4, cs = S / n, rng = mulberry32(23);
+  const col = makeCanvas(S), bump = makeCanvas(S), c = col.getContext('2d'), b = bump.getContext('2d');
+  c.fillStyle = '#a69b8c'; c.fillRect(0, 0, S, S);
+  b.fillStyle = '#202020'; b.fillRect(0, 0, S, S);
+  for (let r = 0; r < n; r++) for (let q = 0; q < n; q++) {
+    const t = 0.93 + rng() * 0.11, x0 = q * cs + (r % 2) * cs / 2, y = r * cs;
+    for (const ox of [0, -S]) {
+      const x = x0 + ox;
+      c.fillStyle = `rgb(${(204 * t) | 0},${(194 * t) | 0},${(180 * t) | 0})`; c.fillRect(x + 3, y + 3, cs - 6, cs - 6);
+      for (let k = 0; k < 70; k++) { c.fillStyle = rng() < 0.5 ? `rgba(90,80,70,${0.05 + rng() * 0.08})` : `rgba(255,250,240,${0.06 + rng() * 0.1})`; c.fillRect(x + 4 + rng() * (cs - 8), y + 4 + rng() * (cs - 8), 1 + rng() * 2, 1 + rng() * 2); }
+      b.fillStyle = '#d0d0d0'; b.fillRect(x + 4, y + 4, cs - 8, cs - 8);
+    }
+  }
+  b.filter = 'blur(2px)'; b.drawImage(bump, 0, 0); b.filter = 'none';
+  return { map: toTexture(col), bump: toTexture(bump, { srgb: false }) };
+}
+function makeAsphaltTexture() {
+  const S = 512, rng = mulberry32(31), cv = makeCanvas(S), c = cv.getContext('2d');
+  c.fillStyle = '#6e6f74'; c.fillRect(0, 0, S, S);
+  for (let k = 0; k < 9000; k++) { c.fillStyle = rng() < 0.5 ? `rgba(40,40,46,${0.15 + rng() * 0.2})` : `rgba(205,202,194,${0.06 + rng() * 0.12})`; c.fillRect(rng() * S, rng() * S, 1 + rng() * 2.2, 1 + rng() * 2.2); }
+  return toTexture(cv);
+}
+TEX.pavers = makePaverTextures();
+TEX.asphalt = makeAsphaltTexture();
 
 const phys = (o) => new THREE.MeshPhysicalMaterial(o);
 const MAT = {
@@ -1261,6 +1293,11 @@ Object.assign(MAT, {
   glowStrip: new THREE.MeshStandardMaterial({ color: 0xffe6c4, emissive: 0xffb36b, emissiveIntensity: 0.4 }),
   indicator: new THREE.MeshStandardMaterial({ color: 0x9fb193, emissive: 0x9fd18a, emissiveIntensity: 1.5 }),
 });
+MAT.pavers = phys({ map: TEX.pavers.map, bumpMap: TEX.pavers.bump, bumpScale: 1.2, roughness: 0.86 });
+MAT.asphalt = phys({ map: TEX.asphalt, roughness: 0.9 });
+MAT.kerb = phys({ color: 0xe3dccf, roughness: 0.8, bumpMap: TEX.plaster, bumpScale: 0.3 });
+MAT.paint = new THREE.MeshStandardMaterial({ color: 0xf4efe4, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+MAT.hydrant = phys({ color: 0xc8553d, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.2 });
 MAT.vinyl = phys({ color: 0x1d1a19, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.12 });
 MAT.neon = new THREE.MeshStandardMaterial({ color: 0xffd2c4, emissive: 0xff7a5c, emissiveIntensity: 2.4 });
 MAT.neonMint = new THREE.MeshStandardMaterial({ color: 0xd8fff0, emissive: 0x7fe0bf, emissiveIntensity: 2.2 });
@@ -1407,14 +1444,95 @@ function buildWindow(w, h) {
   return g;
 }
 
+// the corner plot: pavement wraps the right and back of the café, roads beyond, crossing at the corner
+const STREET = {
+  top: -0.13, left: -7.75, front: 6.15, edgeR: 14.6, edgeB: -12.4,
+  paveR: 10.6, roadR0: 10.8, roadR1: 14.1, paveB: -8.5, roadB0: -8.7, roadB1: -12.0,
+  laneX: 9.55, laneZ: -7.45, terraceX: 8.05, terraceLane: 9.0, doorZ: -6.6,
+};
+// box UVs in world units (x, z) so pavers line up across separate slabs
+function worldUV(g, ox, oz, s) {
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, (p.getX(i) + ox) * s, (p.getZ(i) + oz) * s);
+  uv.needsUpdate = true;
+  return g;
+}
+function buildStreet() {
+  const g = new THREE.Group(), S = STREET, T = S.top;
+  const slab = (x0, x1, z0, z1, y1, mat, uvs = 0, r = 0.02) => {
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, geo = rbox(x1 - x0, y1 - T, z1 - z0, r, 2);
+    if (uvs) worldUV(geo, cx, cz, uvs);
+    const m = mesh(geo, mat, { cast: false }); m.position.set(cx, (T + y1) / 2, cz); g.add(m); return m;
+  };
+  slab(ROOM.x1 + 0.05, S.paveR, S.paveB, S.front, 0, MAT.pavers, 1 / 2.4); // side street pavement (and the corner)
+  slab(S.left, ROOM.x1 + 0.05, S.paveB, ROOM.z0 - 0.32, 0, MAT.pavers, 1 / 2.4); // back street pavement, past the door
+  slab(S.paveR, S.roadR0, S.roadB0, S.front, 0, MAT.kerb);
+  slab(S.left, S.roadR0, S.roadB0, S.paveB, 0, MAT.kerb);
+  slab(S.roadR0, S.roadR1, S.roadB1, S.front, -0.08, MAT.asphalt, 1 / 4, 0.01);
+  slab(S.left, S.roadR0, S.roadB1, S.roadB0, -0.08, MAT.asphalt, 1 / 4, 0.01);
+  slab(S.roadR1, S.roadR1 + 0.2, S.roadB1 - 0.2, S.front, 0, MAT.kerb); // the far side of both roads
+  slab(S.roadR1 + 0.2, S.edgeR, S.edgeB, S.front, 0, MAT.pavers, 1 / 2.4);
+  slab(S.left, S.roadR1, S.roadB1 - 0.2, S.roadB1, 0, MAT.kerb);
+  slab(S.left, S.roadR1 + 0.2, S.edgeB, S.roadB1 - 0.2, 0, MAT.pavers, 1 / 2.4);
+  // road paint: centre dashes and two zebra crossings meeting at the corner
+  const paint = (x, z, w, d) => { const m = mesh(boxGeo(w, 0.012, d, 0.004, 1), MAT.paint, { cast: false }); m.position.set(x, -0.074, z); g.add(m); };
+  const cxR = (S.roadR0 + S.roadR1) / 2, czB = (S.roadB0 + S.roadB1) / 2;
+  for (let z = S.front - 0.6; z > S.laneZ + 1.4; z -= 1.8) paint(cxR, z, 0.12, 1.0);
+  for (let x = S.left + 0.6; x < S.laneX - 1.4; x += 1.8) paint(x, czB, 1.0, 0.12);
+  for (let x = S.roadR0 + 0.3; x < S.roadR1 - 0.2; x += 0.66) paint(x, S.laneZ, 0.4, 1.2);
+  for (let z = S.roadB0 - 0.3; z > S.roadB1 + 0.2; z -= 0.66) paint(S.laneX - 0.3, z, 1.2, 0.4);
+  // street furniture
+  const lamp = (x, z) => { const l = buildLamppost(); l.position.set(x, 0, z); g.add(l); };
+  lamp(S.paveR - 0.28, S.paveB + 0.32); lamp(S.paveR - 0.28, 1.2);
+  { const b = buildStreetBench(); b.position.set(S.paveR - 0.42, 0, -3.4); b.rotation.y = -Math.PI / 2; g.add(b); }
+  { const b = buildStreetBin(); b.position.set(S.paveR - 0.3, 0, 5.7); g.add(b); }
+  { const h = buildHydrant(); h.position.set(S.paveR - 0.28, 0, -6.0); g.add(h); }
+  return g;
+}
+function buildLamppost() {
+  const g = new THREE.Group();
+  const base = mesh(cylGeo(0.13, 0.17, 0.3, 16), MAT.darkMetal); base.position.y = 0.15; g.add(base);
+  const pole = mesh(cylGeo(0.045, 0.06, 3.4, 12), MAT.darkMetal); pole.position.y = 1.95; g.add(pole);
+  const collar = mesh(torGeo(0.065, 0.02, 8, 16), MAT.brass); collar.rotation.x = Math.PI / 2; collar.position.y = 3.6; g.add(collar);
+  const glow = mesh(cylGeo(0.12, 0.085, 0.3, 6), MAT.bulb, { cast: false }); glow.position.y = 3.82; g.add(glow);
+  const roof = mesh(geo('lampRoof', () => new THREE.ConeGeometry(0.19, 0.17, 6)), MAT.darkMetal); roof.position.y = 4.05; g.add(roof);
+  const fin = mesh(sphereGeo(0.035, 12, 8), MAT.brass); fin.position.y = 4.16; g.add(fin);
+  return g;
+}
+function buildStreetBench() {
+  const g = new THREE.Group();
+  for (const sx of [-0.62, 0.62]) {
+    const leg = mesh(boxGeo(0.06, 0.42, 0.46, 0.02, 2), MAT.darkMetal); leg.position.set(sx, 0.21, 0); g.add(leg);
+    const post = mesh(boxGeo(0.06, 0.52, 0.06, 0.02, 2), MAT.darkMetal); post.position.set(sx, 0.66, -0.21); post.rotation.x = -0.15; g.add(post);
+  }
+  for (let i = 0; i < 3; i++) { const sl = mesh(boxGeo(1.5, 0.05, 0.13, 0.02, 2), MAT.oak); sl.position.set(0, 0.45, -0.15 + i * 0.15); g.add(sl); }
+  for (let i = 0; i < 2; i++) { const sl = mesh(boxGeo(1.5, 0.11, 0.04, 0.02, 2), MAT.oak); sl.position.set(0, 0.66 + i * 0.17, -0.24 - i * 0.025); sl.rotation.x = -0.15; g.add(sl); }
+  return g;
+}
+function buildStreetBin() {
+  const g = new THREE.Group();
+  const body = mesh(cylGeo(0.2, 0.17, 0.62, 18), MAT.sageDeep); body.position.y = 0.33; g.add(body);
+  const rim = mesh(torGeo(0.2, 0.025, 8, 24), MAT.darkMetal); rim.rotation.x = Math.PI / 2; rim.position.y = 0.64; g.add(rim);
+  const lid = mesh(sphereGeo(0.19, 20, 10), MAT.darkMetal); lid.scale.y = 0.35; lid.position.y = 0.66; g.add(lid);
+  return g;
+}
+function buildHydrant() {
+  const g = new THREE.Group();
+  const body = mesh(cylGeo(0.09, 0.1, 0.5, 14), MAT.hydrant); body.position.y = 0.27; g.add(body);
+  const cap = mesh(sphereGeo(0.095, 14, 10), MAT.hydrant); cap.position.y = 0.53; cap.scale.y = 0.7; g.add(cap);
+  for (const sx of [-1, 1]) { const n = mesh(cylGeo(0.035, 0.035, 0.1, 10), MAT.brass); n.rotation.z = Math.PI / 2; n.position.set(sx * 0.11, 0.34, 0); g.add(n); }
+  return g;
+}
+
 function buildRoom() {
   const room = new THREE.Group();
   // plinth + plank floor
-  const plinth = mesh(rbox(15.3, 0.62, 12.2, 0.22, 6), MAT.plinth, { cast: true, receive: true });
-  plinth.position.set(-0.1, -0.31 - 0.05, 0.05);
+  const S = STREET, pw = S.edgeR - S.left, pd = S.front - S.edgeB;
+  const plinth = mesh(rbox(pw, 0.55, pd, 0.22, 6), MAT.plinth, { cast: true, receive: true });
+  plinth.position.set((S.left + S.edgeR) / 2, S.top - 0.275, (S.front + S.edgeB) / 2);
   room.add(plinth);
-  const floor = mesh(rbox(14.5, 0.1, 11.45, 0.04, 3), MAT.floor, { cast: false });
-  floor.position.set(-0.15, -0.05, 0.05);
+  const floor = mesh(rbox(14.5, -S.top, 11.45, 0.04, 3), MAT.floor, { cast: false });
+  floor.position.set(-0.15, S.top / 2, 0.05);
   room.add(floor);
 
   // back wall (door arch on the right)
@@ -1460,10 +1578,10 @@ function buildRoom() {
   addPanel(1.55, 7 - 0.78, ROOM.z0 + 0.035, 0);
   addPanel(10.8, ROOM.x0 + 0.035, ROOM.z0 + 5.45, Math.PI / 2);
 
-  // outside step under the door + a little planter world beyond the walls
-  const step = mesh(rbox(3.2, 0.5, 2.6, 0.18, 5), MAT.outside);
-  step.position.set(ROOM.door.x, -0.25, ROOM.z0 - 1.6);
-  room.add(step);
+  // the right side is cut away for the view: a low plaster sill marks where the shopfront stands
+  const sill = mesh(rbox(0.34, 0.3, ROOM.z1 - ROOM.z0 + 0.32, 0.05, 3), MAT.plasterOuter);
+  sill.position.set(ROOM.x1 + 0.17, 0.15, (ROOM.z1 + ROOM.z0 - 0.32) / 2);
+  room.add(sill);
   return room;
 }
 
@@ -2140,6 +2258,7 @@ function mergeStatic(root) {
 const world = new THREE.Group();
 scene.add(world);
 world.add(buildRoom());
+world.add(buildStreet());
 const DECOR = {};
 const LAYOUT = {
   machine: new THREE.Vector3(-4.75, 1.06, -3.6),
@@ -2147,12 +2266,14 @@ const LAYOUT = {
   pastry: new THREE.Vector3(-1.55, 1.06, -3.6),
   register: new THREE.Vector3(-1.55, 0.96, ROOM.z0 + 0.3),
   slots: [-3.8, -3.34, -2.88, -2.42].map((x) => new THREE.Vector3(x, 1.06, -3.3)),
-  tables: [[0.5, -0.35], [4.1, -0.35], [0.5, 3.15], [4.1, 3.15], [-3.2, 3.15], [-3.2, -0.35]].map(([x, z]) => new THREE.Vector3(x, 0, z)),
+  tables: [[0.5, -0.35], [4.1, -0.35], [0.5, 3.15], [4.1, 3.15], [-3.2, 3.15], [-3.2, -0.35],
+    // terrace tables out on the side-street pavement (STREET.terraceX)
+    [8.05, -2.4], [8.05, 0.0], [8.05, 2.4], [8.05, -4.8], [8.05, 4.8]].map(([x, z]) => new THREE.Vector3(x, 0, z)),
 };
 {
   const t1 = buildTree(1.25, PAL.sage); t1.position.set(-9.6, -0.6, -3.2); world.add(t1);
   const t2 = buildTree(1.0, PAL.sageDeep); t2.position.set(-9.3, -0.6, 2.4); world.add(t2);
-  const t3 = buildTree(1.15, PAL.olive); t3.position.set(1.0, -0.6, -8.4); world.add(t3);
+  const t3 = buildTree(1.15, PAL.olive); t3.position.set(1.0, 0, -7.95); world.add(t3); // a street tree behind the café
 
   world.add(buildCounter());
   const rug = buildRug(); rug.position.set(2.3, 0.0, 1.4); world.add(rug);
@@ -2188,7 +2309,7 @@ const LAYOUT = {
   const fid = buildFiddle(1.15); fid.position.set(6.25, 0, -4.6); world.add(fid);
   const snake = buildSnakePlant(1.3); snake.position.set(6.35, 0, 4.85); world.add(snake);
   const bush = buildBush(1.4); bush.position.set(2.62, 0, -4.85); world.add(bush);
-  const bushOut = buildBush(1.3); bushOut.position.set(ROOM.door.x + 1.25, 0, ROOM.z0 - 1.0); world.add(bushOut);
+  const bushOut = buildBush(1.1); bushOut.position.set(ROOM.door.x - 1.25, 0, ROOM.z0 - 0.75); world.add(bushOut);
 
   // decor-upgrade extras (hidden until bought)
   DECOR.plants = new THREE.Group();
@@ -2200,7 +2321,7 @@ const LAYOUT = {
   DECOR.lights.add(buildStringLights(sagCurve(new THREE.Vector3(-6.9, 4.05, ROOM.z0 + 0.12), new THREE.Vector3(6.9, 4.05, ROOM.z0 + 0.12), 0.35, 6), 44));
   DECOR.lights.add(buildStringLights(sagCurve(new THREE.Vector3(ROOM.x0 + 0.12, 4.05, ROOM.z0 + 0.2), new THREE.Vector3(ROOM.x0 + 0.12, 4.05, ROOM.z1 - 0.1), 0.35, 5), 36));
   world.add(DECOR.lights);
-  DECOR.sign = buildSidewalkSign(); DECOR.sign.position.set(6.35, 0, 3.3); DECOR.sign.rotation.y = 0.9; world.add(DECOR.sign);
+  DECOR.sign = buildSidewalkSign(); DECOR.sign.position.set(STREET.paveR - 0.6, 0, -6.4); DECOR.sign.rotation.y = 0.35; world.add(DECOR.sign); // out on the corner
   DECOR.books = buildBookshelf(); DECOR.books.position.set(ROOM.x0 + 0.2, 0, 2.72); DECOR.books.rotation.y = Math.PI / 2; world.add(DECOR.books);
   DECOR.records = buildSideboard(); DECOR.records.position.set(1.2, 0, ROOM.z0 + 0.26); world.add(DECOR.records); // left of the queue so it stays in view
   DECOR.neon = buildNeonSign(); DECOR.neon.position.set(ROOM.door.x + 1.6, 2.55, ROOM.z0 + 0.02); world.add(DECOR.neon);
@@ -2253,6 +2374,13 @@ const ICONS = {
   books: `<svg viewBox="0 0 32 32"><path d="M5 27h22" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><rect x="7" y="9" width="4.6" height="18" rx="1.2" fill="#c9765a" stroke="${INK}" stroke-width="1.8"/><rect x="11.6" y="6.5" width="4.6" height="20.5" rx="1.2" fill="#9fb193" stroke="${INK}" stroke-width="1.8"/><rect x="16.2" y="10" width="4.2" height="17" rx="1.2" fill="#e0b65e" stroke="${INK}" stroke-width="1.8"/><path d="m21.4 12.2 3.9-1.2 3.4 15-3.9 1z" fill="#8e9fb4" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
   record: `<svg viewBox="0 0 32 32"><circle cx="15" cy="17" r="11" fill="#3b3531" stroke="${INK}" stroke-width="2"/><circle cx="15" cy="17" r="7.4" fill="none" stroke="#5a524c" stroke-width="1"/><circle cx="15" cy="17" r="3.6" fill="#c9765a"/><circle cx="15" cy="17" r="1" fill="#fffaf3"/><path d="M27 5.5 22 16.5" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><circle cx="27" cy="5.5" r="2" fill="#d4ad68" stroke="${INK}" stroke-width="1.5"/></svg>`,
   neon: `<svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="6" fill="#4a3a33"/><path d="M9 14v3.5a7 7 0 0 0 14 0V14zM9 14h14M23 15.5h1.6a2.4 2.4 0 0 1 0 4.8H22.6M8 26h16" stroke="#ff8f73" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11c-1-1.2 1-2.2 0-3.6M18 11c-1-1.2 1-2.2 0-3.6" stroke="#8fe6c6" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+  wifi: `<svg viewBox="0 0 24 24"><path d="M3.5 9.5a12 12 0 0 1 17 0M6.5 12.6a7.6 7.6 0 0 1 11 0M9.4 15.6a3.6 3.6 0 0 1 5.2 0" stroke="${INK}" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="18.6" r="1.6" fill="#c9765a"/></svg>`,
+  oat: `<svg viewBox="0 0 24 24"><path d="M8.5 7.5h7l1 3v8.5a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-8.5z" fill="#fffaf3" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 4h6v3.5H9z" fill="#d7a64f" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 12.5c-1.4 1.5-1.4 3.5 0 5M12 12.5c1.4 1.5 1.4 3.5 0 5" stroke="#9fb193" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`,
+  card: `<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5" fill="#f3d2c4" stroke="${INK}" stroke-width="1.7"/><g fill="${INK}"><circle cx="7.5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/><circle cx="14.5" cy="12" r="1.2"/></g><circle cx="18" cy="12" r="1.5" fill="none" stroke="#c9765a" stroke-width="1.5"/></svg>`,
+  plug: `<svg viewBox="0 0 24 24"><rect x="7" y="3.5" width="10" height="17" rx="2.4" fill="#fffaf3" stroke="${INK}" stroke-width="1.7"/><path d="M12.8 7.5 10 12.4h2.6l-1.4 4.1 3.2-5.2h-2.6z" fill="#d7a64f" stroke="${INK}" stroke-width="1.2" stroke-linejoin="round"/></svg>`,
+  dog: `<svg viewBox="0 0 24 24"><path d="M6 9.5c0-2.6 2.6-4.5 6-4.5s6 1.9 6 4.5v4.2c0 3.3-2.7 5.8-6 5.8s-6-2.5-6-5.8z" fill="#e0b27e" stroke="${INK}" stroke-width="1.7"/><path d="M6.4 8.2 3.6 10.8l1.6 4 2-2.4M17.6 8.2l2.8 2.6-1.6 4-2-2.4" fill="#a8703f" stroke="${INK}" stroke-width="1.5" stroke-linejoin="round"/><circle cx="9.8" cy="11.2" r="1" fill="${INK}"/><circle cx="14.2" cy="11.2" r="1" fill="${INK}"/><ellipse cx="12" cy="14.6" rx="1.6" ry="1.1" fill="${INK}"/></svg>`,
+  music: `<svg viewBox="0 0 24 24"><path d="M9.5 17.5V6l9-2v11.5" stroke="${INK}" stroke-width="1.8" fill="none" stroke-linejoin="round"/><ellipse cx="7.3" cy="17.6" rx="2.6" ry="2" fill="#c9765a" stroke="${INK}" stroke-width="1.5"/><ellipse cx="16.3" cy="15.6" rx="2.6" ry="2" fill="#c9765a" stroke="${INK}" stroke-width="1.5"/></svg>`,
+  social: `<svg viewBox="0 0 24 24"><rect x="6.5" y="3" width="11" height="18" rx="2.6" fill="#fffaf3" stroke="${INK}" stroke-width="1.7"/><path d="M12 15.5c-2.4-1.6-3.6-2.9-3.6-4.3a1.8 1.8 0 0 1 3.6-.6 1.8 1.8 0 0 1 3.6.6c0 1.4-1.2 2.7-3.6 4.3z" fill="#d9776a"/></svg>`,
   tag: `<svg viewBox="0 0 24 24"><path d="M4 5.5v5.2c0 .5.2 1 .6 1.4l7.4 7.4a1.6 1.6 0 0 0 2.3 0l5.2-5.2a1.6 1.6 0 0 0 0-2.3L12.1 4.6c-.4-.4-.9-.6-1.4-.6H5.5A1.5 1.5 0 0 0 4 5.5z" fill="#e8c27a" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><circle cx="8.3" cy="8.3" r="1.5" fill="#fffaf3" stroke="${INK}" stroke-width="1.4"/></svg>`,
   fast: `<svg viewBox="0 0 24 24"><path d="M4.5 6.5 11 12l-6.5 5.5zM12.5 6.5 19 12l-6.5 5.5z" fill="#e2a37c" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
   gear: `<svg viewBox="0 0 24 24"><path d="M10.3 3.6h3.4l.5 2.3 1.6.9 2.2-.8 1.7 2.9-1.7 1.6v1.9l1.7 1.6-1.7 2.9-2.2-.8-1.6.9-.5 2.3h-3.4l-.5-2.3-1.6-.9-2.2.8-1.7-2.9 1.7-1.6v-1.9L4.3 8.9 6 6l2.2.8 1.6-.9z" fill="#f3e6d6" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.8" fill="#fffaf3" stroke="${INK}" stroke-width="1.7"/></svg>`,
@@ -2538,6 +2666,7 @@ const POSES = {
   photo: { a0x: -1.6, a1x: -1.6, a0z: 0.52, a1z: -0.52, hx: 0.08 },
   impatient: { a0x: -0.8, a1x: -0.8, a0z: 0.86, a1z: -0.86, hx: -0.04 },
   wipe: { a0x: -0.35, a1x: -1.05, a0z: 0.1, a1z: -0.25, hx: 0.3 }, // staff with nothing to do polish the counter
+  guitar: { a0x: -1.15, a1x: -0.62, a0z: 0.5, a1z: -0.55, hx: 0.22 },
   ready: { a0x: -0.42, a1x: -0.42, a0z: 0.42, a1z: -0.42, hx: 0 },
   chat: {},
 };
@@ -2610,7 +2739,13 @@ class Character {
     { const scr = mesh(CH_GEO.screen, MAT.screen, { cast: false }); scr.position.z = -0.0075; scr.rotation.y = Math.PI; acc.phone.add(scr); }
     acc.umbrella = buildFurledUmbrella(MAT.linen); acc.umbrella.position.set(0.0, -0.36, 0.03); acc.umbrella.rotation.y = Math.PI / 2; this.arms[0].add(acc.umbrella);
     acc.umbrellaCanopy = acc.umbrella.children[2];
-    for (const k in acc) if (acc[k].isObject3D && k !== 'sunBand' && k !== 'bookCover' && k !== 'umbrellaCanopy') acc[k].visible = false;
+    // held up overhead out in the rain (pole in the right hand)
+    acc.brollyOpen = new THREE.Group(); acc.brollyOpen.position.set(0.15, 0.53, 0.34); acc.brollyOpen.rotation.x = -0.12; this.torso.add(acc.brollyOpen);
+    { const pole = mesh(cylGeo(0.012, 0.012, 1.15, 6), MAT.darkMetal, { cast: false }); pole.position.y = 0.575; acc.brollyOpen.add(pole);
+      const dome = mesh(geo('brollyDome', () => new THREE.SphereGeometry(0.6, 20, 6, 0, TAU, 0, Math.PI * 0.32)), MAT.linen); dome.position.y = 0.73; dome.scale.y = 0.7; acc.brollyOpen.add(dome);
+      const tip = mesh(sphereGeo(0.025, 8, 6), MAT.darkMetal, { cast: false }); tip.position.y = 1.17; acc.brollyOpen.add(tip);
+      acc.brollyDome = dome; }
+    for (const k in acc) if (acc[k].isObject3D && k !== 'sunBand' && k !== 'bookCover' && k !== 'umbrellaCanopy' && k !== 'brollyDome') acc[k].visible = false;
     // animation state
     this.phase = rand(TAU); this.walk = 0; this.sit = 0; this.seatY = 0.5;
     this.bounce = 0; this.bounceV = 0; this.seed = rand(100); this.sip = 0; this.mood = 'neutral';
@@ -2646,7 +2781,7 @@ class Character {
     A.sunHat.visible = headwear === 'sun'; A.beret.visible = headwear === 'beret';
     if (headwear === 'sun') { const st = fabricMat(0xe9d3a3); A.sunHat.children.forEach((m) => { m.material = st; }); A.sunBand.material = fabricMat(pick([0xc9765a, 0x8e9fb4, 0x7f9474])); }
     if (headwear === 'beret') { const bm = fabricMat(0x5a2f33); A.beret.children.forEach((m) => { m.material = bm; }); }
-    A.book.visible = false; A.phone.visible = false; A.umbrella.visible = false; A.camera.position.set(0.02, 0.5, 0.29); A.camera.rotation.set(0, 0, 0);
+    A.book.visible = false; A.phone.visible = false; A.umbrella.visible = false; A.brollyOpen.visible = false; this.holdBrolly = false; A.camera.position.set(0.02, 0.5, 0.29); A.camera.rotation.set(0, 0, 0);
     A.phone.material = fabricMat(pick([0x2f2b28, 0xc9765a, 0x8e9fb4, 0x9fb193, 0xe8b3a1, 0xd7a64f]));
     A.bookCover.material = fabricMat(notebook ? 0x2f2b28 : pick([0xc9765a, 0x8e9fb4, 0x7f9474, 0xd7a64f, 0x8a3e3e, 0xe8b3a1]));
     this.activity = null; this.talking = false; this.prop = null; this.propS = 0;
@@ -2726,6 +2861,7 @@ class Character {
       if (act === 'phone') a1x += Math.max(0, Math.sin(t * 1.3 + this.seed)) ** 8 * -0.12; // thumb flick
       if (act === 'book') hy = Math.sin(t * 0.9 + this.seed) * 0.1;
       if (act === 'notes') { a1x += Math.sin(t * 9 + this.seed) * 0.05; a1z += Math.sin(t * 4.5) * 0.06; }
+      if (act === 'guitar') { a1x += Math.sin(t * 9.5) * 0.13; hy = Math.sin(t * 0.8) * 0.25; hx += Math.max(0, Math.sin(t * 4.75)) * 0.06; }
       if (act === 'wipe') { a1x += Math.sin(t * 4.2 + this.seed) * 0.14; a1z += Math.cos(t * 4.2 + this.seed) * 0.2; hy = Math.sin(t * 0.6 + this.seed) * 0.15; }
     }
     if (act === 'chat' || act === 'impatient') hy = this.lookYaw;
@@ -2740,6 +2876,8 @@ class Character {
     this.arms[1].rotation.x = s * 0.55 * w + armBase - sipLift * 1.1 + (this.carry ? -1.1 : 0) + P.a1x;
     this.arms[0].rotation.z = -0.14 - (this.mood === 'angry' ? 0.2 : 0) + P.a0z;
     this.arms[1].rotation.z = 0.14 + (this.mood === 'angry' ? 0.2 : 0) + P.a1z;
+    if (this.holdBrolly) { this.arms[1].rotation.x = -1.2; this.arms[1].rotation.z = -0.3; }
+    if (this.acc.brollyOpen.visible !== !!this.holdBrolly) this.acc.brollyOpen.visible = !!this.holdBrolly;
     this.head.rotation.y = Math.sin(t * 0.7 + this.seed) * 0.12 * (1 - w) * (1 - Math.min(1, Math.abs(P.hy) * 3)) + P.hy;
     this.head.rotation.z = (this.mood === 'happy' ? Math.sin(t * 3 + this.seed) * 0.08 : 0);
     this.head.rotation.x = -sipLift * 0.25 + P.hx;
@@ -2777,13 +2915,13 @@ const G = {
   phase: 'title', day: 1, time: DAY_START, money: 0, rep: 2.0, paused: false,
   up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0, cat: 0, books: 0, records: 0, neon: 0 },
   prices: { latte: 3.5, matcha: 5, pastry: 3 }, staff: [], history: [], // opening prices sit a little under fair
-  streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0, pets: 0 }, cat: { name: '', coat: '' },
+  streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0, pets: 0 }, cat: { name: '', coat: '' }, ads: {},
   spawnTimer: 1.2, lightHour: 8.4, closing: false, stats: null, bought: 0,
 };
 const perItem = () => ({ latte: 0, matcha: 0, pastry: 0 });
 function newStats() {
   return {
-    served: 0, stormed: 0, turned: 0, balked: 0, revenue: 0, tips: 0, bestTip: 0,
+    served: 0, stormed: 0, turned: 0, balked: 0, revenue: 0, tips: 0, bestTip: 0, ads: 0,
     ingredients: 0, wages: 0, rent: 0, hiring: 0, satSum: 0, speedSum: 0, valueSum: 0, waitSum: 0,
     sold: perItem(), salesBy: perItem(), made: perItem(), repStart: G.rep, moneyStart: G.money, bought: 0,
     byType: {}, bestStreak: 0, pastries: 0,
@@ -2810,7 +2948,24 @@ function menuIndex() { // weighted price ratio across the menu, roughly by how o
 // footfall multiplier: cheap menus pull people in (capped), pricey ones scare them off fast
 const footfall = () => { const r = menuIndex(); return r <= 1 ? 1 + Math.min(0.3, (1 - r) * 0.75) : Math.exp(-1.25 * (r - 1)); };
 const rentToday = () => 10 + 4 * tableCount();
-const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 + 0.06 * G.up.cat) * (1 + 0.08 * G.up.books) * (1 - Math.min(0.3, (G.day - 1) * 0.045));
+// ads: a perk advertised on the street. Each pulls in more (or particular) guests for a daily fee
+const ADS = [
+  { id: 'wifi', name: 'Free Wi-Fi', icon: 'wifi', cost: 18, service: 'Free Wi-Fi for anyone who orders.', effect: '+7% guests and lots more students, who linger a little longer.', foot: 0.07, mix: { student: 1.5 }, eat: 1.12, board: ['FREE', 'WI-FI'], tint: '#dfe3ea' },
+  { id: 'oat', name: 'Oat Milk', icon: 'oat', cost: 11, service: 'Oat milk at no extra charge.', effect: '+5% guests, more students and tourists.', foot: 0.05, mix: { student: 1.2, tourist: 1.2 }, board: ['OAT MILK', 'NO EXTRA'], tint: '#f1e6d2' },
+  { id: 'loyalty', name: 'Loyalty Card', icon: 'card', cost: 15, service: 'Every 10th coffee is on the house.', effect: '+6% guests, many more regulars.', foot: 0.06, mix: { regular: 1.4, commuter: 1.15 }, board: ['10TH COFFEE', 'FREE'], tint: '#f3d2c4' },
+  { id: 'charge', name: 'Charging Bar', icon: 'plug', cost: 8, service: 'Free phone charging at every table.', effect: '+3% guests, more commuters, everyone waits 8% longer.', foot: 0.03, mix: { commuter: 1.6 }, patience: 1.08, board: ['FREE', 'CHARGING'], tint: '#e4e1db' },
+  { id: 'dogs', name: 'Dogs Welcome', icon: 'dog', cost: 8, service: 'Water bowls and treats for four-legged guests.', effect: '+4% guests, more tourists and regulars.', foot: 0.04, mix: { tourist: 1.2, regular: 1.1 }, board: ['DOGS', 'WELCOME'], tint: '#f6e2c4' },
+  { id: 'music', name: 'Live Music', icon: 'music', cost: 30, service: 'An acoustic set every evening, 5 to 8 pm.', effect: '+30% guests and +10% tips after 5 pm.', evening: 0.3, eveTip: 0.1, board: ['LIVE MUSIC', '5–8 PM'], tint: '#e2d6ea' },
+  { id: 'social', name: 'Social Media', icon: 'social', cost: 30, service: 'Sponsored posts all over town.', effect: '+10% guests, many more tourists.', foot: 0.1, mix: { tourist: 1.35 }, online: true, tint: '#f6d6d0' },
+];
+const activeAds = () => ADS.filter((a) => G.ads[a.id]);
+const adsDaily = () => activeAds().reduce((t, a) => t + a.cost, 0);
+const adFootfall = () => { let f = 1; for (const a of activeAds()) { f *= 1 + (a.foot || 0); if (a.evening && G.time >= 17) f *= 1 + a.evening; } return f; };
+const adMix = (type) => { let m = 1; for (const a of activeAds()) if (a.mix && a.mix[type]) m *= a.mix[type]; return m; };
+const adMul = (key) => { let m = 1; for (const a of activeAds()) if (a[key]) m *= a[key]; return m; };
+const adTip = () => { let b = 1; for (const a of activeAds()) if (a.eveTip && G.time >= 17) b *= 1 + a.eveTip; return b; };
+const openLeft = () => clamp((OPEN_UNTIL - Math.max(G.time, OPEN_FROM)) / (OPEN_UNTIL - OPEN_FROM), 0, 1);
+const basePatience = () => 27 * (1 + 0.13 * furnitureLevel()) * (1 + 0.08 * G.up.decor) * (1 + 0.06 * G.up.cat) * (1 + 0.08 * G.up.books) * adMul('patience') * (1 - Math.min(0.3, (G.day - 1) * 0.045));
 function nextSpawnInterval() {
   // word of mouth lags: footfall follows the reputation you opened the day with
   const r = clamp(((G.stats ? G.stats.repStart : G.rep) - 0.5) / 4.5, 0, 1);
@@ -2818,6 +2973,7 @@ function nextSpawnInterval() {
   let base = (lerp(9.8, 3.5, r) * (1 - 0.14 * G.up.sign)) / (footfall() * today.footfall);
   if (G.up.neon) base /= 1.04 + (G.time >= 17 ? 0.12 : 0); // the neon cup pulls in the evening crowd
   if (surgeActive()) base *= 0.32;
+  base /= adFootfall();
   const h = G.time;
   if ((h > 8 && h < 10) || (h > 12 && h < 13.6)) base *= 0.78; // morning & lunch rush
   else if (h > 15 && h < 16.8) base *= 1.18;
@@ -3022,9 +3178,32 @@ stations.matcha.group.visible = false;
 
 // ---- tables ----
 const Z_A = -2.25, Z_B = 1.4, Z_LANE = -4.4;
-const DOOR_OUT = V3(ROOM.door.x, 0, ROOM.z0 - 2.4);
+const DOOR_OUT = V3(ROOM.door.x, 0, STREET.doorZ);
 const DOOR_IN = V3(ROOM.door.x, 0, ROOM.z0 + 0.75);
 const AISLES = [-1.35, 2.3, 6.0];
+// every street trip runs between two of these ends (or the door) along the pavement lanes, via the corner
+const STREET_ENDS = ['front', 'east', 'north', 'west'];
+const STREET_END_W = [0.4, 0.22, 0.18, 0.2];
+function toSpine(e, o) { // from an end in towards the back-street lane
+  const S = STREET;
+  switch (e) {
+    case 'front': return [V3(S.laneX + o, 0, S.front - 0.12), V3(S.laneX + o, 0, S.laneZ + o)];
+    case 'east': return [V3(S.edgeR - 0.12, 0, S.laneZ + o), V3(S.laneX + o, 0, S.laneZ + o)];
+    case 'north': return [V3(S.laneX - 0.3 + o, 0, S.edgeB + 0.12), V3(S.laneX - 0.3 + o, 0, S.laneZ + o)];
+    case 'west': return [V3(S.left + 0.12, 0, S.laneZ + o)];
+    default: return [DOOR_OUT.clone().add(V3(o * 0.6, 0, 0)), V3(ROOM.door.x + o * 0.6, 0, S.laneZ + o)]; // the door
+  }
+}
+const streetRoute = (a, b, o = 0) => [...toSpine(a, o), ...toSpine(b, o).reverse()];
+// from a terrace seat row out into the side-street lane, then straight off to an end
+function terraceExit(z, end, o) {
+  const S = STREET, lanePt = V3(S.laneX + o, 0, z);
+  if (end === 'front') return [lanePt, toSpine('front', o)[0]];
+  return [lanePt, V3(S.laneX + o, 0, S.laneZ + o), ...toSpine(end, o).reverse().filter((_, i, a) => end === 'west' || i > 0 || a.length < 2)];
+}
+const pickStreetEnd = (not) => { let e; do { let r = Math.random(); e = STREET_ENDS.find((k, i) => (r -= STREET_END_W[i]) <= 0) || 'front'; } while (e === not); return e; };
+// characters fade out as they walk off the edge of the board, and in as they arrive
+const edgeFade = (p) => { const S = STREET; return smooth(clamp(Math.min(p.x - S.left, S.edgeR - p.x, S.front - p.z, p.z - S.edgeB) / 0.7, 0, 1)); };
 const nearestAisle = (x) => AISLES.reduce((a, b) => (Math.abs(b - x) < Math.abs(a - x) ? b : a));
 const QUEUE_SPOTS = [V3(3.35, 0, -4.25), V3(2.6, 0, -3.85), V3(1.85, 0, -3.45)];
 
@@ -3033,7 +3212,7 @@ const Z_C = 4.75; // walkway along the front of the second row
 const COIN_GEO = cylGeo(0.055, 0.055, 0.018, 18);
 class Table {
   constructor(i, pos) {
-    this.i = i; this.pos = pos.clone(); this.row = pos.z < 1 ? 0 : 1;
+    this.i = i; this.pos = pos.clone(); this.terrace = pos.x > ROOM.x1; this.row = this.terrace ? 2 : pos.z < 1 ? 0 : 1;
     this.group = new THREE.Group(); this.group.position.copy(pos); world.add(this.group);
     this.group.visible = false; this.active = false; this.level = -1;
     this.party = null; this.items = []; this.furniture = null; this.dirty = false; this.pendingTip = 0; this.dirtySince = 0;
@@ -3074,7 +3253,9 @@ class Table {
     return kind === 'pastry' ? V3(this.pos.x - 0.27 * s, TABLE_H, this.pos.z - 0.1 * s) : V3(this.pos.x + 0.1 * s, TABLE_H, this.pos.z - 0.3 * s);
   }
   pathToSeat(seat) {
-    const p = this.seats[seat].pos, pts = [V3(ROOM.door.x, 0, Z_A)];
+    const p = this.seats[seat].pos;
+    if (this.terrace) { const L = STREET.terraceLane; return [DOOR_OUT.clone(), V3(L, 0, STREET.doorZ), V3(L, 0, p.z), p.clone()]; } // order inside, sit outside
+    const pts = [V3(ROOM.door.x, 0, Z_A)];
     const lane = this.row === 0 ? (seat ? Z_B : Z_A) : (seat ? Z_C : Z_B);
     if (lane === Z_A) pts.push(V3(p.x, 0, Z_A));
     else { const ax = nearestAisle(this.pos.x); pts.push(V3(ax, 0, Z_A), V3(ax, 0, lane), V3(p.x, 0, lane)); }
@@ -3093,7 +3274,7 @@ class Table {
   }
 }
 const tables = LAYOUT.tables.map((p, i) => new Table(i, p));
-const freeTable = () => tables.find((t) => t.free);
+const freeTable = () => tables.find((t) => t.free && !(t.terrace && rain.level > 0.4)); // nobody sits out in the rain
 
 // clearing a table: dishes go, the tip pile is banked
 function clearTable(t, by = null) {
@@ -3151,6 +3332,7 @@ function pickGuestType() {
   };
   for (const k in today.mix) w[k] *= today.mix[k];
   if (surgeActive()) w[SURGES[today.surge.k].type] *= 4;
+  for (const k in w) w[k] *= adMix(k);
   let sum = 0; for (const k in w) sum += w[k];
   let r = Math.random() * sum;
   for (const k in w) { r -= w[k]; if (r <= 0) return k; }
@@ -3235,17 +3417,20 @@ class Customer extends Walker {
   spawn(party, idx) {
     this.party = party; this.idx = idx; this.type = party.type;
     this.ch.randomize(this.type); this.ch.setMood('neutral'); this.ch.sit = 0; this.ch.stomp = 1; this.ch.root.visible = true; this.ch.activity = null;
-    const off = idx ? V3(0.45, 0, -0.55) : V3(rand(-0.15, 0.15), 0, 0);
     this.offset = idx ? V3(0.42, 0, 0.22) : V3(0, 0, 0);
-    this.pos.copy(DOOR_OUT).add(off); this.prev.copy(this.pos);
-    this.yaw = this.prevYaw = 0;
-    this.speed = rand(1.75, 2.05);
-    this.setPath([DOOR_IN.clone().add(V3(idx * 0.4, 0, -idx * 0.25))]);
+    this.lane = idx ? clamp(party.lane + 0.42, -0.45, 0.6) : (party.lane = rand(-0.4, 0.3));
+    const route = streetRoute(party.from, 'door', this.lane);
+    this.spawnAt = route[0].clone();
+    this.pos.copy(route[0]); if (idx) { const d = route[1].clone().sub(route[0]).setY(0).normalize(); this.pos.addScaledVector(d, -0.55); }
+    this.prev.copy(this.pos);
+    this.yaw = this.prevYaw = Math.atan2(route[1].x - route[0].x, route[1].z - route[0].z);
+    this.speed = rand(1.85, 2.15);
+    this.setPath([...route.slice(1), DOOR_IN.clone().add(V3(idx * 0.4, 0, -idx * 0.25))]);
     this.state = 'enter';
     this.order = makeOrder(this.type); this.table = null; this.seat = 0; this.timer = 0; this.waited = 0; this.paid = false;
     this.actT = rand(1, 3); this.snapped = false; this.flashed = true; this.catVisited = false;
     this.brolly = today.weather === 'rainy' && Math.random() < 0.7;
-    if (this.brolly) { const A = this.ch.acc, m = fabricMat(pick(BROLLY_COLORS)); A.umbrella.visible = true; A.umbrellaCanopy.material = m; A.umbrella.children[3].material = m; }
+    if (this.brolly) { const A = this.ch.acc, m = fabricMat(pick(BROLLY_COLORS)); A.umbrellaCanopy.material = m; A.umbrella.children[3].material = m; A.brollyDome.material = m; }
     this.patienceMax = basePatience() * GUEST_TYPES[this.type].patience * today.patience * (party.rush ? 0.9 : 1); this.patience = this.patienceMax;
     this.bubble.shown = false; this.bubble.el.classList.add('hidden'); this.bubble.lastFrac = -1;
     this.bubble.el.classList.toggle('critic', this.type === 'critic');
@@ -3262,7 +3447,16 @@ class Customer extends Walker {
     this.setPath(path);
     this.state = 'toSeat';
   }
-  walkOut(extra = []) { this.state = 'leave'; this.setPath([...extra, DOOR_IN.clone(), DOOR_OUT.clone()]); }
+  get outside() { return this.pos.z < ROOM.z0 - 0.2 || this.pos.x > ROOM.x1 + 0.1; }
+  // back out to the street and off to one end of it; still out on the pavement, just turn round
+  walkOut(extra = []) {
+    const P = this.party, end = (P && P.exitEnd) || pickStreetEnd();
+    let pts;
+    if (extra.length || !this.outside) pts = [...extra, DOOR_IN.clone(), ...streetRoute('door', end, this.lane)];
+    else if (this.state === 'enter') pts = [...this.path.slice(0, this.pi).reverse(), this.spawnAt.clone()];
+    else pts = streetRoute('door', end, this.lane).slice(1);
+    this.state = 'leave'; this.setPath(pts);
+  }
   fixed(dt) {
     this.prev.copy(this.pos); this.prevYaw = this.yaw;
     const P = this.party;
@@ -3272,7 +3466,7 @@ class Customer extends Walker {
       case 'toQueue': if (this.follow(dt)) this.state = 'queue'; break;
       case 'queue': this.faceTo(0.5, dt, 4); break;
       case 'toSeat':
-        if (this.follow(dt)) { this.state = 'sitting'; this.timer = 0; this.ch.seatY = this.table.seatY; this.ch.acc.umbrella.visible = false; }
+        if (this.follow(dt)) { this.state = 'sitting'; this.timer = 0; this.ch.seatY = this.table.seatY; }
         break;
       case 'sitting':
         this.timer += dt;
@@ -3301,6 +3495,10 @@ class Customer extends Walker {
         break;
     }
     if (this.party) this.tickActivity(dt);
+    // umbrellas: up outside in the rain, furled indoors, stashed while seated
+    const wet = this.brolly && this.outside && rain.level > 0.35 && !this.seated;
+    this.ch.holdBrolly = wet;
+    this.ch.acc.umbrella.visible = this.brolly && !wet && !this.seated;
   }
   get handsBusy() { return !!POSES[this.ch.activity]?.a0x; }
   mate() { return this.party.members.find((m) => m !== this && m.state === this.state || (m !== this && m.seated && this.seated)) || null; }
@@ -3350,7 +3548,7 @@ class Customer extends Walker {
     else if (T === 'tourist' && st === 'eat' && !this.snapped && ch.acc.camera.visible && this.timer > 2.4) { a = 'photo'; this.snapped = true; this.flashed = false; }
     else if (mate && r < (st === 'eat' ? 0.7 : 0.55)) a = 'chat';
     else {
-      const ph = ACT_PHONE[T] || 0, bk = st === 'queue' || st === 'arrived' ? 0 : (ACT_BOOK[T] || 0) * (G.up.books ? 1.8 : 1), q = Math.random();
+      const ph = (ACT_PHONE[T] || 0) * (G.ads.wifi ? 1.5 : 1), bk = st === 'queue' || st === 'arrived' ? 0 : (ACT_BOOK[T] || 0) * (G.up.books ? 1.8 : 1), q = Math.random();
       if (st === 'eat') a = q < ph * 0.3 ? 'phone' : null;
       else a = q < ph ? 'phone' : q < ph + bk ? 'book' : null;
     }
@@ -3393,7 +3591,7 @@ class Customer extends Walker {
     value /= this.order.length;
     const sat = clamp(0.5 * speed + 0.5 * value, 0, 1);
     const streakBonus = 1 + 0.05 * Math.min(5, G.streak);
-    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records) * (this.party && this.party.rush ? 1.35 : 1);
+    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records) * (this.party && this.party.rush ? 1.35 : 1) * adTip();
     addMoney(total);
     this.paid = true;
     const S = G.stats;
@@ -3409,7 +3607,7 @@ class Customer extends Walker {
     const head = V3(this.pos.x, this.headY() + 0.2, this.pos.z);
     ui.float(`+$${total.toFixed(2)}`, head, '');
     sfx.coins(false);
-    this.state = 'eat'; this.timer = rand(5.2, 7.2) * today.eat * (this.party && this.party.rush ? 0.55 : 1);
+    this.state = 'eat'; this.timer = rand(5.2, 7.2) * today.eat * (this.party && this.party.rush ? 0.55 : 1) * adMul('eat');
     this.actT = Math.min(this.actT, rand(0.5, 1.5)); // put the book down, the food's here
     this.sat = sat; this.speedScore = speed; this.valueScoreAvg = value;
     this.ch.setMood(sat >= 0.48 ? 'happy' : 'neutral'); this.ch.kick(sat >= 0.48 ? 1.3 : 0.5);
@@ -3429,10 +3627,10 @@ class Customer extends Walker {
   }
   standUp() {
     this.state = 'standing'; this.timer = 0; this.ch.activity = null; this.ch.talking = false;
-    if (this.brolly) this.ch.acc.umbrella.visible = true;
-    const t = this.table;
+    const t = this.table, P = this.party, end = (P && P.exitEnd) || pickStreetEnd();
     const back = t.pathToSeat(this.seat).reverse(); back.shift();
-    this.setPath([...back, DOOR_IN.clone(), DOOR_OUT.clone()]);
+    // terrace tables are already outside; indoor ones head back through the door
+    this.setPath(t.terrace ? [back[0], ...terraceExit(back[0].z, end, this.lane)] : [...back, DOOR_IN.clone(), ...streetRoute('door', end, this.lane)]);
     this.ch.moving = false;
     this.hideBubble();
     this.table = null;
@@ -3448,6 +3646,7 @@ class Customer extends Walker {
   }
   render(alpha, dt, t) {
     this.renderWalker(alpha, dt, t);
+    this.ch.root.scale.setScalar(this.ch.scale * Math.max(0.001, edgeFade(this.ch.root.position)));
     if (this.table && this.ch.sit > 0) { // settle exactly on the seat while sitting
       const s = this.table.seats[this.seat].pos;
       this.ch.root.position.x = lerp(this.ch.root.position.x, s.x, this.ch.sit);
@@ -3461,6 +3660,7 @@ function spawnParty() {
   const type = today.criticDue && !today.criticCame && G.time > 9 && Math.random() < 0.25 ? 'critic' : pickGuestType();
   const size = Math.random() < GUEST_TYPES[type].pair * today.pair ? 2 : 1;
   const P = new Party(type, size);
+  P.from = pickStreetEnd(); P.exitEnd = pickStreetEnd();
   P.rush = surgeActive() && type === SURGES[today.surge.k].type; // on a schedule: eat fast, tip well
   parties.push(P);
   for (let i = 0; i < size; i++) (customerPool.pop() || new Customer()).spawn(P, i);
@@ -3686,6 +3886,7 @@ const HELP_CARDS = [
   ['cloud', 'Weather & events', 'Every morning rolls weather and sometimes an event. Sun brings crowds, rain brings fewer guests who linger.'],
   ['trophy', 'Goals & streaks', 'Three daily goals pay a bonus. Serve quickly back to back to build a streak worth up to +25% tips.'],
   ['person', 'Staff', 'Hire a barista, tea master, baker and servers. Wages are paid at closing, so hire when the crowd can pay for them.'],
+  ['music', 'Ads', 'Advertise a perk like free Wi-Fi or live music in Manage → Ads. It brings more (or particular) guests but costs a fee every day it runs.'],
   ['cat', 'Café cat', 'Adopt one from Upgrades. It visits guests, and a scratch calms everyone who’s waiting.'],
 ];
 const REVIEW_NAMES = ['Ana', 'Ben', 'Cleo', 'Dev', 'Elif', 'Finn', 'Gia', 'Hugo', 'Ivy', 'Jon', 'Kira', 'Leo', 'Maya', 'Nico', 'Omar', 'Priya', 'Quinn', 'Rosa', 'Sami', 'Tess', 'Uma', 'Vik', 'Willa', 'Yuki', 'Zoe'];
@@ -3843,9 +4044,9 @@ const rain = (() => {
   const spawnPos = (d) => {
     // only behind and beside the walls: anything between the camera and the room would read as indoor rain
     const r = Math.random();
-    if (r < 0.45) { d.x = rand(-13, 11); d.z = rand(-13, -6); }
-    else if (r < 0.75) { d.x = rand(-14, -7.7); d.z = rand(-6, 6); }
-    else { d.x = rand(7.7, 13); d.z = rand(-12, -1); }
+    if (r < 0.3) { d.x = rand(-8, 15); d.z = rand(-13, -5.8); } // over the back street
+    else if (r < 0.5) { d.x = rand(-14, -7.7); d.z = rand(-6, 6); }
+    else { d.x = rand(7.4, 15); d.z = rand(-5.8, 6.1); } // over the side street
     d.y = rand(0, 9);
   };
   for (let i = 0; i < N; i++) { const d = { x: 0, y: 0, z: 0, v: rand(9, 12) }; spawnPos(d); drops.push(d); }
@@ -3948,7 +4149,7 @@ const cat = (() => {
     decide() {
       const r = Math.random();
       const open = G.phase === 'open' && !G.closing && G.time < OPEN_UNTIL - 0.3;
-      const company = open && this.visitCD <= 0 ? customers.filter((c) => c.table && (c.state === 'wait' || c.state === 'eat') && !c.catVisited) : [];
+      const company = open && this.visitCD <= 0 ? customers.filter((c) => c.table && !c.table.terrace && (c.state === 'wait' || c.state === 'eat') && !c.catVisited) : [];
       if (company.length && r < 0.5) {
         const g = pick(company), sp = g.table.seats[g.seat], side = Math.random() < 0.5 ? 1 : -1;
         // sit beside the chair, a little toward the table
@@ -4068,6 +4269,123 @@ const cat = (() => {
   proxy.userData.owner = self; interactables.push(self);
   return self;
 })();
+
+// ---- ads out on the street: a chalk A-board per physical perk, and a guitarist for live music ----
+function toggleAd(id) {
+  const a = ADS.find((x) => x.id === id); if (!a) return;
+  if (G.ads[id]) delete G.ads[id]; else G.ads[id] = true;
+  applyAds(true);
+  sfx.tick();
+  ui.toast(G.ads[id] ? `${a.name} is advertised · ${fmtMoney(a.cost)}/day` : `${a.name} ad taken down`, a.icon, 1900, 'ad');
+  ui.overviewDirty = true;
+}
+const AD_ACCENT = { wifi: '#7f93ad', oat: '#d29d45', loyalty: '#c9765a', charge: '#7f9474', dogs: '#b07f52', music: '#8a6fae' };
+const AD_SLOTS = [4.6, 3.5, 2.4, -0.1, -1.4, -5.05]; // along the kerb, between the lamp, bench and hydrant
+const adBoards = {};
+function drawAdBoard(a, cv, img) {
+  const W = cv.width, H = cv.height, c = cv.getContext('2d');
+  // a cream poster with a coloured band, so it reads from across the street
+  c.fillStyle = '#f7f0e4'; c.fillRect(0, 0, W, H);
+  c.fillStyle = AD_ACCENT[a.id] || '#c9765a'; c.fillRect(0, 0, W, 150);
+  c.fillStyle = 'rgba(74,52,40,.12)'; c.fillRect(0, 150, W, 4);
+  c.fillStyle = '#fffaf3'; c.beginPath(); c.arc(W / 2, 80, 52, 0, TAU); c.fill();
+  if (img) c.drawImage(img, W / 2 - 36, 44, 72, 72);
+  c.fillStyle = '#4a3428'; c.textAlign = 'center';
+  a.board.forEach((line, i) => {
+    let fs = i ? 44 : 56; c.font = `700 ${fs}px Caveat, "Comic Sans MS", cursive`;
+    while (c.measureText(line).width > W - 40 && fs > 24) { fs -= 2; c.font = `700 ${fs}px Caveat, "Comic Sans MS", cursive`; }
+    c.fillText(line, W / 2, 196 + i * 58);
+  });
+  c.strokeStyle = '#c9765a'; c.lineWidth = 4; c.beginPath(); c.moveTo(70, 304); c.quadraticCurveTo(W / 2, 316, W - 70, 304); c.stroke();
+}
+function buildAdBoard(a) {
+  const cv = makeCanvas(256, 352), tex = toTexture(cv, { wrap: false });
+  const faceMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 });
+  const draw = (img) => { drawAdBoard(a, cv, img); tex.needsUpdate = true; };
+  const img = new Image();
+  img.onload = () => { faceMat.userData.img = img; draw(img); };
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(ICONS[a.icon].replace('<svg ', '<svg width="96" height="96" '));
+  draw(null);
+  const g = new THREE.Group();
+  for (const sd of [-1, 1]) {
+    const board = mesh(boxGeo(0.5, 0.74, 0.04, 0.02, 3), MAT.walnut); board.position.set(0, 0.4, sd * 0.13); board.rotation.x = sd * 0.2; g.add(board);
+    const face = mesh(new THREE.PlaneGeometry(0.42, 0.58), faceMat, { cast: false }); face.position.set(0, 0.41, sd * 0.155); face.rotation.x = sd * 0.2; if (sd < 0) face.rotation.y = Math.PI; g.add(face);
+  }
+  // faces look up and down the pavement, at the people walking towards it
+  g.userData.redraw = () => draw(faceMat.userData.img || null);
+  return g;
+}
+ADS.filter((a) => !a.online).forEach((a, i) => {
+  const b = buildAdBoard(a); b.position.set(STREET.paveR - 0.33, 0, AD_SLOTS[i]); b.visible = false; world.add(b); adBoards[a.id] = b;
+});
+if (document.fonts && document.fonts.load) document.fonts.load('700 48px Caveat').then(() => { for (const k in adBoards) adBoards[k].userData.redraw(); }).catch(() => {});
+const musician = (() => {
+  const ch = new Character(); ch.randomize('regular'); ch.activity = 'guitar'; ch.sit = 1; ch.seatY = 0.62;
+  const root = ch.root; root.position.set(-4.75, 0, 4.85); root.rotation.y = 0.55; root.visible = false; world.add(root);
+  const stool = new THREE.Group(); root.add(stool);
+  { const seat = mesh(cylGeo(0.2, 0.2, 0.06, 20), MAT.walnut); seat.position.y = 0.6; stool.add(seat);
+    for (let k = 0; k < 3; k++) { const a = (k / 3) * TAU, l = mesh(cylGeo(0.02, 0.025, 0.6, 8), MAT.darkMetal); l.position.set(Math.sin(a) * 0.14, 0.3, Math.cos(a) * 0.14 - 0.05); l.rotation.set(Math.cos(a) * 0.12, 0, -Math.sin(a) * 0.12); stool.add(l); } }
+  const gtr = new THREE.Group(); gtr.position.set(0.06, 0.36, 0.3); gtr.rotation.set(-0.15, 0, 1.15); ch.torso.add(gtr);
+  { const wood = MAT.oak;
+    const lower = mesh(sphereGeo(0.17, 24, 14), wood); lower.scale.set(1, 1, 0.32); gtr.add(lower);
+    const upper = mesh(sphereGeo(0.13, 24, 14), wood); upper.scale.set(1, 1, 0.32); upper.position.y = 0.17; gtr.add(upper);
+    const hole = mesh(cylGeo(0.045, 0.045, 0.01, 18), MAT.darkMetal, { cast: false }); hole.rotation.x = Math.PI / 2; hole.position.set(0, 0.11, 0.055); gtr.add(hole);
+    const neck = mesh(boxGeo(0.05, 0.42, 0.03, 0.01, 1), MAT.walnut); neck.position.set(0, 0.47, 0.02); gtr.add(neck);
+    const head = mesh(boxGeo(0.07, 0.11, 0.03, 0.01, 1), MAT.walnut); head.position.set(0, 0.73, 0.02); gtr.add(head); }
+  return { ch, root, playing: false };
+})();
+function applyAds() {
+  for (const k in adBoards) {
+    const on = !!G.ads[k], b = adBoards[k];
+    if (on && !b.visible) { b.visible = true; popIn(b, 0, 0.5); } else if (!on) b.visible = false;
+  }
+}
+
+// ---- passers-by: the street's own foot traffic (purely for looks; customers come from spawnParty) ----
+class Passerby extends Walker {
+  constructor() { super(); this.initWalker(); this.ch = new Character(); this.ch.root.visible = false; world.add(this.ch.root); this.on = false; }
+  spawn() {
+    const from = pickStreetEnd(), to = pickStreetEnd(from), o = rand(-0.4, 0.4);
+    const route = streetRoute(from, to, o);
+    this.ch.randomize(pickGuestType()); this.ch.setMood('neutral'); this.ch.sit = 0; this.ch.root.visible = true;
+    this.pos.copy(route[0]); this.prev.copy(this.pos);
+    this.yaw = this.prevYaw = Math.atan2(route[1].x - route[0].x, route[1].z - route[0].z);
+    this.setPath(route.slice(1));
+    this.speed = rand(1.45, 2.15) * (rain.level > 0.5 ? 1.12 : 1);
+    // a few slow down to look in at the café as they pass along the side street
+    this.lookZ = (from === 'front' || to === 'front') && Math.random() < 0.3 ? rand(-4.5, 4.5) : null;
+    this.state = 'walk'; this.timer = 0;
+    this.wet = Math.random() < 0.85;
+    if (this.wet) this.ch.acc.brollyDome.material = fabricMat(pick(BROLLY_COLORS));
+    this.on = true;
+  }
+  update(dt, t) {
+    this.prev.copy(this.pos); this.prevYaw = this.yaw;
+    if (this.state === 'walk') {
+      if (this.lookZ !== null && this.pos.x > ROOM.x1 + 1 && Math.abs(this.pos.z - this.lookZ) < 0.12) { this.lookZ = null; this.state = 'look'; this.timer = rand(1.4, 2.6); this.ch.moving = false; }
+      else if (this.follow(dt)) { this.on = false; this.ch.root.visible = false; passerPool.push(this); return; }
+    } else if (this.state === 'look') {
+      this.faceTo(-Math.PI / 2, dt, 6);
+      if ((this.timer -= dt) <= 0) { this.state = 'walk'; this.ch.moving = true; }
+    }
+    this.ch.holdBrolly = this.wet && rain.level > 0.35;
+    this.renderWalker(1, dt, t);
+    this.ch.root.scale.setScalar(this.ch.scale * Math.max(0.001, edgeFade(this.ch.root.position)));
+  }
+}
+const passers = [], passerPool = [];
+const PASSER_CAP = { high: 7, medium: 5, low: 3 };
+let passerTimer = 0.5;
+function updatePassers(dt, t) {
+  if (dt <= 0) return;
+  passerTimer -= dt;
+  const h = G.lightHour % 24, live = passers.filter((p) => p.on).length;
+  if (passerTimer <= 0) {
+    passerTimer = rand(1.4, 3.2) * (h < 7 || h > 21 ? 3 : h > 19 ? 1.5 : 1) * (rain.level > 0.5 ? 1.5 : 1);
+    if (live < (PASSER_CAP[quality.tier] || 5)) { let p = passerPool.pop(); if (!p) { p = new Passerby(); passers.push(p); } p.spawn(); }
+  }
+  for (const p of passers) if (p.on) p.update(dt, t);
+}
 
 // ---- staff: every hired worker is a Worker; their role decides what they do ----
 const ROLES = {
@@ -4211,6 +4529,7 @@ class Worker extends Walker {
   }
   outPath(table, x) {
     const s = table.serve, pts = [V3(x, 0, Z_A)];
+    if (table.terrace) return [...pts, V3(ROOM.door.x, 0, Z_A), DOOR_IN.clone(), DOOR_OUT.clone(), V3(STREET.terraceLane, 0, STREET.doorZ), s.clone()];
     if (table.row === 0) pts.push(V3(s.x, 0, Z_A));
     else { const ax = nearestAisle(s.x); pts.push(V3(ax, 0, Z_A), V3(ax, 0, Z_B), V3(s.x, 0, Z_B)); }
     pts.push(s.clone());
@@ -4345,8 +4664,8 @@ function fireStaff(data) {
 // 13. UPGRADES
 // ---------------------------------------------------------------------
 const UPGRADES = [
-  { id: 'tables', name: 'Extra Table', icon: 'table', tint: '#efdcc4', costs: [45, 95, 170, 280],
-    desc: (l) => (l < 4 ? `Seat more guests: ${2 + l} → ${3 + l} tables.` : 'Every seat in the house is set.') },
+  { id: 'tables', name: 'Extra Table', icon: 'table', tint: '#efdcc4', costs: [45, 95, 170, 280, 380, 480, 600, 740, 900],
+    desc: (l) => (l < 4 ? `Seat more guests: ${2 + l} → ${3 + l} tables.` : l < 9 ? `A terrace table out on the pavement: ${2 + l} → ${3 + l} tables (not used in the rain).` : 'Every seat inside and out is set.') },
   { id: 'machine', name: 'Espresso Machine', icon: 'machine', tint: '#f3d2c4', costs: [80, 190, 380],
     desc: (l) => ['Pro Boiler: lattes brew 25% faster.', 'Twin Group: brew two drinks at once.', 'Brass Masterpiece: the fastest pull in town.', 'A gleaming brass masterpiece.'][l] },
   { id: 'furniture', name: 'Nicer Furniture', icon: 'chair', tint: '#dfe6d6', costs: [110, 240, 450],
@@ -4723,6 +5042,7 @@ const audio = {
         const ch = chords[bar % chords.length];
         for (const fr of ch) this.pad(fr / 2, next, 4.4);
         for (let b = 0; b < 8; b++) if (Math.random() < 0.32) this.tone(pick(penta), 0.9, { gain: 0.018, when: next - ctx.currentTime + b * 0.5, bus: this.musicBus, type: 'triangle', filter: 2400 });
+        if (this.gig) for (const b of [0, 1, 2, 3, 4, 5, 6, 7]) if (b !== 3 && b !== 7) this.tone(ch[(b * 3) % 4] / (b % 2 ? 1 : 2), 0.7, { gain: 0.03, attack: 0.003, type: 'triangle', filter: 1700, when: next - ctx.currentTime + b * 0.5 + (b % 2) * 0.02, bus: this.musicBus }); // strummed guitar
         if (this.vinyl) for (let i = 0; i < 5; i++) this.hiss(0.008, { gain: 0.05, freq: rand(1800, 5200), q: 2, when: next - ctx.currentTime + Math.random() * 4, bus: this.musicBus }); // pops and ticks
         next += 4; bar++;
       }
@@ -4820,8 +5140,9 @@ function books() {
   const S = G.stats, closed = G.phase === 'summary' || G.phase === 'transition';
   const wages = closed ? S.wages : S.wages + G.staff.reduce((a, st) => a + wageDue(st), 0);
   const rent = closed ? S.rent : rentToday();
-  const costs = S.ingredients + wages + rent;
-  return { sales: S.revenue, tips: S.tips, ingredients: S.ingredients, wages, rent, costs, profit: S.revenue + S.tips - costs, invested: S.hiring + (S.upgrades || 0) };
+  const ads = closed ? S.ads : S.ads + adsDaily() * openLeft();
+  const costs = S.ingredients + wages + rent + ads;
+  return { sales: S.revenue, tips: S.tips, ingredients: S.ingredients, wages, rent, ads, costs, profit: S.revenue + S.tips - costs, invested: S.hiring + (S.upgrades || 0) };
 }
 // single-series column chart of daily profit: blue above zero, terracotta below (direction + colour)
 function profitChart(days) {
@@ -4877,6 +5198,7 @@ const ui = {
     $('customDone').addEventListener('click', () => this.toggleCustom(false));
     $('mgTabs').addEventListener('click', (e) => { const t = e.target.closest('button[data-tab]'); if (t) { this.setTab(t.dataset.tab); sfx.tick(); } });
     $('tab-staff').addEventListener('click', (e) => this.onStaffClick(e));
+    $('tab-ads').addEventListener('click', (e) => { const b = e.target.closest('button[data-ad]'); if (b) { audio.unlock(); toggleAd(b.dataset.ad); this.renderAds(); } });
     $('tab-menu').addEventListener('input', (e) => { const k = e.target.dataset && e.target.dataset.k; if (k && e.target.type === 'range') this.setPrice(k, +e.target.value); });
     $('tab-menu').addEventListener('click', (e) => { const b = e.target.closest('.step-btn'); if (b) this.setPrice(b.dataset.k, G.prices[b.dataset.k] + PRICE_STEP * +b.dataset.d); });
     $('tab-overview').addEventListener('pointerover', (e) => this.chartHover(e));
@@ -4988,19 +5310,20 @@ const ui = {
     this.tab = tab;
     for (const b of $('mgTabs').children) { const on = b.dataset.tab === tab; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); }
     $('tab-overview').hidden = tab !== 'overview'; $('tab-menu').hidden = tab !== 'menu';
-    $('tab-staff').hidden = tab !== 'staff'; $('shopList').hidden = tab !== 'upgrades'; $('tab-goals').hidden = tab !== 'goals';
+    $('tab-staff').hidden = tab !== 'staff'; $('shopList').hidden = tab !== 'upgrades'; $('tab-goals').hidden = tab !== 'goals'; $('tab-ads').hidden = tab !== 'ads';
     this.refreshTab(true);
   },
   refreshTab(force) {
     if (!this.shopOpen) return;
     // cash now vs. after tonight's wages & rent, so purchases never come as a surprise
-    const due = G.phase === 'open' ? G.staff.reduce((a, st) => a + wageDue(st), 0) + rentToday() : 0;
+    const due = G.phase === 'open' ? G.staff.reduce((a, st) => a + wageDue(st), 0) + rentToday() + G.stats.ads + adsDaily() * openLeft() : 0;
     const sub = due > 0 ? `Cash ${fmtMoney(G.money)} · after closing ≈ ${fmtMoney(G.money - due)}` : `Cash ${fmtMoney(G.money)}`;
     if (sub !== this.subTxt) { this.subTxt = sub; $('mgSub').textContent = sub; }
     if (this.tab === 'overview') this.renderOverview(force);
     else if (this.tab === 'menu') this.renderMenu(force);
     else if (this.tab === 'staff') { if (force || this.staffDirty) this.renderStaff(); }
     else if (this.tab === 'goals') this.renderGoals();
+    else if (this.tab === 'ads') { if (force) this.renderAds(); }
     else this.shopDirty = true;
   },
 
@@ -5017,7 +5340,7 @@ const ui = {
     const cmp = closed ? G.history[G.history.length - 2] : last;
     let delta = '';
     if (cmp) { const d = B.profit - cmp.profit; delta = `<div class="delta ${Math.abs(d) < 0.5 ? 'flat' : d > 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${fmtMoney(Math.abs(d))} vs Day ${cmp.day}</div>`; }
-    let sub = closed ? 'The books are closed for today.' : 'Wages and rent are due at closing and already counted here.';
+    let sub = closed ? 'The books are closed for today.' : `Wages${adsDaily() ? ', ads' : ''} and rent are due at closing and already counted here.`;
     if (!closed && B.profit < 0) {
       const m = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => G.prices[k] - UNIT_COST[k]);
       const avg = m.reduce((a, b) => a + b, 0) / m.length;
@@ -5032,7 +5355,7 @@ const ui = {
       tile('Avg ticket', S.served ? fmtMoney((B.sales + B.tips) / S.served) : '—', 'per guest'),
       tile('Ingredients', fmtMoney(-B.ingredients), `${made} made`),
       tile('Wages', fmtMoney(-B.wages), `${G.staff.length} staff`),
-      tile('Rent & bills', fmtMoney(-B.rent), `${tableCount()} tables`),
+      B.ads > 0.004 ? tile('Rent & ads', fmtMoney(-(B.rent + B.ads)), `ads ${fmtMoney(B.ads)}`) : tile('Rent & bills', fmtMoney(-B.rent), `${tableCount()} tables`),
     ].join('')}</div>${B.invested > 0 ? `<div class="chips"><span class="chip">Invested today <b>${fmtMoney(B.invested)}</b></span><span class="chip">Cash <b>${fmtMoney(G.money)}</b></span></div>` : ''}`;
     // happiness
     const n = Math.max(1, S.served), sat = S.satSum / n, sp = S.speedSum / n, va = S.valueSum / n;
@@ -5148,6 +5471,16 @@ const ui = {
     let j = 0;
     for (const role of ROLE_ORDER) for (const s of G.staff) if (s.role === role) { const nm = el.querySelectorAll('.nm')[j++]; if (nm) nm.textContent = s.name; }
   },
+  renderAds() {
+    const fee = adsDaily();
+    let html = `<div class="menu-note">Advertise a perk out on the street and more people walk in. Each ad has a daily fee, charged at closing for the hours it ran. Extra guests only pay off if you have the seats and the hands to serve them. Running now: <b>${fmtMoney(fee)}/day</b>.</div>`;
+    for (const a of ADS) {
+      const on = !!G.ads[a.id];
+      html += `<div class="staff-card ad-card${on ? ' on' : ''}"><span class="avatar" style="background:${a.tint}">${ICONS[a.icon]}</span><div><h4>${a.name}<small>${fmtMoney(a.cost)}/day</small></h4><p>${a.service}</p><p class="eff">${a.effect}</p></div>
+        <div class="staff-actions"><button class="switch${on ? ' on' : ''}" data-ad="${a.id}" role="switch" aria-checked="${on}" aria-label="${a.name}"><i></i></button></div></div>`;
+    }
+    $('tab-ads').innerHTML = html;
+  },
   onStaffClick(e) {
     const b = e.target.closest('button[data-act]'); if (!b || b.disabled) return;
     audio.unlock();
@@ -5172,7 +5505,7 @@ const ui = {
     const stat = (label, val, sm = '') => `<div class="stat"><span>${label}</span><b>${val}</b>${sm ? `<small style="font-size:11px;font-weight:700;color:var(--ink-soft)">${sm}</small>` : ''}</div>`;
     $('sumStats').innerHTML = [
       stat('Takings', fmtMoney(S.revenue + S.tips), `incl. ${fmtMoney(S.tips)} tips`),
-      stat('Costs', fmtMoney(S.ingredients + S.wages + S.rent), `wages ${fmtMoney(S.wages)}`),
+      stat('Costs', fmtMoney(S.ingredients + S.wages + S.rent + S.ads), S.ads > 0.004 ? `wages ${fmtMoney(S.wages)} · ads ${fmtMoney(S.ads)}` : `wages ${fmtMoney(S.wages)}`),
       stat('Happiness', S.served ? `${Math.round(sat * 100)}%` : '—', 'speed + value'),
       stat('Served', S.served, `best tip ${fmtMoney(S.bestTip)}`),
       stat('Lost guests', lost, `${S.balked} over price`),
@@ -5186,7 +5519,9 @@ const ui = {
     // little moments from the day, before the advice
     const moments = [];
     if (S.posts) moments.push(`Tourists posted ${S.posts} photo${S.posts > 1 ? 's' : ''} of your café.`);
-    if (G.up.cat && (S.catVisits || S.pets)) moments.push(`${G.cat.name} sat with ${S.catVisits || 0} guest${S.catVisits === 1 ? '' : 's'}${S.pets ? ` and got ${S.pets} scratch${S.pets > 1 ? 'es' : ''}` : ''}.`);
+    const scratches = S.pets ? `${S.pets} scratch${S.pets > 1 ? 'es' : ''}` : '';
+    if (G.up.cat && S.catVisits) moments.push(`${G.cat.name} sat with ${S.catVisits} guest${S.catVisits === 1 ? '' : 's'}${scratches ? ` and got ${scratches}` : ''}.`);
+    else if (G.up.cat && S.pets) moments.push(`${G.cat.name} got ${scratches}.`);
     if (moments.length) { const p = document.createElement('p'); p.className = 'moment'; p.textContent = moments.join(' '); coach.appendChild(p); }
     for (const t of coachTips(S, profit)) { const p = document.createElement('p'); p.textContent = t; coach.appendChild(p); }
   },
@@ -5524,10 +5859,10 @@ function endDay() {
   let wages = 0;
   for (const st of G.staff) { wages += wageDue(st); st.hiredAt = DAY_START; }
   S.wages += wages; S.rent = rentToday();
-  addMoney(-(wages + S.rent));
+  addMoney(-(wages + S.rent + S.ads)); // ad fees ran up by the hour
   goals.close();
   const sat = S.served ? S.satSum / S.served : 0;
-  const costs = S.ingredients + S.wages + S.rent;
+  const costs = S.ingredients + S.wages + S.rent + S.ads;
   const profit = S.revenue + S.tips - costs;
   const prev = G.history[G.history.length - 1];
   const r2 = (v) => Math.round(v * 100) / 100;
@@ -5587,7 +5922,7 @@ function saveGame() {
   try {
     localStorage.setItem('bb-save', JSON.stringify({
       v: 2, day: G.phase === 'summary' ? G.day + 1 : G.day, money: G.money, // a finished day is never replayed rep: G.rep, up: G.up, prices: G.prices, history: G.history,
-      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, cat: G.cat,
+      reviews: G.reviews.slice(0, 20), milestones: G.milestones, lifetime: G.lifetime, cat: G.cat, ads: G.ads,
       today: G.phase === 'open' ? { weather: today.weather, event: today.event, surge: today.surge && { k: today.surge.k, at: today.surge.at } } : null,
       staff: G.staff.map(({ role, level, name, skin, hair, scale }) => ({ role, level, name, skin, hair, scale })),
     }));
@@ -5618,6 +5953,7 @@ function loadGame() {
     if (d.milestones && typeof d.milestones === 'object') for (const m of MILESTONES) if (d.milestones[m.id]) G.milestones[m.id] = d.milestones[m.id] | 0;
     if (d.lifetime) G.lifetime = { served: num(d.lifetime.served, 0), profit: num(d.lifetime.profit, 0), pets: num(d.lifetime.pets, 0) };
     if (d.today && typeof d.today === 'object') G.savedToday = d.today;
+    if (d.ads && typeof d.ads === 'object') for (const a of ADS) if (d.ads[a.id]) G.ads[a.id] = true;
     if (d.cat) G.cat = { name: String(d.cat.name || '').slice(0, 16), coat: CAT_COATS[d.cat.coat] ? d.cat.coat : '' };
     return true;
   } catch (_) { return false; }
@@ -5675,7 +6011,7 @@ function fixedUpdate(dt) {
     const active = parties.filter((P) => P.state !== 'leaving').length;
     if (G.spawnTimer <= 0) {
       G.spawnTimer = nextSpawnInterval();
-      if (active < tableCount() + queue.length + 1) spawnParty();
+      if (active < tableCount() + queue.length + 3) spawnParty(); // a couple can be on their way along the street
     }
   }
   if (!G.closing && G.time >= OPEN_UNTIL) {
@@ -5683,6 +6019,7 @@ function fixedUpdate(dt) {
     ui.toast('Closing time — finishing the last orders', 'moon', 3200);
     for (const P of [...parties]) if (P.state === 'queue') partyTurnAway(P, 'closing');
   }
+  if (G.time >= OPEN_FROM && G.time < OPEN_UNTIL) { const fee = adsDaily(); if (fee) G.stats.ads += (fee * dt * HOURS_PER_SEC) / (OPEN_UNTIL - OPEN_FROM); }
   for (const st of stationList) st.fixed(dt);
   for (let i = customers.length - 1; i >= 0; i--) customers[i].fixed(dt);
   updateParties(dt);
@@ -5717,6 +6054,11 @@ function renderUpdate(dt, alpha) {
   for (const c of customers) c.render(alpha, simDt, elapsed);
   for (const w of workers) w.render(alpha, simDt, elapsed);
   cat.render(alpha, simDt, elapsed);
+  updatePassers(simDt, elapsed);
+  const gig = !!G.ads.music && G.phase === 'open' && G.time >= 17 && G.time < 20;
+  if (gig !== musician.playing) { musician.playing = gig; musician.root.visible = gig; if (gig) { popIn(musician.root, 0, 0.6); ui.toast('Live music is on: the evening crowd is coming!', 'music', 2600, 'gig'); } }
+  if (gig) musician.ch.animate(simDt, elapsed);
+  audio.gig = gig && !G.paused;
   if (G.up.records) DECOR.records.userData.vinyl.rotation.y -= simDt * 3.5; // 33⅓ rpm, near enough
   renderFlights(alpha);
   updateTweens(dt);
@@ -5768,6 +6110,7 @@ const resumed = loadGame();
 tables.forEach((t, i) => { if (i < tableCount()) t.activate(furnitureLevel(), false); });
 for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign', 'cat', 'books', 'records', 'neon']) if (G.up[id] > 0) applyUpgrade(id, false);
 for (const st of G.staff) spawnWorker(st, false);
+applyAds();
 applyStyle();
 updateMenuBoard();
 if (document.fonts && document.fonts.load) document.fonts.load('700 64px Caveat').then(updateMenuBoard).catch(() => {});
@@ -5801,7 +6144,7 @@ document.addEventListener('visibilitychange', () => {
 });
 window.__booted = true;
 requestAnimationFrame(frame);
-window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, parties, today, rain, weatherFx, ui, goals, slots, workers, clickTable, clearTable, spawnParty, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality, cat, milestones, umbrellaStand };
+window.__cafe = { get frames() { return frameCount; }, fixedUpdate, renderUpdate, STEP, G, composer, finalPass, gtaoPass, bloomPass, THREE, scene, camera, renderer, rig, applyQuality, setQualityMode, sunLight, sunDir, MAT, TEX, stations, tables, customers, parties, today, rain, weatherFx, ui, goals, slots, workers, clickTable, clearTable, spawnParty, hireStaff, trainStaff, fireStaff, ROLES, priceRatio, fairPrice, footfall, interact, serveTable, buyUpgrade, startGame, endDay, startNextDay, applyLighting, spawnCustomer, quality, cat, milestones, umbrellaStand, __applyAds: applyAds, toggleAd, passers, STREET };
 
 </script>
 </body>

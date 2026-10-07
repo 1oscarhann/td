@@ -6,6 +6,8 @@ Three.js and its addons load from jsDelivr via an import map, and fonts load fro
 
 ## How to play
 
+The café sits on a street corner. People stroll along the pavements and over the zebra crossings; some walk past, some stop to look in, and some head for the door. Your customers arrive and leave along the street too, and on rainy days everyone outside puts their umbrella up.
+
 1. Guests arrive alone or in pairs, take a table and show an order bubble. The ring around the bubble is their patience. If every table is taken they queue by the door, and they won't wait forever.
 2. Click the espresso machine (or press `1`) to brew. Finished drinks wait on the counter.
 3. Click a guest's table to serve them. How happy they are depends on **speed** (how fast it arrived) and **value** (how fair the price felt), and happiness drives tips and reputation.
@@ -14,7 +16,8 @@ Three.js and its addons load from jsDelivr via an import map, and fonts load fro
    - **Overview:** today's profit (wages and rent are counted up front because they're due at closing), takings, costs, guest happiness, lost guests, today's guest mix, recent reviews, a 7-day profit chart with a table, and per-item margins.
    - **Menu:** set your own prices. Every item costs ingredients to make. Guests judge prices against what feels fair *in your café*, and that rises with reputation, furniture and decor. Cheap prices pull in more guests, pricey ones scare them off (some walk straight out), and the sweet spot moves: charge more when you're packed, less when seats sit empty.
    - **Staff:** hire a barista, a tea master, a baker and up to two servers. Brewers keep their station stocked (and make it faster); servers carry orders to tables and bus dirty ones. Everyone draws a daily wage paid at closing, and training makes them quicker. Over-hire and the wages eat your profit.
-   - **Upgrades:** more tables, a faster machine, nicer furniture, a matcha bar (`2`), a pastry case (`3`), cosy decor, a sidewalk sign and a café cat. Late-game pieces give you something to save for: a bookshelf (+8% patience, more readers), a record player (+8% tips and vinyl crackle in the music) and a neon cup sign (more guests, especially after 5 pm).
+   - **Ads:** switch on a perk to advertise on the street (free Wi-Fi, oat milk, a loyalty card, a charging bar, dogs welcome, live music in the evening, social media posts). Each brings more or particular guests and puts an A-board out on the pavement, but costs a daily fee charged at closing for the hours it ran. Extra guests only pay off if you have the seats and staff for them.
+   - **Upgrades:** more tables (once the inside is full they go out on a pavement terrace, up to 11, though nobody sits outside in the rain), a faster machine, nicer furniture, a matcha bar (`2`), a pastry case (`3`), cosy decor, a sidewalk sign on the corner and a café cat. Late-game pieces give you something to save for: a bookshelf (+8% patience, more readers), a record player (+8% tips and vinyl crackle in the music) and a neon cup sign (more guests, especially after 5 pm).
    - **Goals:** today's goals and every milestone you've unlocked or have left to chase.
 6. Each day ends with a wrap-up showing profit, costs, happiness, goals, reviews, your best streak and a couple of tips from your numbers.
 
