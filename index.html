@@ -273,6 +273,9 @@
   table.hist td { text-align: right; padding: 5px 4px; border-top: 1px solid rgba(74,52,40,.08); font-weight: 700; }
   table.hist th:first-child, table.hist td:first-child { text-align: left; }
   table.hist td.neg { color: var(--bad); }
+  .sec-title.up-sec { margin: 14px 4px 8px; } .sec-title.up-sec:first-child { margin-top: 2px; }
+  .card.locked { opacity: .62; }
+  @media (max-width: 720px) { #slots.many { display: grid; grid-template-columns: repeat(4, 28px); gap: 4px; } #slots.many .slot { width: 28px; height: 28px; border-radius: 9px; } #slots.many .slot svg { width: 20px; height: 20px; } }
   .ad-card p.eff { color: var(--ink); margin-top: 3px; }
   .ad-card.on { background: rgba(255,250,240,.86); box-shadow: inset 0 0 0 2px rgba(201,118,90,.35); }
   .switch { width: 50px; height: 28px; border-radius: 999px; border: 0; background: rgba(74,52,40,.16); position: relative; cursor: pointer; transition: background .2s; padding: 0; }
@@ -1298,6 +1301,7 @@ MAT.asphalt = phys({ map: TEX.asphalt, roughness: 0.9 });
 MAT.kerb = phys({ color: 0xe3dccf, roughness: 0.8, bumpMap: TEX.plaster, bumpScale: 0.3 });
 MAT.paint = new THREE.MeshStandardMaterial({ color: 0xf4efe4, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
 MAT.hydrant = phys({ color: 0xc8553d, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.2 });
+MAT.heaterGlow = new THREE.MeshStandardMaterial({ color: 0xffc9a0, emissive: 0xff7a3c, emissiveIntensity: 1.8 });
 MAT.vinyl = phys({ color: 0x1d1a19, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.12 });
 MAT.neon = new THREE.MeshStandardMaterial({ color: 0xffd2c4, emissive: 0xff7a5c, emissiveIntensity: 2.4 });
 MAT.neonMint = new THREE.MeshStandardMaterial({ color: 0xd8fff0, emissive: 0x7fe0bf, emissiveIntensity: 2.2 });
@@ -2070,6 +2074,76 @@ function buildCounter() {
   return g;
 }
 
+// one bay of counter extension, matching the main counter (fluted front, marble top, fluted end)
+function buildCounterBay(x0, x1) {
+  const g = new THREE.Group(), zf = -3.08, zb = -4.03, H = 0.98, L = x1 - x0, cx = (x0 + x1) / 2, cz = (zf + zb) / 2;
+  const core = mesh(boxGeo(L, H - 0.12, zf - zb - 0.06, 0.04, 3), MAT.terracotta); core.position.set(cx, 0.12 + (H - 0.12) / 2, cz); g.add(core);
+  const kick = mesh(boxGeo(L, 0.13, zf - zb - 0.2, 0.04, 3), MAT.walnut); kick.position.set(cx, 0.065, cz); g.add(kick);
+  const flute = boxGeo(0.15, H - 0.2, 0.09, 0.045, 4);
+  for (let x = x0 + 0.08; x < x1 - 0.05; x += 0.158) { const f = mesh(flute, MAT.terracotta); f.position.set(x, 0.14 + (H - 0.2) / 2, zf); g.add(f); }
+  for (let z = zb + 0.13; z < zf - 0.05; z += 0.158) { const f = mesh(flute, MAT.terracotta); f.rotation.y = Math.PI / 2; f.position.set(x1, 0.14 + (H - 0.2) / 2, z); g.add(f); }
+  const top = mesh(boxGeo(L + 0.12, 0.08, zf - zb + 0.22, 0.035, 4), MAT.marble); top.position.set(cx + 0.04, H + 0.04, cz + 0.05); g.add(top);
+  return g;
+}
+function buildTipJar() {
+  const g = new THREE.Group();
+  const jar = mesh(cylGeo(0.075, 0.07, 0.2, 20), MAT.glass, { cast: false }); jar.position.y = 0.1; jar.userData.noAO = true; g.add(jar);
+  for (let i = 0; i < 7; i++) { const c = mesh(cylGeo(0.022, 0.022, 0.006, 12), MAT.brass, { cast: false }); c.position.set(Math.sin(i * 2.3) * 0.03, 0.01 + i * 0.012, Math.cos(i * 2.3) * 0.03); c.rotation.set(0.3 * Math.sin(i), 0, 0.3 * Math.cos(i)); g.add(c); }
+  const rim = mesh(torGeo(0.075, 0.01, 8, 20), MAT.terracotta, { cast: false }); rim.rotation.x = Math.PI / 2; rim.position.y = 0.2; g.add(rim);
+  const tag = mesh(boxGeo(0.09, 0.05, 0.004, 0.002, 1), MAT.linen, { cast: false }); tag.position.set(0, 0.11, 0.077); g.add(tag);
+  return g;
+}
+function buildBeanSacks() {
+  const g = new THREE.Group(), burlap = phys({ color: 0xc8a57a, roughness: 0.95, bumpMap: TEX.weave, bumpScale: 0.6 });
+  [[0, 0, 0, 0], [0.5, 0, 0.08, -0.25], [0.24, 0.36, -0.02, 0.15]].forEach(([x, y, z, r]) => {
+    const sk = mesh(boxGeo(0.46, 0.42, 0.34, 0.14, 4), burlap); sk.position.set(x, y + 0.21, z); sk.rotation.y = r; g.add(sk);
+    const tie = mesh(sphereGeo(0.06, 12, 8), burlap); tie.scale.set(1.4, 0.6, 1.2); tie.position.set(x, y + 0.44, z); g.add(tie);
+  });
+  for (let i = 0; i < 9; i++) { const b = mesh(sphereGeo(0.022, 8, 6), MAT.beans, { cast: false }); b.scale.set(1, 0.7, 1.3); b.position.set(-0.1 + Math.sin(i * 1.7) * 0.12, 0.01, 0.28 + Math.cos(i * 2.1) * 0.06); g.add(b); }
+  return g;
+}
+function buildOven() {
+  const g = new THREE.Group();
+  const body = mesh(boxGeo(0.62, 0.42, 0.46, 0.06, 4), MAT.enamelCream); body.position.y = 0.21; g.add(body);
+  const door = mesh(boxGeo(0.46, 0.24, 0.02, 0.03, 2), MAT.darkMetal, { cast: false }); door.position.set(-0.04, 0.22, 0.235); g.add(door);
+  const glow = mesh(boxGeo(0.38, 0.16, 0.01, 0.02, 2), MAT.lampInner, { cast: false }); glow.position.set(-0.04, 0.22, 0.242); g.add(glow);
+  const bar = mesh(cylGeo(0.012, 0.012, 0.36, 8), MAT.brass, { cast: false }); bar.rotation.z = Math.PI / 2; bar.position.set(-0.04, 0.36, 0.26); g.add(bar);
+  for (let i = 0; i < 2; i++) { const k = mesh(cylGeo(0.026, 0.026, 0.03, 14), MAT.brass, { cast: false }); k.rotation.x = Math.PI / 2; k.position.set(0.25, 0.28 - i * 0.1, 0.24); g.add(k); }
+  return g;
+}
+function buildRoaster() {
+  const g = new THREE.Group();
+  const base = mesh(boxGeo(0.5, 0.26, 0.4, 0.06, 4), MAT.enamelTerracotta); base.position.y = 0.13; g.add(base);
+  const drum = mesh(cylGeo(0.13, 0.13, 0.34, 24), MAT.darkMetal); drum.rotation.z = Math.PI / 2; drum.position.set(0, 0.38, -0.02); g.add(drum);
+  const face = mesh(cylGeo(0.11, 0.11, 0.02, 24), MAT.brass); face.rotation.z = Math.PI / 2; face.position.set(0.18, 0.38, -0.02); g.add(face);
+  const hop = mesh(geo('roastHopper', () => new THREE.ConeGeometry(0.1, 0.18, 18, 1, true).rotateX(Math.PI)), MAT.brass); hop.position.set(-0.04, 0.6, -0.02); g.add(hop);
+  const tray = mesh(cylGeo(0.15, 0.14, 0.05, 24), MAT.chrome); tray.position.set(0.05, 0.29, 0.25); g.add(tray);
+  const beans = mesh(cylGeo(0.13, 0.13, 0.02, 20), MAT.beans, { cast: false }); beans.position.set(0.05, 0.315, 0.25); g.add(beans);
+  return g;
+}
+function buildPatioHeater() {
+  const g = new THREE.Group();
+  const base = mesh(cylGeo(0.2, 0.24, 0.08, 20), MAT.darkMetal); base.position.y = 0.04; g.add(base);
+  const pole = mesh(cylGeo(0.035, 0.04, 2.0, 10), MAT.darkMetal); pole.position.y = 1.05; g.add(pole);
+  const burner = mesh(cylGeo(0.07, 0.09, 0.22, 16), MAT.heaterGlow, { cast: false }); burner.position.y = 2.1; g.add(burner);
+  const hood = mesh(geo('heaterHood', () => new THREE.ConeGeometry(0.28, 0.14, 24, 1, true)), MAT.chrome); hood.position.y = 2.28; g.add(hood);
+  const cap = mesh(sphereGeo(0.05, 12, 8), MAT.chrome); cap.position.y = 2.4; g.add(cap);
+  return g;
+}
+function buildCargoBike() {
+  const g = new THREE.Group();
+  const wheel = (x) => { const w = mesh(torGeo(0.24, 0.035, 10, 28), MAT.darkMetal); w.position.set(x, 0.27, 0); g.add(w); const hub = mesh(cylGeo(0.03, 0.03, 0.06, 10), MAT.chrome); hub.rotation.x = Math.PI / 2; hub.position.set(x, 0.27, 0); g.add(hub); };
+  wheel(-0.62); wheel(0.62);
+  const tube = (x0, y0, x1, y1, r = 0.025) => { const d = Math.hypot(x1 - x0, y1 - y0), t = mesh(cylGeo(r, r, d, 8), MAT.sageDeep); t.position.set((x0 + x1) / 2, (y0 + y1) / 2, 0); t.rotation.z = Math.atan2(x0 - x1, y1 - y0); g.add(t); };
+  tube(-0.62, 0.27, -0.1, 0.32); tube(-0.1, 0.32, -0.32, 0.78); tube(-0.62, 0.27, -0.32, 0.72); tube(-0.1, 0.32, 0.5, 0.42); tube(0.62, 0.27, 0.48, 0.86);
+  const seat = mesh(boxGeo(0.2, 0.05, 0.1, 0.02, 2), MAT.walnut); seat.position.set(-0.33, 0.82, 0); g.add(seat);
+  const bars = mesh(cylGeo(0.018, 0.018, 0.42, 8), MAT.darkMetal); bars.rotation.x = Math.PI / 2; bars.position.set(0.47, 0.88, 0); g.add(bars);
+  const crate = mesh(boxGeo(0.52, 0.34, 0.46, 0.04, 3), MAT.oak); crate.position.set(0.18, 0.62, 0); g.add(crate);
+  const lid = mesh(boxGeo(0.5, 0.04, 0.44, 0.02, 2), MAT.terracotta); lid.position.set(0.18, 0.8, 0); g.add(lid);
+  const stand = mesh(cylGeo(0.015, 0.015, 0.3, 6), MAT.darkMetal); stand.position.set(-0.1, 0.15, 0.08); stand.rotation.x = 0.4; g.add(stand);
+  return g;
+}
+
 function buildShelf(w = 1.3) {
   const g = new THREE.Group();
   const s = mesh(boxGeo(w, 0.06, 0.32, 0.025, 3), MAT.walnut); g.add(s);
@@ -2265,7 +2339,7 @@ const LAYOUT = {
   matcha: new THREE.Vector3(-6.12, 1.06, -3.58),
   pastry: new THREE.Vector3(-1.55, 1.06, -3.6),
   register: new THREE.Vector3(-1.55, 0.96, ROOM.z0 + 0.3),
-  slots: [-3.8, -3.34, -2.88, -2.42].map((x) => new THREE.Vector3(x, 1.06, -3.3)),
+  slots: [-3.8, -3.34, -2.88, -2.42, -0.62, -0.16, 0.3, 0.76].map((x) => new THREE.Vector3(x, 1.06, -3.3)), // the last four sit on the counter extension
   tables: [[0.5, -0.35], [4.1, -0.35], [0.5, 3.15], [4.1, 3.15], [-3.2, 3.15], [-3.2, -0.35],
     // terrace tables out on the side-street pavement (STREET.terraceX)
     [8.05, -2.4], [8.05, 0.0], [8.05, 2.4], [8.05, -4.8], [8.05, 4.8]].map(([x, z]) => new THREE.Vector3(x, 0, z)),
@@ -2325,7 +2399,17 @@ const LAYOUT = {
   DECOR.books = buildBookshelf(); DECOR.books.position.set(ROOM.x0 + 0.2, 0, 2.72); DECOR.books.rotation.y = Math.PI / 2; world.add(DECOR.books);
   DECOR.records = buildSideboard(); DECOR.records.position.set(1.2, 0, ROOM.z0 + 0.26); world.add(DECOR.records); // left of the queue so it stays in view
   DECOR.neon = buildNeonSign(); DECOR.neon.position.set(ROOM.door.x + 1.6, 2.55, ROOM.z0 + 0.02); world.add(DECOR.neon);
-  for (const k of ['books', 'records', 'neon']) DECOR[k].visible = false;
+  DECOR.counter1 = buildCounterBay(-0.9, 0.0); DECOR.counter2 = buildCounterBay(0.0, 0.9);
+  for (const k of ['counter1', 'counter2']) world.add(DECOR[k]);
+  DECOR.tipjar = buildTipJar(); DECOR.tipjar.position.set(-0.98, 1.06, -3.8); world.add(DECOR.tipjar);
+  DECOR.beans = buildBeanSacks(); DECOR.beans.position.set(-6.55, 0, -4.55); DECOR.beans.rotation.y = 0.5; world.add(DECOR.beans);
+  DECOR.oven = buildOven(); DECOR.oven.position.set(-3.05, 0.96, ROOM.z0 + 0.3); world.add(DECOR.oven);
+  DECOR.roaster = buildRoaster(); DECOR.roaster.position.set(-4.15, 0.96, ROOM.z0 + 0.3); world.add(DECOR.roaster);
+  DECOR.heaters = new THREE.Group();
+  for (const z of [-3.6, -1.2, 1.2, 3.6]) { const h = buildPatioHeater(); h.position.set(ROOM.x1 + 0.52, 0, z); DECOR.heaters.add(h); }
+  world.add(DECOR.heaters);
+  DECOR.bike = buildCargoBike(); DECOR.bike.position.set(8.1, 0, -8.08); world.add(DECOR.bike);
+  for (const k of ['books', 'records', 'neon', 'counter1', 'counter2', 'tipjar', 'beans', 'oven', 'roaster', 'heaters', 'bike']) DECOR[k].visible = false;
 
   // bake everything static into a handful of draw calls
   const staticRoot = new THREE.Group();
@@ -2333,7 +2417,8 @@ const LAYOUT = {
   world.add(staticRoot);
   mergeStatic(staticRoot);
   for (const p of DECOR.plants.children) mergeStatic(p);
-  for (const k of ['books', 'records', 'neon']) mergeStatic(DECOR[k]);
+  for (const k of ['books', 'records', 'neon', 'counter1', 'counter2', 'tipjar', 'beans', 'oven', 'roaster', 'bike']) mergeStatic(DECOR[k]);
+  for (const h of DECOR.heaters.children) mergeStatic(h);
   mergeStatic(DECOR.sign);
   mergeStatic(DECOR.lights);
 
@@ -2374,6 +2459,13 @@ const ICONS = {
   books: `<svg viewBox="0 0 32 32"><path d="M5 27h22" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><rect x="7" y="9" width="4.6" height="18" rx="1.2" fill="#c9765a" stroke="${INK}" stroke-width="1.8"/><rect x="11.6" y="6.5" width="4.6" height="20.5" rx="1.2" fill="#9fb193" stroke="${INK}" stroke-width="1.8"/><rect x="16.2" y="10" width="4.2" height="17" rx="1.2" fill="#e0b65e" stroke="${INK}" stroke-width="1.8"/><path d="m21.4 12.2 3.9-1.2 3.4 15-3.9 1z" fill="#8e9fb4" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
   record: `<svg viewBox="0 0 32 32"><circle cx="15" cy="17" r="11" fill="#3b3531" stroke="${INK}" stroke-width="2"/><circle cx="15" cy="17" r="7.4" fill="none" stroke="#5a524c" stroke-width="1"/><circle cx="15" cy="17" r="3.6" fill="#c9765a"/><circle cx="15" cy="17" r="1" fill="#fffaf3"/><path d="M27 5.5 22 16.5" stroke="${INK}" stroke-width="2" stroke-linecap="round"/><circle cx="27" cy="5.5" r="2" fill="#d4ad68" stroke="${INK}" stroke-width="1.5"/></svg>`,
   neon: `<svg viewBox="0 0 32 32"><rect x="3" y="3" width="26" height="26" rx="6" fill="#4a3a33"/><path d="M9 14v3.5a7 7 0 0 0 14 0V14zM9 14h14M23 15.5h1.6a2.4 2.4 0 0 1 0 4.8H22.6M8 26h16" stroke="#ff8f73" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 11c-1-1.2 1-2.2 0-3.6M18 11c-1-1.2 1-2.2 0-3.6" stroke="#8fe6c6" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+  counter: `<svg viewBox="0 0 32 32"><rect x="4" y="12" width="24" height="4" rx="1.5" fill="#efe6da" stroke="${INK}" stroke-width="2"/><path d="M6 16v10M10 16v10M14 16v10M18 16v10M22 16v10M26 16v10" stroke="#c9765a" stroke-width="2.2" stroke-linecap="round"/><path d="M20 12V8.5a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5V12" fill="#fffaf3" stroke="${INK}" stroke-width="1.8"/><path d="M4.5 28h23" stroke="${INK}" stroke-width="2" stroke-linecap="round"/></svg>`,
+  heater: `<svg viewBox="0 0 32 32"><path d="M8 9h16l-3-4H11z" fill="#e8e2da" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/><rect x="13.5" y="9" width="5" height="4" rx="1" fill="#f0884d" stroke="${INK}" stroke-width="1.6"/><path d="M16 13v12" stroke="${INK}" stroke-width="2.2"/><path d="M10.5 27h11" stroke="${INK}" stroke-width="2.4" stroke-linecap="round"/><path d="M9.5 15c-1 1.5 1 2.5 0 4M22.5 15c-1 1.5 1 2.5 0 4" stroke="#f0884d" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`,
+  beans: `<svg viewBox="0 0 32 32"><g stroke="${INK}" stroke-width="1.8"><ellipse cx="11.5" cy="17" rx="5.5" ry="7.5" transform="rotate(-25 11.5 17)" fill="#8a5a3a"/><ellipse cx="21" cy="14.5" rx="5" ry="7" transform="rotate(20 21 14.5)" fill="#a8703f"/></g><path d="M9 11.5c3 3 1 8 4.5 11M18.5 8.5c-1.5 3.5 2 6.5 1 12" stroke="#f3d9b8" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>`,
+  oven: `<svg viewBox="0 0 32 32"><rect x="5" y="7" width="22" height="19" rx="3" fill="#f2e6d4" stroke="${INK}" stroke-width="2"/><rect x="8" y="13" width="16" height="10" rx="1.8" fill="#4a3a33" stroke="${INK}" stroke-width="1.6"/><rect x="10" y="16" width="12" height="4" rx="1" fill="#f0a35e"/><circle cx="10.5" cy="10" r="1.3" fill="${INK}"/><circle cx="15" cy="10" r="1.3" fill="${INK}"/></svg>`,
+  roaster: `<svg viewBox="0 0 32 32"><rect x="6" y="19" width="20" height="8" rx="2" fill="#c8694a" stroke="${INK}" stroke-width="1.8"/><rect x="8" y="12" width="14" height="8" rx="4" fill="#4a423d" stroke="${INK}" stroke-width="1.8"/><circle cx="22" cy="16" r="3.2" fill="#d4ad68" stroke="${INK}" stroke-width="1.6"/><path d="M12 12l-2-6h8l-2 6" fill="#d4ad68" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/></svg>`,
+  jar: `<svg viewBox="0 0 32 32"><path d="M10 9h12v2.5c1.8 1 3 2.8 3 5V25a3 3 0 0 1-3 3H10a3 3 0 0 1-3-3v-8.5c0-2.2 1.2-4 3-5z" fill="#eef4f6" stroke="${INK}" stroke-width="1.8" stroke-linejoin="round"/><rect x="9.5" y="6" width="13" height="3.5" rx="1.2" fill="#c9765a" stroke="${INK}" stroke-width="1.6"/><g fill="#d4ad68" stroke="#a98140" stroke-width="1"><ellipse cx="13" cy="24" rx="3" ry="1.4"/><ellipse cx="18.5" cy="22.5" rx="3" ry="1.4"/><ellipse cx="15.5" cy="20.5" rx="3" ry="1.4"/></g></svg>`,
+  bike: `<svg viewBox="0 0 32 32"><circle cx="8" cy="22" r="5" fill="none" stroke="${INK}" stroke-width="2"/><circle cx="25" cy="22" r="5" fill="none" stroke="${INK}" stroke-width="2"/><path d="M8 22l5-9h6M13 13l-1.5-3h-3M25 22l-3-10" stroke="#7d9373" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="15" y="12" width="9" height="7" rx="1.2" fill="#c89d72" stroke="${INK}" stroke-width="1.6"/></svg>`,
   wifi: `<svg viewBox="0 0 24 24"><path d="M3.5 9.5a12 12 0 0 1 17 0M6.5 12.6a7.6 7.6 0 0 1 11 0M9.4 15.6a3.6 3.6 0 0 1 5.2 0" stroke="${INK}" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="18.6" r="1.6" fill="#c9765a"/></svg>`,
   oat: `<svg viewBox="0 0 24 24"><path d="M8.5 7.5h7l1 3v8.5a2 2 0 0 1-2 2h-5a2 2 0 0 1-2-2v-8.5z" fill="#fffaf3" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><path d="M9 4h6v3.5H9z" fill="#d7a64f" stroke="${INK}" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 12.5c-1.4 1.5-1.4 3.5 0 5M12 12.5c1.4 1.5 1.4 3.5 0 5" stroke="#9fb193" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>`,
   card: `<svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2.5" fill="#f3d2c4" stroke="${INK}" stroke-width="1.7"/><g fill="${INK}"><circle cx="7.5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/><circle cx="14.5" cy="12" r="1.2"/></g><circle cx="18" cy="12" r="1.5" fill="none" stroke="#c9765a" stroke-width="1.5"/></svg>`,
@@ -2913,7 +3005,7 @@ const priceRange = (k) => [Math.ceil(UNIT_COST[k] / PRICE_STEP) * PRICE_STEP, Ma
 const DAY_START = 7, OPEN_FROM = 7.2, OPEN_UNTIL = 20, DAY_END = 20.5, HOURS_PER_SEC = 14 / 170;
 const G = {
   phase: 'title', day: 1, time: DAY_START, money: 0, rep: 2.0, paused: false,
-  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0, cat: 0, books: 0, records: 0, neon: 0 },
+  up: { tables: 0, machine: 0, furniture: 0, matcha: 0, pastry: 0, decor: 0, sign: 0, cat: 0, books: 0, records: 0, neon: 0, counter: 0, tipjar: 0, beans: 0, oven: 0, roaster: 0, heaters: 0, bike: 0 },
   prices: { latte: 3.5, matcha: 5, pastry: 3 }, staff: [], history: [], // opening prices sit a little under fair
   streak: 0, reviews: [], milestones: {}, lifetime: { served: 0, profit: 0, pets: 0 }, cat: { name: '', coat: '' }, ads: {},
   spawnTimer: 1.2, lightHour: 8.4, closing: false, stats: null, bought: 0,
@@ -2934,7 +3026,9 @@ const tableCount = () => 2 + G.up.tables;
 // ---- pricing: guests judge your prices against what feels fair *here* ----
 // Reputation and a nicer room (furniture, decor) earn you pricing power.
 const ambience = () => (1 + 0.05 * (G.rep - 2.5)) * (1 + 0.06 * furnitureLevel() + 0.04 * G.up.decor);
-const fairPrice = (k) => BASE_PRICE[k] * ambience() * (today.fair[k] || 1);
+const fairPrice = (k) => BASE_PRICE[k] * ambience() * (today.fair[k] || 1) * (k === 'latte' ? 1 + 0.08 * G.up.beans : 1);
+// what an item costs to make, after the roaster and the oven
+const unitCost = (k) => UNIT_COST[k] * (k === 'pastry' ? 1 - 0.3 * G.up.oven : 1 - 0.25 * G.up.roaster);
 const priceRatio = (k) => G.prices[k] / fairPrice(k);
 const valueScore = (r) => clamp(1 - (r - 0.85) * 1.6, 0, 1); // 1 = a steal, 0 = a rip-off
 const VALUE_BANDS = [[0.8, 'A steal', 'good'], [0.97, 'Good value', 'good'], [1.12, 'Fair', 'ok'], [1.35, 'Pricey', 'warn'], [Infinity, 'Rip-off', 'bad']];
@@ -3000,7 +3094,9 @@ function getItemMesh(kind) {
 function releaseItemMesh(kind, m) { world.remove(m); itemPool[kind].push(m); }
 
 const slots = LAYOUT.slots.map((pos, i) => ({ i, pos, item: null, claimed: false }));
-const freeSlot = () => slots.find((s) => !s.item && !s.claimed);
+const slotCount = () => 4 + 2 * G.up.counter;
+const freeSlot = () => slots.find((s) => s.i < slotCount() && !s.item && !s.claimed);
+const counterEndX = () => -0.9 + 0.9 * G.up.counter;
 const findReady = (kind) => slots.find((s) => s.item && s.item.kind === kind && !s.item.reserved);
 const readyCount = (kind) => slots.reduce((n, s) => n + (s.item && s.item.kind === kind && !s.item.reserved ? 1 : 0), 0);
 
@@ -3105,7 +3201,7 @@ class Machine {
       const used = new Set(this.jobs.map((j) => j.head));
       let head = 0; while (used.has(head)) head++;
       this.queue--;
-      const cost = UNIT_COST[this.kind];
+      const cost = unitCost(this.kind);
       addMoney(-cost); G.stats.ingredients += cost; G.stats.made[this.kind]++;
       const m = getItemMesh(this.kind);
       this.headWorld(head, m.position);
@@ -3349,7 +3445,7 @@ function makeOrder(type) {
   }
   const items = [{ kind: drink, status: 'need' }];
   const pr = 1 + (priceRatio('pastry') - 1) * T.sens;
-  if (G.up.pastry && Math.random() < 0.45 * T.pastry * clamp(2 - pr, 0.15, 1.4)) items.push({ kind: 'pastry', status: 'need' });
+  if (G.up.pastry && Math.random() < 0.45 * (1 + 0.25 * G.up.oven) * T.pastry * clamp(2 - pr, 0.15, 1.4)) items.push({ kind: 'pastry', status: 'need' });
   return items;
 }
 
@@ -3442,6 +3538,7 @@ class Customer extends Walker {
   headY() { return this.ch.headWorldY; }
   goToSeat(t, seat, fromQueue) {
     this.table = t; this.seat = seat;
+    if (t.terrace && G.up.heaters) { this.patienceMax *= 1.15; this.patience *= 1.15; } // warm out there
     const path = t.pathToSeat(seat);
     if (fromQueue) path.unshift(V3(ROOM.door.x - 0.4, 0, -3.3));
     this.setPath(path);
@@ -3591,7 +3688,7 @@ class Customer extends Walker {
     value /= this.order.length;
     const sat = clamp(0.5 * speed + 0.5 * value, 0, 1);
     const streakBonus = 1 + 0.05 * Math.min(5, G.streak);
-    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records) * (this.party && this.party.rush ? 1.35 : 1) * adTip();
+    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records) * (this.party && this.party.rush ? 1.35 : 1) * adTip() * (1 + 0.1 * G.up.tipjar) * (this.table && this.table.terrace && G.up.heaters ? 1.1 : 1);
     addMoney(total);
     this.paid = true;
     const S = G.stats;
@@ -4446,7 +4543,7 @@ class Worker extends Walker {
     }
   }
   // brewers slip behind the counter at its open end; servers wait in front of it
-  entryPath() { return this.isServer ? [V3(this.home.x, 0, Z_A), this.home.clone()] : [V3(-0.42, 0, Z_A), V3(-0.42, 0, Z_LANE), this.home.clone()]; }
+  entryPath() { const gx = counterEndX() + 0.48; return this.isServer ? [V3(this.home.x, 0, Z_A), this.home.clone()] : [V3(gx, 0, Z_A), V3(gx, 0, Z_LANE), this.home.clone()]; } // round the end of the counter
   get walkSpeed() { return [0, 2.6, 3.1, 3.6][this.data.level]; }
   get workTime() { return [0, 0.5, 0.38, 0.28][this.data.level]; }
   walkTo(pts, then) { this.ch.activity = null; this.setPath(pts); this.state = 'walk'; this.onArrive = then; }
@@ -4579,7 +4676,7 @@ class Worker extends Walker {
   }
   leave() {
     this.releaseTask(); if (this.carry) this.dropCarry();
-    const pts = this.isServer ? [V3(this.pos.x, 0, Z_A)] : [V3(-0.42, 0, Z_LANE), V3(-0.42, 0, Z_A)];
+    const gx = counterEndX() + 0.48, pts = this.isServer ? [V3(this.pos.x, 0, Z_A)] : [V3(gx, 0, Z_LANE), V3(gx, 0, Z_A)];
     this.setPath([...pts, V3(ROOM.door.x, 0, Z_A), DOOR_IN.clone(), DOOR_OUT.clone()]);
     this.state = 'leaving';
     this.ch.setMood('sad');
@@ -4663,28 +4760,43 @@ function fireStaff(data) {
 // ---------------------------------------------------------------------
 // 13. UPGRADES
 // ---------------------------------------------------------------------
+const UPGRADE_CATS = [['space', 'Space & seating'], ['kitchen', 'Kitchen & menu'], ['vibe', 'Atmosphere'], ['business', 'Business']];
 const UPGRADES = [
-  { id: 'tables', name: 'Extra Table', icon: 'table', tint: '#efdcc4', costs: [45, 95, 170, 280, 380, 480, 600, 740, 900],
+  { id: 'tables', cat: 'space', name: 'Extra Table', icon: 'table', tint: '#efdcc4', costs: [45, 95, 170, 280, 380, 480, 600, 740, 900],
     desc: (l) => (l < 4 ? `Seat more guests: ${2 + l} → ${3 + l} tables.` : l < 9 ? `A terrace table out on the pavement: ${2 + l} → ${3 + l} tables (not used in the rain).` : 'Every seat inside and out is set.') },
-  { id: 'machine', name: 'Espresso Machine', icon: 'machine', tint: '#f3d2c4', costs: [80, 190, 380],
+  { id: 'counter', cat: 'space', name: 'Longer Counter', icon: 'counter', tint: '#f3d2c4', costs: [140, 320],
+    desc: (l) => ['Extend the counter: room for 6 finished orders, so the machines stall less.', 'Extend it again: room for 8 finished orders.', 'The counter runs right up to the queue.'][l] },
+  { id: 'heaters', cat: 'space', name: 'Patio Heaters', icon: 'heater', tint: '#f6e2c4', costs: [220], needs: () => G.up.tables >= 5, needsText: 'Needs a terrace table first.',
+    desc: (l) => (l ? 'Glowing away between the terrace tables.' : 'Terrace guests wait 15% longer and tip 10% more.') },
+  { id: 'machine', cat: 'kitchen', name: 'Espresso Machine', icon: 'machine', tint: '#f3d2c4', costs: [80, 190, 380],
     desc: (l) => ['Pro Boiler: lattes brew 25% faster.', 'Twin Group: brew two drinks at once.', 'Brass Masterpiece: the fastest pull in town.', 'A gleaming brass masterpiece.'][l] },
-  { id: 'furniture', name: 'Nicer Furniture', icon: 'chair', tint: '#dfe6d6', costs: [110, 240, 450],
+  { id: 'furniture', cat: 'space', name: 'Nicer Furniture', icon: 'chair', tint: '#dfe6d6', costs: [110, 240, 450],
     desc: (l) => ['Bentwood bistro chairs: +tips, +patience.', 'Velvet tub chairs & marble tops.', 'Plush armchairs & mushroom lamps.', 'Peak cosiness achieved.'][l] },
-  { id: 'matcha', name: 'Matcha Bar', icon: 'matcha', tint: '#e2ead2', costs: [140],
+  { id: 'matcha', cat: 'kitchen', name: 'Matcha Bar', icon: 'matcha', tint: '#e2ead2', costs: [140],
     desc: (l) => (l ? 'Whisking ceremonial matcha.' : 'A second drink on the menu: whisked matcha.') },
-  { id: 'pastry', name: 'Pastry Case', icon: 'pastry', tint: '#f6e2c4', costs: [90],
+  { id: 'pastry', cat: 'kitchen', name: 'Pastry Case', icon: 'pastry', tint: '#f6e2c4', costs: [90],
     desc: (l) => (l ? 'Croissants, muffins & donuts.' : 'Guests add pastries to their orders.') },
-  { id: 'decor', name: 'Cosy Decor', icon: 'plant', tint: '#dbe5d3', costs: [70, 160],
+  { id: 'beans', cat: 'kitchen', name: 'Specialty Beans', icon: 'beans', tint: '#efdcc4', costs: [180, 420],
+    desc: (l) => ['Single-origin beans: lattes feel 8% more worth it, so you can charge more.', 'Award-winning roasts: lattes feel 16% more worth it.', 'The best beans money can buy.'][l] },
+  { id: 'oven', cat: 'kitchen', name: 'Bakery Oven', icon: 'oven', tint: '#f6e2c4', costs: [260], needs: () => G.up.pastry > 0, needsText: 'Needs the Pastry Case first.',
+    desc: (l) => (l ? 'Fresh bakes all day.' : 'Bake in-house: pastries cost 30% less to make and more guests add one.') },
+  { id: 'roaster', cat: 'kitchen', name: 'Coffee Roaster', icon: 'roaster', tint: '#e9d6c8', costs: [480],
+    desc: (l) => (l ? 'Roasting your own beans in the back.' : 'Roast your own: lattes and matcha cost 25% less to make.') },
+  { id: 'decor', cat: 'vibe', name: 'Cosy Decor', icon: 'plant', tint: '#dbe5d3', costs: [70, 160],
     desc: (l) => ['Plants everywhere: reputation grows faster.', 'String lights: guests linger happily.', 'Maximum hygge.'][l] },
-  { id: 'sign', name: 'Sidewalk Sign', icon: 'sign', tint: '#e4e1db', costs: [120, 260],
+  { id: 'sign', cat: 'business', name: 'Sidewalk Sign', icon: 'sign', tint: '#e4e1db', costs: [120, 260],
     desc: (l) => ['Chalkboard sign: guests arrive more often.', 'Fresh specials daily: even more foot traffic.', 'The whole street knows you.'][l] },
-  { id: 'books', name: 'Bookshelf', icon: 'books', tint: '#eadfcd', costs: [220],
+  { id: 'books', cat: 'vibe', name: 'Bookshelf', icon: 'books', tint: '#eadfcd', costs: [220],
     desc: (l) => (l ? 'Well-thumbed paperbacks for slow afternoons.' : 'Guests browse while they wait: +8% patience, and more of them read.') },
-  { id: 'records', name: 'Record Player', icon: 'record', tint: '#f0d9cc', costs: [260],
+  { id: 'records', cat: 'vibe', name: 'Record Player', icon: 'record', tint: '#f0d9cc', costs: [260],
     desc: (l) => (l ? 'Spinning warm vinyl all day.' : 'Warm vinyl crackle puts guests in a generous mood: +8% tips.') },
-  { id: 'neon', name: 'Neon Sign', icon: 'neon', tint: '#f6d6d0', costs: [340],
+  { id: 'neon', cat: 'vibe', name: 'Neon Sign', icon: 'neon', tint: '#f6d6d0', costs: [340],
     desc: (l) => (l ? 'Glowing away on the back wall.' : 'A glowing cup on the wall: +4% guests all day, +12% after 5 pm.') },
-  { id: 'cat', name: 'Café Cat', icon: 'cat', tint: '#f3e0cc', costs: [150],
+  { id: 'tipjar', cat: 'business', name: 'Tip Jar', icon: 'jar', tint: '#e4e1db', costs: [60],
+    desc: (l) => (l ? 'Jingling away by the till.' : 'A jar on the counter: +10% tips.') },
+  { id: 'bike', cat: 'business', name: 'Delivery Bike', icon: 'bike', tint: '#dfe6d6', costs: [380],
+    desc: (l) => (l ? 'Out on deliveries all day; the better your reputation, the more it earns.' : 'Take online orders: earns about $20–55 a day, more with a better reputation.') },
+  { id: 'cat', cat: 'vibe', name: 'Café Cat', icon: 'cat', tint: '#f3e0cc', costs: [150],
     desc: (l) => (l ? `${G.cat.name || 'Your cat'} runs the place now. Click for a scratch.` : 'Adopt a resident cat: guests wait a little longer, and a scratch calms the room.') },
 ];
 const upgradeCost = (u) => u.costs[G.up[u.id]];
@@ -4692,7 +4804,7 @@ const upgradeMaxed = (u) => G.up[u.id] >= u.costs.length;
 
 function buyUpgrade(id) {
   const u = UPGRADES.find((x) => x.id === id);
-  if (!u || upgradeMaxed(u)) return;
+  if (!u || upgradeMaxed(u) || (u.needs && !u.needs())) return;
   const cost = upgradeCost(u);
   if (G.money < cost) { sfx.nope(); return; }
   addMoney(-cost);
@@ -4740,7 +4852,12 @@ function applyUpgrade(id, animate) {
       focus.set(-2, 2, -2);
       break;
     }
-    case 'books': case 'records': case 'neon': {
+    case 'counter': {
+      for (let l = 1; l <= G.up.counter; l++) { const d = DECOR['counter' + l]; if (!d.visible) { d.visible = true; if (animate) popIn(d, 0, 0.6); focus.set(-0.9 + 0.9 * l - 0.45, 1, -3.5); } }
+      ui.buildSlots();
+      break;
+    }
+    case 'books': case 'records': case 'neon': case 'tipjar': case 'beans': case 'oven': case 'roaster': case 'heaters': case 'bike': {
       const d = DECOR[id]; d.visible = true; d.getWorldPosition(focus);
       if (animate) popIn(d, 0, 0.7);
       if (id === 'records') audio.setVinyl(true);
@@ -5141,8 +5258,8 @@ function books() {
   const wages = closed ? S.wages : S.wages + G.staff.reduce((a, st) => a + wageDue(st), 0);
   const rent = closed ? S.rent : rentToday();
   const ads = closed ? S.ads : S.ads + adsDaily() * openLeft();
-  const costs = S.ingredients + wages + rent + ads;
-  return { sales: S.revenue, tips: S.tips, ingredients: S.ingredients, wages, rent, ads, costs, profit: S.revenue + S.tips - costs, invested: S.hiring + (S.upgrades || 0) };
+  const costs = S.ingredients + wages + rent + ads, delivery = S.delivery || 0;
+  return { sales: S.revenue + delivery, delivery, tips: S.tips, ingredients: S.ingredients, wages, rent, ads, costs, profit: S.revenue + delivery + S.tips - costs, invested: S.hiring + (S.upgrades || 0) };
 }
 // single-series column chart of daily profit: blue above zero, terracotta below (direction + colour)
 function profitChart(days) {
@@ -5173,18 +5290,25 @@ const fmtTime = (h) => { const hh = Math.floor(h) % 24, mm = Math.floor((h % 1) 
 const ui = {
   moneyDirty: true, repDirty: true, shopDirty: true, traysDirty: true, staffDirty: true,
   dispMoney: 0, emotes: [], shopOpen: false, customOpen: false, tab: 'overview', tabTimer: 0, toastKeys: new Map(), lastClock: '', lastSun: '', cards: {},
+  buildSlots() {
+    const n = slotCount();
+    if (this.slotEls && this.slotEls.length === n) return;
+    $('slots').innerHTML = Array.from({ length: n }, () => '<div class="slot"></div>').join('');
+    $('slots').classList.toggle('many', n > 4);
+    this.slotEls = [...$('slots').children];
+    this.traysDirty = true;
+  },
   init() {
     const star = ICONS.star;
     $('stars').querySelector('.base').innerHTML = star.replace('<path', '<path fill="rgba(74,52,40,.14)" stroke="rgba(74,52,40,.0)"').repeat(5);
     $('starFill').innerHTML = `<div style="display:flex;gap:2px;width:120px">${star.replace('<path', '<path fill="#d9a54a" stroke="#c8913a"').repeat(5)}</div>`;
-    $('slots').innerHTML = slots.map(() => '<div class="slot"></div>').join('');
-    this.slotEls = [...$('slots').children];
-    $('shopList').innerHTML = UPGRADES.map((u) => `
+    this.buildSlots();
+    $('shopList').innerHTML = UPGRADE_CATS.map(([cat, title]) => `<div class="sec-title up-sec">${title}</div>` + UPGRADES.filter((u) => u.cat === cat).map((u) => `
       <div class="card" id="card-${u.id}">
         <div class="ico" style="background:${u.tint}">${ICONS[u.icon]}</div>
         <div><h4></h4><p></p><div class="pips">${u.costs.map(() => '<i></i>').join('')}</div></div>
         <button class="buy" data-id="${u.id}"></button>
-      </div>`).join('');
+      </div>`).join('')).join('');
     for (const u of UPGRADES) {
       const el = $('card-' + u.id);
       this.cards[u.id] = { el, h: el.querySelector('h4'), p: el.querySelector('p'), pips: [...el.querySelectorAll('.pips i')], btn: el.querySelector('.buy') };
@@ -5342,7 +5466,7 @@ const ui = {
     if (cmp) { const d = B.profit - cmp.profit; delta = `<div class="delta ${Math.abs(d) < 0.5 ? 'flat' : d > 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${fmtMoney(Math.abs(d))} vs Day ${cmp.day}</div>`; }
     let sub = closed ? 'The books are closed for today.' : `Wages${adsDaily() ? ', ads' : ''} and rent are due at closing and already counted here.`;
     if (!closed && B.profit < 0) {
-      const m = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => G.prices[k] - UNIT_COST[k]);
+      const m = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => G.prices[k] - unitCost(k));
       const avg = m.reduce((a, b) => a + b, 0) / m.length;
       if (avg > 0) sub += ` Break-even in about ${Math.ceil(-B.profit / avg)} more sales.`;
     }
@@ -5350,7 +5474,7 @@ const ui = {
     const sold = ITEMS.reduce((a, k) => a + S.sold[k], 0), made = ITEMS.reduce((a, k) => a + S.made[k], 0);
     const tile = (l, v, sm) => `<div class="tile"><span>${l}</span><b>${v}</b><small>${sm}</small></div>`;
     $('ovBooks').innerHTML = `<h5>Today’s books <small>${S.served} guests served</small></h5><div class="tiles">${[
-      tile('Sales', fmtMoney(B.sales), `${sold} items`),
+      tile('Sales', fmtMoney(B.sales), B.delivery > 0.004 ? `incl. ${fmtMoney(B.delivery)} delivery` : `${sold} items`),
       tile('Tips', fmtMoney(B.tips), B.sales ? `${Math.round((B.tips / B.sales) * 100)}% on top` : '—'),
       tile('Avg ticket', S.served ? fmtMoney((B.sales + B.tips) / S.served) : '—', 'per guest'),
       tile('Ingredients', fmtMoney(-B.ingredients), `${made} made`),
@@ -5397,8 +5521,8 @@ const ui = {
     if (mix) $('ovHappy').insertAdjacentHTML('beforeend', `<div class="chips">${mix}</div>`);
     // per-item margins
     const rows = ITEMS.filter((k) => k === 'latte' || G.up[k]).map((k) => {
-      const p = G.prices[k], m = (p - UNIT_COST[k]) / p;
-      return `<tr><td>${ITEM_NAMES[k]}</td><td>${S.sold[k]}</td><td>${fmtMoney(S.salesBy[k])}</td><td>${fmtMoney(p - UNIT_COST[k])}</td><td>${Math.round(m * 100)}%</td></tr>`;
+      const p = G.prices[k], m = (p - unitCost(k)) / p;
+      return `<tr><td>${ITEM_NAMES[k]}</td><td>${S.sold[k]}</td><td>${fmtMoney(S.salesBy[k])}</td><td>${fmtMoney(p - unitCost(k))}</td><td>${Math.round(m * 100)}%</td></tr>`;
     }).join('');
     $('ovMenu').innerHTML = `<h5>Menu today <small>margin = price − ingredients</small></h5><table class="hist"><thead><tr><th>Item</th><th>Sold</th><th>Sales</th><th>Per item</th><th>Margin</th></tr></thead><tbody>${rows}</tbody></table>`;
   },
@@ -5412,7 +5536,7 @@ const ui = {
       el.innerHTML = `<div class="menu-note" id="menuNote"></div>` + ITEMS.map((k) => {
         const on = k === 'latte' || G.up[k], [lo, hi] = priceRange(k);
         return `<div class="price-card${on ? '' : ' locked'}">
-          <div class="pc-head"><span class="ico">${ICONS[k]}</span><div><h4>${ITEM_NAMES[k]}</h4><p>${on ? `Costs ${fmtMoney(UNIT_COST[k])} to make` : `Unlock the ${k === 'matcha' ? 'Matcha Bar' : 'Pastry Case'} in Upgrades`}</p></div><div class="pc-price" id="pcp-${k}"></div></div>
+          <div class="pc-head"><span class="ico">${ICONS[k]}</span><div><h4>${ITEM_NAMES[k]}</h4><p>${on ? `Costs ${fmtMoney(unitCost(k))} to make` : `Unlock the ${k === 'matcha' ? 'Matcha Bar' : 'Pastry Case'} in Upgrades`}</p></div><div class="pc-price" id="pcp-${k}"></div></div>
           ${on ? `<div class="pc-ctrl"><button class="step-btn" data-k="${k}" data-d="-1" aria-label="Lower ${ITEM_NAMES[k]} price">−</button><input type="range" class="price" id="pcr-${k}" data-k="${k}" min="${lo}" max="${hi}" step="${PRICE_STEP}" value="${G.prices[k]}" aria-label="${ITEM_NAMES[k]} price"><button class="step-btn" data-k="${k}" data-d="1" aria-label="Raise ${ITEM_NAMES[k]} price">+</button></div>
           <div class="vbar"><i id="pcm-${k}"></i></div><div class="vlabels"><span>Steal</span><span>Fair</span><span>Rip-off</span></div>
           <div class="pc-foot"><span class="feel" id="pcf-${k}"></span><span>Margin <b id="pcg-${k}"></b></span><span>Sold today <b id="pcs-${k}"></b></span></div>` : ''}
@@ -5428,7 +5552,7 @@ const ui = {
       const r = priceRatio(k), band = valueBand(r);
       $('pcm-' + k).style.left = `${clamp((r - 0.6) / 1.0, 0, 1) * 100}%`;
       const f = $('pcf-' + k); f.className = `feel ${band[2]}`; f.textContent = `Guests think: ${band[1]}`;
-      $('pcg-' + k).textContent = `${Math.round(((G.prices[k] - UNIT_COST[k]) / G.prices[k]) * 100)}%`;
+      $('pcg-' + k).textContent = `${Math.round(((G.prices[k] - unitCost(k)) / G.prices[k]) * 100)}%`;
       $('pcs-' + k).textContent = G.stats.sold[k];
       const rng = $('pcr-' + k); if (document.activeElement !== rng && +rng.value !== G.prices[k]) rng.value = G.prices[k];
     }
@@ -5504,7 +5628,7 @@ const ui = {
     $('sumHero').innerHTML = `<span>Profit</span><b class="${profit < 0 ? 'neg' : ''}">${fmtMoney(profit)}</b>${d === null ? '' : `<div class="delta ${Math.abs(d) < 0.5 ? 'flat' : d > 0 ? 'up' : 'down'}">${d >= 0 ? '▲' : '▼'} ${fmtMoney(Math.abs(d))} vs Day ${prev.day}</div>`}`;
     const stat = (label, val, sm = '') => `<div class="stat"><span>${label}</span><b>${val}</b>${sm ? `<small style="font-size:11px;font-weight:700;color:var(--ink-soft)">${sm}</small>` : ''}</div>`;
     $('sumStats').innerHTML = [
-      stat('Takings', fmtMoney(S.revenue + S.tips), `incl. ${fmtMoney(S.tips)} tips`),
+      stat('Takings', fmtMoney(S.revenue + (S.delivery || 0) + S.tips), S.delivery ? `tips ${fmtMoney(S.tips)} · delivery ${fmtMoney(S.delivery)}` : `incl. ${fmtMoney(S.tips)} tips`),
       stat('Costs', fmtMoney(S.ingredients + S.wages + S.rent + S.ads), S.ads > 0.004 ? `wages ${fmtMoney(S.wages)} · ads ${fmtMoney(S.ads)}` : `wages ${fmtMoney(S.wages)}`),
       stat('Happiness', S.served ? `${Math.round(sat * 100)}%` : '—', 'speed + value'),
       stat('Served', S.served, `best tip ${fmtMoney(S.bestTip)}`),
@@ -5733,9 +5857,12 @@ const ui = {
       for (const u of UPGRADES) {
         const c = this.cards[u.id], lvl = G.up[u.id], maxed = upgradeMaxed(u);
         c.h.textContent = u.title ? u.title(Math.min(lvl, u.costs.length - 1)) : u.name;
-        c.p.textContent = u.desc(lvl);
+        const locked = !maxed && u.needs && !u.needs();
+        c.p.textContent = locked ? `${u.desc(lvl)} ${u.needsText}` : u.desc(lvl);
         c.pips.forEach((p, i) => p.classList.toggle('on', i < lvl));
-        if (maxed) { c.btn.textContent = u.costs.length > 1 ? 'Maxed' : 'Owned'; c.btn.disabled = true; c.btn.classList.add('maxed'); }
+        c.el.classList.toggle('locked', !!locked);
+        if (locked) { c.btn.textContent = 'Locked'; c.btn.disabled = true; c.btn.classList.remove('maxed'); }
+        else if (maxed) { c.btn.textContent = u.costs.length > 1 ? 'Maxed' : 'Owned'; c.btn.disabled = true; c.btn.classList.add('maxed'); }
         else { const cost = upgradeCost(u); c.btn.textContent = `$${cost}`; c.btn.disabled = G.money < cost; c.btn.classList.remove('maxed'); if (G.money >= cost) afford++; }
       }
       const b = $('shopBadge'); b.textContent = afford; b.classList.toggle('on', afford > 0);
@@ -5744,7 +5871,8 @@ const ui = {
     if (this.traysDirty) {
       this.traysDirty = false;
       slots.forEach((s, i) => {
-        const el = this.slotEls[i], k = s.item ? s.item.kind : '';
+        const el = this.slotEls[i]; if (!el) return;
+        const k = s.item ? s.item.kind : '';
         if (el.dataset.k !== k) { el.dataset.k = k; el.innerHTML = k ? ICONS[k] : ''; el.classList.toggle('full', !!k); }
       });
       for (const st of stationList) {
@@ -5859,11 +5987,12 @@ function endDay() {
   let wages = 0;
   for (const st of G.staff) { wages += wageDue(st); st.hiredAt = DAY_START; }
   S.wages += wages; S.rent = rentToday();
-  addMoney(-(wages + S.rent + S.ads)); // ad fees ran up by the hour
+  addMoney(-(wages + S.rent + S.ads) + (S.delivery || 0)); // ad fees and delivery takings ran up by the hour
+  if (S.delivery) ui.toast(`Delivery orders today: +${fmtMoney(S.delivery)}`, 'bike', 2600);
   goals.close();
   const sat = S.served ? S.satSum / S.served : 0;
   const costs = S.ingredients + S.wages + S.rent + S.ads;
-  const profit = S.revenue + S.tips - costs;
+  const profit = S.revenue + (S.delivery || 0) + S.tips - costs;
   const prev = G.history[G.history.length - 1];
   const r2 = (v) => Math.round(v * 100) / 100;
   G.history.push({ day: G.day, sales: r2(S.revenue), tips: r2(S.tips), costs: r2(costs), profit: r2(profit), served: S.served, lost: S.stormed + S.turned + S.balked, sat: Math.round(sat * 1000) / 1000, rep: r2(G.rep) });
@@ -6019,7 +6148,11 @@ function fixedUpdate(dt) {
     ui.toast('Closing time — finishing the last orders', 'moon', 3200);
     for (const P of [...parties]) if (P.state === 'queue') partyTurnAway(P, 'closing');
   }
-  if (G.time >= OPEN_FROM && G.time < OPEN_UNTIL) { const fee = adsDaily(); if (fee) G.stats.ads += (fee * dt * HOURS_PER_SEC) / (OPEN_UNTIL - OPEN_FROM); }
+  if (G.time >= OPEN_FROM && G.time < OPEN_UNTIL) {
+    const share = (dt * HOURS_PER_SEC) / (OPEN_UNTIL - OPEN_FROM), fee = adsDaily();
+    if (fee) G.stats.ads += fee * share;
+    if (G.up.bike) G.stats.delivery = (G.stats.delivery || 0) + (12 + 9 * G.stats.repStart) * share; // online orders
+  }
   for (const st of stationList) st.fixed(dt);
   for (let i = customers.length - 1; i >= 0; i--) customers[i].fixed(dt);
   updateParties(dt);
@@ -6108,7 +6241,7 @@ document.body.classList.add('title');
 DECOR.plants.visible = false; DECOR.lights.visible = false; DECOR.sign.visible = false;
 const resumed = loadGame();
 tables.forEach((t, i) => { if (i < tableCount()) t.activate(furnitureLevel(), false); });
-for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign', 'cat', 'books', 'records', 'neon']) if (G.up[id] > 0) applyUpgrade(id, false);
+for (const id of ['machine', 'matcha', 'pastry', 'decor', 'sign', 'cat', 'books', 'records', 'neon', 'counter', 'tipjar', 'beans', 'oven', 'roaster', 'heaters', 'bike']) if (G.up[id] > 0) applyUpgrade(id, false);
 for (const st of G.staff) spawnWorker(st, false);
 applyAds();
 applyStyle();
