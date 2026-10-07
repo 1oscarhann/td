@@ -208,6 +208,8 @@
   @media (max-width: 520px) { .set-row { grid-template-columns: 78px 1fr auto; gap: 8px; } .set-row .seg button { padding: 6px 7px; } }
   .link-btn.danger { color: #b5523a; }
   #sumCoach p.moment { color: #7a68ad; }
+  .dchip.ev.surge { background: #f6d9c9; color: #9a4a2f; animation: surgePulse 1.4s ease-in-out infinite; }
+  @keyframes surgePulse { 50% { box-shadow: 0 0 0 3px rgba(201,118,90,.18); } }
   .link-btn.danger.armed { color: #fff8ef; background: #b5523a; text-decoration: none; padding: 7px 12px; border-radius: 10px; }
   .help-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
   .help-card { display: flex; gap: 11px; align-items: flex-start; background: rgba(255,255,255,.55); border-radius: 16px; padding: 11px 12px; }
@@ -2815,6 +2817,7 @@ function nextSpawnInterval() {
   // a party averages ~1.35 guests, so groups arrive a little less often than singles used to
   let base = (lerp(9.8, 3.5, r) * (1 - 0.14 * G.up.sign)) / (footfall() * today.footfall);
   if (G.up.neon) base /= 1.04 + (G.time >= 17 ? 0.12 : 0); // the neon cup pulls in the evening crowd
+  if (surgeActive()) base *= 0.32;
   const h = G.time;
   if ((h > 8 && h < 10) || (h > 12 && h < 13.6)) base *= 0.78; // morning & lunch rush
   else if (h > 15 && h < 16.8) base *= 1.18;
@@ -3137,7 +3140,7 @@ const GUEST_TYPES = {
   critic: { name: 'Food critic', plural: 'Food critics', sens: 1.25, patience: 0.85, tip: 1.0, pastry: 1.2, matcha: 1.0, pair: 0 },
 };
 // today's conditions (weather & events fill these in each morning)
-const today = { weather: 'sunny', event: null, footfall: 1, patience: 1, eat: 1, pair: 1, mix: {}, fair: {}, criticDue: false, criticCame: false };
+const today = { weather: 'sunny', event: null, footfall: 1, patience: 1, eat: 1, pair: 1, mix: {}, fair: {}, criticDue: false, criticCame: false, surge: null };
 function pickGuestType() {
   const h = G.time;
   const w = {
@@ -3147,6 +3150,7 @@ function pickGuestType() {
     tourist: h > 10 && h < 17.5 ? 2.2 : 0.7,
   };
   for (const k in today.mix) w[k] *= today.mix[k];
+  if (surgeActive()) w[SURGES[today.surge.k].type] *= 4;
   let sum = 0; for (const k in w) sum += w[k];
   let r = Math.random() * sum;
   for (const k in w) { r -= w[k]; if (r <= 0) return k; }
@@ -3242,7 +3246,7 @@ class Customer extends Walker {
     this.actT = rand(1, 3); this.snapped = false; this.flashed = true; this.catVisited = false;
     this.brolly = today.weather === 'rainy' && Math.random() < 0.7;
     if (this.brolly) { const A = this.ch.acc, m = fabricMat(pick(BROLLY_COLORS)); A.umbrella.visible = true; A.umbrellaCanopy.material = m; A.umbrella.children[3].material = m; }
-    this.patienceMax = basePatience() * GUEST_TYPES[this.type].patience * today.patience; this.patience = this.patienceMax;
+    this.patienceMax = basePatience() * GUEST_TYPES[this.type].patience * today.patience * (party.rush ? 0.9 : 1); this.patience = this.patienceMax;
     this.bubble.shown = false; this.bubble.el.classList.add('hidden'); this.bubble.lastFrac = -1;
     this.bubble.el.classList.toggle('critic', this.type === 'critic');
     this.renderBubbleItems();
@@ -3389,13 +3393,14 @@ class Customer extends Walker {
     value /= this.order.length;
     const sat = clamp(0.5 * speed + 0.5 * value, 0, 1);
     const streakBonus = 1 + 0.05 * Math.min(5, G.streak);
-    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records);
+    const tip = total * (0.02 + 0.4 * Math.pow(sat, 1.5)) * (1 + 0.3 * furnitureLevel()) * T.tip * streakBonus * (1 + 0.08 * G.up.records) * (this.party && this.party.rush ? 1.35 : 1);
     addMoney(total);
     this.paid = true;
     const S = G.stats;
     S.served++; S.revenue += total;
     S.satSum += sat; S.speedSum += speed; S.valueSum += value; S.waitSum += this.waited;
     S.byType[this.type] = (S.byType[this.type] || 0) + 1;
+    if (this.party && this.party.rush) S.rushServed = (S.rushServed || 0) + 1;
     for (const o of this.order) { S.sold[o.kind]++; S.salesBy[o.kind] += G.prices[o.kind]; }
     const critic = this.type === 'critic' ? 4 : 1;
     addRep(critic * (sat >= 0.45 ? (sat - 0.45) * 0.13 * (1 + 0.25 * G.up.decor) * clamp((5.4 - G.rep) / 3.4, 0.15, 1.2) : (sat - 0.45) * 0.14));
@@ -3404,7 +3409,7 @@ class Customer extends Walker {
     const head = V3(this.pos.x, this.headY() + 0.2, this.pos.z);
     ui.float(`+$${total.toFixed(2)}`, head, '');
     sfx.coins(false);
-    this.state = 'eat'; this.timer = rand(5.2, 7.2) * today.eat;
+    this.state = 'eat'; this.timer = rand(5.2, 7.2) * today.eat * (this.party && this.party.rush ? 0.55 : 1);
     this.actT = Math.min(this.actT, rand(0.5, 1.5)); // put the book down, the food's here
     this.sat = sat; this.speedScore = speed; this.valueScoreAvg = value;
     this.ch.setMood(sat >= 0.48 ? 'happy' : 'neutral'); this.ch.kick(sat >= 0.48 ? 1.3 : 0.5);
@@ -3456,6 +3461,7 @@ function spawnParty() {
   const type = today.criticDue && !today.criticCame && G.time > 9 && Math.random() < 0.25 ? 'critic' : pickGuestType();
   const size = Math.random() < GUEST_TYPES[type].pair * today.pair ? 2 : 1;
   const P = new Party(type, size);
+  P.rush = surgeActive() && type === SURGES[today.surge.k].type; // on a schedule: eat fast, tip well
   parties.push(P);
   for (let i = 0; i < size; i++) (customerPool.pop() || new Customer()).spawn(P, i);
   sfx.doorbell();
@@ -3481,7 +3487,9 @@ function partyTurnAway(P, reason) {
   for (const m of P.members) { m.ch.setMood('sad'); m.walkOut(); }
   showEmote(V3(P.leader.pos.x, P.leader.headY(), P.leader.pos.z), 'sad');
   if (reason !== 'closing') {
-    G.stats.turned += P.members.length; addRep(-0.03); G.streak = 0; ui.streakDirty = true;
+    G.stats.turned += P.members.length;
+    // a packed room during a rush is forgivable; a full house on an ordinary day is not
+    if (!(reason === 'full' && surgeActive())) { addRep(-0.03); G.streak = 0; ui.streakDirty = true; }
     if (tables.some((t) => t.dirty)) G.stats.turnedDirty = (G.stats.turnedDirty || 0) + P.members.length;
   }
 }
@@ -3508,6 +3516,7 @@ function partyStorm(P) {
   let stormed = 0;
   for (const m of P.members) if (!m.paid) { m.angry(); stormed++; leaveReview(m, 0.1, 0, 0.5, 'storm'); }
   G.stats.stormed += stormed; addRep(-0.2 * stormed * (P.type === 'critic' ? 3 : 1));
+  if (P.rush) G.stats.rushStorm = (G.stats.rushStorm || 0) + stormed;
   G.streak = 0; ui.streakDirty = true;
   ui.float('−★ reputation', V3(P.leader.pos.x, P.leader.headY() + 0.2, P.leader.pos.z), 'bad');
   sfx.angry();
@@ -3614,6 +3623,36 @@ const EVENTS = {
   festival: { name: 'Coffee festival', icon: 'latte', desc: 'Everyone wants coffee: lattes feel 15% more worth it.', apply() { today.fair.latte = 1.15; today.footfall *= 1.12; } },
   office: { name: 'New offices nearby', icon: 'commuter', desc: 'More commuters (they pay for speed, not bargains).', apply() { today.mix.commuter = (today.mix.commuter || 1) * 2.4; } },
 };
+// mid-day surges: a crowd of one kind arrives at once, with an hour's warning to brew ahead
+const SURGES = {
+  tour: { type: 'tourist', icon: 'tourist', name: 'Tour bus', warn: 'A tour bus pulls up within the hour. Brew ahead!', go: 'Tour bus! Here they come.', from: 10.5, to: 15.5 },
+  school: { type: 'student', icon: 'student', name: 'School’s out', warn: 'School lets out within the hour. Students incoming!', go: 'School’s out!', from: 14.6, to: 16.4 },
+  office: { type: 'commuter', icon: 'commuter', name: 'Office lunch', warn: 'An office lunch crowd is heading your way.', go: 'Lunch rush from the offices!', from: 11.8, to: 12.6 },
+};
+const surgeActive = () => !!(today.surge && today.surge.stage === 2);
+function updateSurge() {
+  const s = today.surge; if (!s || s.stage >= 4) return;
+  const S = SURGES[s.k];
+  if (G.closing && s.stage < 3) { s.stage = 3; ui.dayChipsDirty = true; }
+  if (s.stage === 0 && G.time >= s.at - 1) { s.stage = 1; ui.toast(S.warn, S.icon, 3800, 'surge'); ui.dayChipsDirty = true; }
+  else if (s.stage === 1 && G.time >= s.at) {
+    s.stage = 2; ui.toast(S.go, S.icon, 2600, 'surge'); ui.dayChipsDirty = true;
+    // the first wave walks in together
+    for (let i = 0; i < 2; i++) if (parties.filter((P) => P.state !== 'leaving').length < tableCount() + queue.length + 1) spawnParty();
+    G.spawnTimer = nextSpawnInterval();
+  }
+  else if (s.stage === 2 && G.time >= s.at + 1.2) { s.stage = 3; ui.dayChipsDirty = true; }
+  else if (s.stage === 3 && G.time >= s.at + 2.4) { // once the last of the rush has eaten: pay out for handling it
+    s.stage = 4;
+    const n = G.stats.rushServed || 0, clean = !G.stats.rushStorm;
+    if (n) {
+      const bonus = n * (clean ? 3 : 1);
+      addMoney(bonus); G.stats.goalCash = (G.stats.goalCash || 0) + bonus;
+      ui.toast(clean ? `Rush handled! ${n} served, nobody stormed off: +${fmtMoney(bonus)}` : `Rush survived: ${n} served, +${fmtMoney(bonus)}`, clean ? 'trophy' : S.icon, 3600);
+      if (clean) sfx.coins(true);
+    }
+  }
+}
 function rollDay() {
   const wkey = G.day === 1 ? 'sunny' : (() => { const r = Math.random(); return r < 0.45 ? 'sunny' : r < 0.78 ? 'cloudy' : 'rainy'; })();
   const W = WEATHER[wkey];
@@ -3623,6 +3662,8 @@ function rollDay() {
     const ev = G.day === 3 ? 'critic' : pick(keys);
     today.event = ev; EVENTS[ev].apply();
   }
+  today.surge = null;
+  if (G.day >= 2 && Math.random() < 0.4) { const k = pick(Object.keys(SURGES)), S = SURGES[k]; today.surge = { k, at: rand(S.from, S.to), stage: 0 }; }
   rain.setActive(W.rain > 0);
   umbrellaStand.visible = W.rain > 0;
   ui.dayChipsDirty = true;
@@ -4504,7 +4545,7 @@ function pickObject(clientX, clientY) {
 }
 
 function interact(obj) {
-  if (!obj || G.phase !== 'open' || G.paused) return;
+  if (!obj || G.phase !== 'open' || G.paused || ui.modalPaused) return;
   audio.unlock();
   if (obj instanceof Machine) {
     const r = obj.request();
@@ -4900,6 +4941,7 @@ const ui = {
     this.settingsOpen = open;
     if (open) { this.toggleShop(false); this.toggleCustom(false); this.syncSettings(); }
     $('settingsWrap').classList.toggle('hidden', !open);
+    if (G.phase === 'title') $('startWrap').classList.toggle('hidden', open || this.helpOpen);
     sfx.pop();
   },
   toggleHelp(force) {
@@ -5214,7 +5256,8 @@ const ui = {
   renderDayChips() {
     this.dayChipsDirty = false;
     const W = WEATHER[today.weather], E = today.event && EVENTS[today.event];
-    $('dayChips').innerHTML = `<span class="dchip">${ICONS[W.icon]}${W.name}</span>${E ? `<span class="dchip ev">${ICONS[E.icon]}${E.name}</span>` : ''}`;
+    const su = today.surge && (today.surge.stage === 1 || today.surge.stage === 2) && SURGES[today.surge.k];
+    $('dayChips').innerHTML = `<span class="dchip">${ICONS[W.icon]}${W.name}</span>${E ? `<span class="dchip ev">${ICONS[E.icon]}${E.name}</span>` : ''}${su ? `<span class="dchip ev surge">${ICONS[su.icon]}${su.name}${today.surge.stage === 1 ? ' soon' : '!'}</span>` : ''}`;
   },
   renderGoalList() {
     this.goalsDirty = false;
@@ -5637,7 +5680,7 @@ function fixedUpdate(dt) {
   cat.fixed(dt);
   updateFlights(dt);
   G.tick = (G.tick || 0) + dt;
-  if (G.tick >= 0.5) { G.tick = 0; goals.update(); milestones.check(); }
+  if (G.tick >= 0.5) { G.tick = 0; goals.update(); milestones.check(); updateSurge(); }
   if (G.time >= 21.6) forceLeaveAll('closing');
   if (G.time >= DAY_END && customers.length === 0 && flights.length === 0) endDay();
 }

@@ -34,6 +34,7 @@ While they wait, guests scroll their phones, read, chat with whoever they came w
 
 - **Weather:** sunny days bring crowds and tourists, cloudy days are steady, and rainy days bring fewer guests who linger and forgive slow service. On rainy days guests carry umbrellas and the light turns grey and soft.
 - **Events:** some mornings bring a critic in town, market day, exam week, a coffee festival or new offices nearby, each shifting who turns up and what they order. The morning card tells you what's coming.
+- **Rushes:** some days a tour bus, school letting out or an office lunch crowd turns up all at once. You get a warning about an hour ahead (game time) to brew ahead. Rush guests eat fast and tip well, and handling the whole rush without anyone storming off pays a bonus.
 - **Goals:** three small goals each morning pay a cash bonus on the spot.
 - **Streak:** serve guests quickly back to back to build a streak worth up to +25% tips.
 - **Milestones:** eighteen long-term achievements, each with a reward, ending with Dream café for owning every upgrade.
