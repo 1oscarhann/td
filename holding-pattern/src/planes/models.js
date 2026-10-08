@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { AIRLINES } from '../config/airlines.js';
-import { M, mat, basic } from '../render/materials.js';
-import { loft, latheZ, merge, place, rbox } from '../render/geom.js';
+import { mat } from '../render/materials.js';
+import { TONES } from '../config/palette.js';
+import { loft, latheZ, merge, mergeColored, place, rbox } from '../render/geom.js';
 import { liveryMaterial } from './livery.js';
 
 // Procedural aircraft. Geometry is built once per size class and shared;
@@ -377,6 +378,11 @@ function buildClassGeometry(cls) {
       propPos: mounts.map((m) => new THREE.Vector3(m.x, m.y, m.z + e.len / 2 + 0.05)),
     };
   }
+  // static airframe batches by material
+  const stabOnTail = cls === 'small';
+  out.wingBatch = merge([wing.geo, ...(stabOnTail ? [] : [tail.stab]), ...(out.engine.wingPart ? [out.engine.wingPart] : [])]);
+  out.tailBatch = merge([tail.fin, ...(stabOnTail ? [tail.stab] : [])]);
+  out.discGeo = new THREE.CircleGeometry(1.95, 28);
   // landing gear
   const g = spec.gear;
   const wheelR = cls === 'narrow' ? 0.58 : cls === 'regional' ? 0.46 : 0.42;
@@ -455,18 +461,69 @@ function airlineMaterials(airlineId, cls, layout) {
   };
 }
 
-const lightMats = {
-  red: basic(new THREE.Color(5, 0.25, 0.2)),
-  green: basic(new THREE.Color(0.2, 5, 0.6)),
-  white: basic(new THREE.Color(4, 4, 4)),
-  beacon: basic(new THREE.Color(6, 0.3, 0.2)),
-  off: basic(new THREE.Color(0.25, 0.05, 0.05)),
+const VC = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.15 });
+const VC_LIGHT = new THREE.MeshBasicMaterial({ vertexColors: true });
+const HDR = {
+  red: new THREE.Color(2.6, 0.15, 0.1),
+  green: new THREE.Color(0.15, 2.4, 0.5),
+  white: new THREE.Color(2.4, 2.4, 2.4),
+  beacon: new THREE.Color(3.2, 0.2, 0.1),
 };
 const propDisc = new THREE.MeshBasicMaterial({ color: 0x2a2f38, transparent: true, opacity: 0.16, depthWrite: false, side: THREE.DoubleSide });
+const DARK = TONES.dark, METAL = TONES.metal, TYRE = TONES.tyre;
+
+// airline-specific batched geometry (emblems, spinners, lights), cached
+const airGeoCache = new Map();
+function airlineGeometry(cls, airlineId) {
+  const key = `${cls}|${airlineId}`;
+  if (airGeoCache.has(key)) return airGeoCache.get(key);
+  const G = buildClassGeometry(cls);
+  const spec = G.spec;
+  const L = AIRLINES[airlineId].livery;
+  const E = G.engine;
+  // small static details in one vertex-coloured mesh
+  const detail = [];
+  if (E.dark) detail.push([E.dark, DARK]);
+  if (E.metal) detail.push([E.metal, METAL]);
+  if (E.spinner) for (const p of E.propPos) detail.push([E.spinner.clone().translate(p.x, p.y, p.z), L.accent]);
+  const ea = G.tail.emblemAt;
+  for (const side of [1, -1]) {
+    for (const [geo, role, lift = 0] of emblemShapes(L.emblem, ea.size)) {
+      const gg = geo.clone();
+      gg.rotateY((side * Math.PI) / 2);
+      gg.translate(side * (ea.c * 0.062 + 0.05 + lift), ea.y, ea.z);
+      detail.push([gg, role === 'white' ? 0xffffff : role === 'dark' ? DARK : L.accent]);
+    }
+  }
+  const lamp = (r) => new THREE.SphereGeometry(r, 8, 6);
+  const tip = G.wing.tipL;
+  const wy = tip.y + (spec.wing.winglet ? 0.05 : 0);
+  const nav = mergeColored([
+    [lamp(0.18).translate(tip.x + 0.05, wy, tip.z + 0.4), HDR.red],
+    [lamp(0.18).translate(-tip.x - 0.05, wy, tip.z + 0.4), HDR.green],
+    [lamp(0.16).translate(0, G.fus.prof(-spec.L / 2 + 0.2).yc, -spec.L / 2 - 0.1), HDR.white],
+  ]);
+  const beacons = mergeColored([
+    [lamp(0.2).translate(0, spec.R * spec.ry + 0.12, 0.5), HDR.beacon],
+    [lamp(0.2).translate(0, -spec.R * spec.ry - 0.12, -1.5), HDR.beacon],
+  ]);
+  const strobes = mergeColored([
+    [lamp(0.14).translate(tip.x + 0.05, tip.y, tip.z - 0.3), HDR.white],
+    [lamp(0.14).translate(-tip.x - 0.05, tip.y, tip.z - 0.3), HDR.white],
+  ]);
+  const fan = E.fan ? mergeColored([[E.fan.blades, METAL], [E.fan.spinner, cls === 'narrow' ? 0xffffff : DARK]]) : null;
+  const prop = E.prop ? mergeColored([[E.prop, DARK]]) : null;
+  const noseGear = mergeColored([[G.noseGear.metal, METAL], [G.noseGear.tyre, TYRE]]);
+  const mainGear = mergeColored([[G.mainGear.metal, METAL], [G.mainGear.tyre, TYRE]]);
+  const out = { detail: mergeColored(detail), nav, beacons, strobes, fan, prop, noseGear, mainGear };
+  airGeoCache.set(key, out);
+  return out;
+}
 
 // ---------------------------------------------------------------------------
 export function buildPlaneModel(cls, airlineId) {
   const G = buildClassGeometry(cls);
+  const A = airlineGeometry(cls, airlineId);
   const spec = G.spec;
   const mats = airlineMaterials(airlineId, cls, G.layout);
   const root = new THREE.Group(); // positioned at fuselage axis
@@ -477,97 +534,52 @@ export function buildPlaneModel(cls, airlineId) {
     parent.add(m);
     return m;
   };
-  add(G.fus.geo, mats.body);
-  add(G.wing.geo, mats.wing);
-  add(G.tail.fin, mats.tail);
-  add(G.tail.stab, cls === 'small' ? mats.tail : mats.wing);
-  const parts = { props: [], fans: [], discs: [], gear: [], flaps: [], beacons: [], strobes: [] };
-  // engines
   const E = G.engine;
+  add(G.fus.geo, mats.body);
+  add(G.wingBatch, mats.wing);
+  add(G.tailBatch, mats.tail);
   add(E.shell, mats.engine);
-  if (E.dark) add(E.dark, M.dark, root, false);
-  if (E.metal) add(E.metal, M.metal);
-  if (E.wingPart) add(E.wingPart, mats.wing);
-  if (E.fan) {
+  add(A.detail, VC, root, false);
+  const parts = { props: [], fans: [], discs: [], gear: [], flaps: [], beacons: [], strobes: [] };
+  if (A.fan) {
     for (const p of E.fanPos) {
-      const g = new THREE.Group();
-      g.position.copy(p);
-      add(E.fan.blades, M.metal, g, false);
-      add(E.fan.spinner, cls === 'narrow' ? M.white : M.dark, g, false);
-      root.add(g);
-      parts.fans.push(g);
+      const m = add(A.fan, VC, root, false);
+      m.position.copy(p);
+      parts.fans.push(m);
     }
   }
-  if (E.prop) {
+  if (A.prop) {
     for (const p of E.propPos) {
       const g = new THREE.Group();
       g.position.copy(p);
-      add(E.prop, M.dark, g, true);
-      const disc = new THREE.Mesh(new THREE.CircleGeometry(1.95, 28), propDisc);
+      add(A.prop, VC, g, true);
+      const disc = new THREE.Mesh(G.discGeo, propDisc);
       disc.visible = false;
       g.add(disc);
       parts.discs.push(disc);
       root.add(g);
       parts.props.push(g);
-      const sp = add(E.spinner, mats.accent);
-      sp.position.copy(p);
     }
   }
-  // gear
-  const mkGear = (pivot, unit, kind, side) => {
-    const g = new THREE.Group();
-    g.position.copy(pivot);
-    add(unit.metal, M.metal, g);
-    add(unit.tyre, M.tyre, g);
-    root.add(g);
-    parts.gear.push({ g, kind, side });
+  const mkGear = (pivot, geo, kind, side) => {
+    const m = add(geo, VC, root, true);
+    m.position.copy(pivot);
+    parts.gear.push({ g: m, kind, side });
   };
-  mkGear(G.nosePivot, G.noseGear, 'nose', 0);
-  G.mainPivots.forEach((p, i) => mkGear(p, G.mainGear, spec.gear.main.inNacelle ? 'nacelle' : 'main', i === 0 ? 1 : -1));
-  // flaps
+  mkGear(G.nosePivot, A.noseGear, 'nose', 0);
+  G.mainPivots.forEach((p, i) => mkGear(p, A.mainGear, spec.gear.main.inNacelle ? 'nacelle' : 'main', i === 0 ? 1 : -1));
   for (const f of G.wing.flaps) {
-    const pivot = new THREE.Group();
-    pivot.position.copy(f.hinge);
-    add(f.geo, mats.wing, pivot, false);
-    root.add(pivot);
-    parts.flaps.push({ pivot, axis: f.axis, side: f.side, base: f.hinge.clone() });
+    const m = add(f.geo, mats.wing, root, false);
+    m.position.copy(f.hinge);
+    parts.flaps.push({ pivot: m, axis: f.axis, side: f.side, base: f.hinge.clone() });
   }
-  // emblem on both sides of the fin
-  const ea = G.tail.emblemAt;
-  for (const side of [1, -1]) {
-    for (const [geo, role, lift = 0] of emblemShapes(AIRLINES[airlineId].livery.emblem, ea.size)) {
-      const gg = geo.clone();
-      gg.rotateY((side * Math.PI) / 2);
-      gg.translate(side * (ea.c * 0.062 + 0.05 + lift), ea.y, ea.z);
-      const m = role === 'white' ? M.white : role === 'dark' ? M.dark : mats.accent;
-      const mesh = add(gg, m, root, false);
-      mesh.material = m;
-      if (side < 0) mesh.material = m; // geometry mirrored by rotation, single-sided ok
-    }
-  }
-  // lights
-  const lamp = (r) => new THREE.SphereGeometry(r, 8, 6);
-  const tip = G.wing.tipL;
-  const red = add(lamp(0.18), lightMats.red, root, false);
-  red.position.set(tip.x + 0.05, tip.y + (spec.wing.winglet ? 0.05 : 0), tip.z + 0.4);
-  const green = add(lamp(0.18), lightMats.green, root, false);
-  green.position.set(-tip.x - 0.05, tip.y + (spec.wing.winglet ? 0.05 : 0), tip.z + 0.4);
-  const tail = add(lamp(0.16), lightMats.white, root, false);
-  tail.position.set(0, G.fus.prof(-spec.L / 2 + 0.2).yc, -spec.L / 2 - 0.1);
-  for (const [y, z] of [[spec.R * spec.ry + 0.12, 0.5], [-spec.R * spec.ry - 0.12, -1.5]]) {
-    const b = add(lamp(0.2), lightMats.beacon, root, false);
-    b.position.set(0, y, z);
-    parts.beacons.push(b);
-  }
-  for (const s of [1, -1]) {
-    const st = add(lamp(0.14), lightMats.white, root, false);
-    st.position.set(s * (tip.x + 0.05), tip.y, tip.z - 0.3);
-    st.visible = false;
-    parts.strobes.push(st);
-  }
+  add(A.nav, VC_LIGHT, root, false);
+  parts.beacons.push(add(A.beacons, VC_LIGHT, root, false));
+  const st = add(A.strobes, VC_LIGHT, root, false);
+  st.visible = false;
+  parts.strobes.push(st);
   root.userData.parts = parts;
   root.userData.spec = spec;
   return { root, parts, spec, geo: G };
 }
 
-export { lightMats };

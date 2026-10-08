@@ -45,6 +45,29 @@ export function merge(list) {
   return out;
 }
 
+// Merge [geometry, color] pairs into one geometry with a vertex colour
+// attribute, so differently coloured small parts share a single draw call.
+export function mergeColored(list) {
+  const c = new THREE.Color();
+  const parts = list.filter((x) => x && x[0]).map(([g, col]) => {
+    const out = clean(g);
+    c.set(col);
+    const n = out.attributes.position.count;
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      arr[i * 3] = c.r;
+      arr[i * 3 + 1] = c.g;
+      arr[i * 3 + 2] = c.b;
+    }
+    out.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    return out;
+  });
+  if (!parts.length) return new THREE.BufferGeometry();
+  const out = mergeGeometries(parts, false);
+  parts.forEach((p) => p.dispose());
+  return out;
+}
+
 // Groups geometries by material so a whole structure becomes a few meshes.
 export class MeshBuilder {
   constructor() {

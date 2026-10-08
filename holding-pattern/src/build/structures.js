@@ -41,15 +41,8 @@ export class StructureRenderer {
         this.group.add(m);
       }
     }
-    for (const s of grid.stands) {
-      live.add(s.id);
-      if (!this.standMeshes.has(s.id)) {
-        const m = buildStand(grid, s);
-        this.standMeshes.set(s.id, m);
-        this.group.add(m);
-      }
-    }
-    for (const map of [this.runwayMeshes, this.standMeshes]) {
+
+    for (const map of [this.runwayMeshes]) {
       for (const [id, m] of map) {
         if (!live.has(id)) {
           this.group.remove(m);
@@ -62,7 +55,11 @@ export class StructureRenderer {
       this.group.remove(this.taxiMesh);
       disposeTree(this.taxiMesh);
     }
-    this.taxiMesh = buildTaxiways(grid);
+    // taxiways and every stand share one batch
+    const mb = new MeshBuilder();
+    buildTaxiways(grid, mb);
+    for (const st of grid.stands) buildStand(grid, st, mb);
+    this.taxiMesh = mb.build({ cast: false, receive: true });
     this.group.add(this.taxiMesh);
   }
 }
@@ -131,8 +128,7 @@ export function buildRunway(grid, r) {
 }
 
 // ---------------------------------------------------------------------------
-export function buildTaxiways(grid) {
-  const mb = new MeshBuilder();
+export function buildTaxiways(grid, mb) {
   const W = grid.W, H = grid.H;
   const y = TARMAC_Y + PAINT_LIFT;
   const isTar = (x, z) => {
@@ -174,13 +170,12 @@ export function buildTaxiways(grid) {
       }
     }
   }
-  const g = mb.build({ cast: false, receive: true });
-  return g;
 }
 
 // ---------------------------------------------------------------------------
-export function buildStand(grid, s) {
-  const local = new MeshBuilder();
+export function buildStand(grid, s, mb) {
+  const m4 = new THREE.Matrix4().makeRotationY(s.heading).setPosition(s.center.x, 0, s.center.z);
+  const local = { add: (material, g) => mb.add(material, g.applyMatrix4(m4)) };
   const size = s.n * TILE;
   const half = size / 2;
   const y = TARMAC_Y + PAINT_LIFT;
@@ -209,9 +204,4 @@ export function buildStand(grid, s) {
   for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
     local.add(M.hivis, place(flat(1.4, 1.4), sx * (half - inset), y + 0.003, sz * (half - inset)));
   }
-  const g = local.build({ cast: false, receive: true });
-  g.position.set(s.center.x, 0, s.center.z);
-  g.rotation.y = s.heading;
-  g.userData.standId = s.id;
-  return g;
 }

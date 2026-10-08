@@ -106,13 +106,14 @@ export const BALANCE = {
 
   turnaround: {
     // scheduled time between arrival and departure, in-game minutes
-    scheduledMin: { small: 50, regional: 65, narrow: 80 },
+    scheduledMin: { small: 60, regional: 75, narrow: 90 },
     // ground handling (fuel, bags) once vehicles are at the plane, seconds
     service: { small: 14, regional: 20, narrow: 26 },
     noVehicleMult: 2.6, // service takes this much longer when ground vehicles can't reach the stand
     deplaneInterval: { small: 0.42, regional: 0.24, narrow: 0.13 },
     boardInterval: { small: 0.42, regional: 0.24, narrow: 0.13 },
-    boardingOpensMin: 40, // boarding call this many in-game minutes before departure
+    boardingOpensMin: 45, // boarding call this many in-game minutes before departure
+    minTurnFrac: 0.8, // a late inbound pushes departure back to at least this much of a normal turnaround
     onTimeGraceMin: 15,
   },
 

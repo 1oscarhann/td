@@ -23,7 +23,11 @@ export class Turnaround {
     this.boardingDone = false;
     this.paxOnboard = this.flight.arrPax;
     this.flight.standId = stand?.id ?? null;
+    if (stand) this.flight.lounge = game.terminal.loungeFor(stand);
     this.flight.status = 'atStand';
+    // a late arrival can't leave on time: departure slips to a minimum turnaround
+    const minTurn = BALANCE.turnaround.scheduledMin[plane.cls] * TA.minTurnFrac;
+    this.flight.etd = Math.max(this.flight.std, game.clock.abs + minTurn);
     game.events.emit('turnaroundStart', this);
   }
 
@@ -51,9 +55,12 @@ export class Turnaround {
     this.t += dt;
     const pax = this.game.passengers;
     switch (this.phase) {
-      case 'arrive':
-        if (this.t > 2.5) this.next('deplane');
+      case 'arrive': {
+        // gates wait for the jet bridge to reach the door
+        const jb = this.stand && this.game.jetbridges?.forStand(this.stand.id);
+        if (this.t > 2.5 && (!jb || jb.docked || this.t > 12)) this.next('deplane');
         break;
+      }
       case 'deplane': {
         // passengers walk off one at a time
         this.deplaneT -= dt;
@@ -74,12 +81,18 @@ export class Turnaround {
         if (this.serviceLeft <= 0) this.next('board');
         break;
       case 'board': {
-        const std = this.flight.std;
-        if (!this.boardingOpen && this.now >= std - TA.boardingOpensMin) {
+        if (!this.boardingOpen && this.now >= (this.flight.etd ?? this.flight.std) - TA.boardingOpensMin) {
           this.boardingOpen = true;
+          // everyone already at the airport gets a fair chance to walk on board
+          const walk = this.game.terminal.walkTime(this.flight.lounge, this.stand);
+          const windowMin = (this.flight.depBooked * TA.boardInterval[this.plane.cls] + walk + 12) * BALANCE.time.gameMinPerSec;
+          this.flight.etd = Math.max(this.flight.etd ?? this.flight.std, this.now + windowMin);
+          this.flight.boardingOpenFlag = true;
+          this.flight.lounge = this.game.terminal.loungeFor(this.stand) || this.flight.lounge;
           this.flight.status = 'boarding';
           this.game.events.emit('boardingOpen', this.flight, this.plane, this.stand);
         }
+        const std = this.flight.etd ?? this.flight.std;
         if (this.boardingOpen) {
           this.boardingDone = pax ? pax.boardingComplete(this.flight) : true;
           if ((this.boardingDone && this.now >= std - 10) || this.now >= std) {

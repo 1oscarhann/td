@@ -19,6 +19,10 @@ import { ATC } from './atc/atc.js';
 import { PlaneManager } from './planes/planeManager.js';
 import { Turnarounds } from './planes/turnaround.js';
 import { Flights } from './economy/flights.js';
+import { PassengerManager } from './passengers/passengerManager.js';
+import { JetBridges } from './terminal/jetbridge.js';
+import { GroundVehicles } from './planes/groundVehicles.js';
+import { RoomMeshes } from './terminal/roomMesh.js';
 
 // Wires every system together and runs the frame loop.
 export class Game {
@@ -41,12 +45,16 @@ export class Game {
     this.planes = new PlaneManager(this);
     this.turnarounds = new Turnarounds(this);
     this.flights = new Flights(this);
+    this.passengers = new PassengerManager(this);
+    this.jetbridges = new JetBridges(this);
+    this.vehicles = new GroundVehicles(this);
+    this.roomMeshes = new RoomMeshes(this.renderer.scene, this);
     this.build = new BuildController(this);
     this.ui = new UI(this);
     this.selection = new Selection(this);
     this.debugSpawn = (any) => this.planes.debugSpawn(any);
     // simulation systems with update(simDt), in order
-    this.systems = [this.flights, this.atc, this.planes];
+    this.systems = [this.flights, this.atc, this.planes, this.passengers, this.jetbridges, this.vehicles];
     this.time = 0;
     this.simTime = 0;
     this.frame = 0;
@@ -137,6 +145,9 @@ export class Game {
     this.terminalMesh.update(realDt, termTool);
     this.scenery.update(realDt);
     this.planes.visualUpdate(realDt, this.time);
+    this.roomMeshes.update();
+    this.jetbridges.sync();
+    this.passengers.render(this.time, (this.radar?.t ?? 0) < 0.55);
     for (const v of this.visuals || []) v.update(realDt);
     this.ui.update(realDt);
     this.renderer.render(this.time);

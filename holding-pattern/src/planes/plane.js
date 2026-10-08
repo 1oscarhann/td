@@ -248,6 +248,20 @@ export class Plane {
   }
 
   // ---- ground paths ------------------------------------------------------------------
+  // the front-left passenger door in world space (+ outward normal)
+  doorWorld() {
+    const lay = this.model.geo.layout;
+    const lx = this.spec.R * 1.02, lz = lay.doorF;
+    const sn = Math.sin(this.yaw), cs = Math.cos(this.yaw);
+    return {
+      x: this.pos.x + cs * lx + sn * lz,
+      z: this.pos.z - sn * lx + cs * lz,
+      y: TARMAC_Y + this.spec.gearH + this.spec.R * 0.25,
+      ox: cs,
+      oz: -sn,
+    };
+  }
+
   parkingPoint(stand) {
     const off = stand.half - 3 - this.halfLen;
     return { x: stand.center.x + stand.fwd.x * off, z: stand.center.z + stand.fwd.z * off };

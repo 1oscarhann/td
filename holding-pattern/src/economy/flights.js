@@ -22,7 +22,7 @@ export class Flights {
   // in-game minutes from appearing on the radar edge to touching down
   static leadMinutes() {
     const F = BALANCE.flight;
-    const sec = (F.radarRadius - F.holdingFixDistance) / F.inboundSpeed + 48;
+    const sec = (F.radarRadius - F.holdingFixDistance) / F.inboundSpeed + 80;
     return sec * T.gameMinPerSec;
   }
 
@@ -115,11 +115,32 @@ export class Flights {
 
   update() {
     const now = this.game.clock.abs;
+    const PX = BALANCE.passengers;
+    let routeOk;
     for (const f of this.list) {
       if (f.status === 'scheduled' && now >= f.spawnAt) {
         f.status = 'inbound';
         this.game.planes.spawnInbound(f);
       }
+      // departing passengers drift in over the hours before departure
+      if (f.depSpawnDone || f.status === 'departed' || f.status === 'diverted' || f.status === 'cancelled') continue;
+      const t0 = f.std - PX.spawnWindowStartMin, t1 = f.std - PX.spawnWindowEndMin;
+      if (now < t0) continue;
+      const frac = clamp((now - t0) / (t1 - t0), 0, 1);
+      const target = Math.round(f.depBooked * frac);
+      if (routeOk === undefined) routeOk = this.game.terminal.departureRouteOk();
+      f.routeProblem = routeOk;
+      while (f.depSpawned < target) {
+        if (routeOk) {
+          // nobody can get through the terminal: they never show up
+          f.depSpawned++;
+          f.depNoShow = (f.depNoShow || 0) + 1;
+        } else if (!this.game.passengers.spawnDeparting(f)) {
+          f.depSpawned++;
+          f.depNoShow = (f.depNoShow || 0) + 1;
+        }
+      }
+      if (frac >= 1) f.depSpawnDone = true;
     }
   }
 }

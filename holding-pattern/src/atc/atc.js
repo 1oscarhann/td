@@ -251,6 +251,8 @@ export class ATC {
       return false;
     }
     plan.stand.reservedBy = plane.id;
+    plane.flight.standId = plan.stand.id;
+    plane.flight.lounge = this.game.terminal.loungeFor(plan.stand);
     plane.atcNote = null;
     this.remove(plane);
     st.lastTouch = touch;
@@ -271,7 +273,9 @@ export class ATC {
     const order = { S: 0, M: 1, L: 2 };
     const need = order[PLANE_TYPES[cls].stand];
     const waste = order[s.size] - need;
-    let score = waste * 120 + (s.gate ? 0 : 150);
+    // gates beat remote stands (passengers walk the apron to those) unless
+    // the gate is much too big for this plane
+    let score = waste * 90 + (s.gate ? 0 : 300);
     // prefer gates whose terminal side is actually connected to a lounge
     if (s.gate && !this.game.terminal.standDoor?.(s)) score += 100;
     return score;
