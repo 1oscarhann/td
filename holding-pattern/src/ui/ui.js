@@ -1,6 +1,9 @@
 import { Hud } from './hud.js';
 import { BuildMenu, CursorTip } from './buildMenu.js';
 import { Toasts } from './toasts.js';
+import { Board } from './board.js';
+import { Modal } from './modal.js';
+import { ContractsUI } from './contractsUI.js';
 
 // Root of the HTML interface. Components are created here and updated each frame.
 export class UI {
@@ -15,7 +18,10 @@ export class UI {
     this.right = document.createElement('div');
     this.right.id = 'right';
     root.appendChild(this.right);
-    this.components = [this.hud];
+    this.modal = new Modal(this);
+    this.board = new Board(this, root);
+    this.contractsUI = new ContractsUI(this);
+    this.components = [this.hud, this.board];
     game.events.on('buildRejected', (reason) => this.toasts.show(reason, { kind: 'bad', icon: 'close', ms: 2200 }));
   }
 

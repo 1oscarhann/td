@@ -12,9 +12,11 @@ export const BALANCE = {
   },
 
   time: {
-    gameMinPerSec: 1.2, // in-game minutes that pass per simulation second at 1x
+    gameMinPerSec: 0.8, // in-game minutes that pass per simulation second at 1x
     startHour: 6, // a new game starts at 06:00 on day 1
-    nightBoost: 5, // the clock runs this much faster 00:00-05:00 while the airport is empty
+    nightBoost: 8, // the clock runs this much faster overnight while the airport is empty
+    nightFrom: 22.5,
+    nightTo: 6,
     speeds: [1, 2, 4],
     maxStep: 0.05, // largest simulation sub-step, seconds
   },
@@ -40,8 +42,8 @@ export const BALANCE = {
   },
 
   fees: {
-    landing: { small: 900, regional: 1800, narrow: 3200 },
-    perPassenger: 12, // every passenger who arrives or departs through the airport
+    landing: { small: 1200, regional: 2400, narrow: 4200 },
+    perPassenger: 15, // every passenger who arrives or departs through the airport
   },
 
   runway: {
@@ -62,7 +64,7 @@ export const BALANCE = {
   },
 
   flight: {
-    taxiSpeed: 14, // m/s
+    taxiSpeed: 17, // m/s
     taxiTurnSpeed: 6,
     pushbackSpeed: 3.4,
     taxiAccel: 3.5,
@@ -90,9 +92,9 @@ export const BALANCE = {
   fuel: {
     reserveMin: 55, // seconds of holding fuel on arrival at the radar edge (beyond the trip itself)
     reserveMax: 150,
-    lowChance: 0.22, // chance a flight shows up already short on fuel
-    lowReserveMin: 26,
-    lowReserveMax: 48,
+    lowChance: 0.15, // chance a flight shows up already short on fuel
+    lowReserveMin: 32,
+    lowReserveMax: 55,
     amber: 45, // seconds left
     red: 20,
   },
@@ -106,22 +108,22 @@ export const BALANCE = {
 
   turnaround: {
     // scheduled time between arrival and departure, in-game minutes
-    scheduledMin: { small: 60, regional: 75, narrow: 90 },
+    scheduledMin: { small: 70, regional: 85, narrow: 100 },
     // ground handling (fuel, bags) once vehicles are at the plane, seconds
-    service: { small: 14, regional: 20, narrow: 26 },
+    service: { small: 14, regional: 18, narrow: 22 },
     noVehicleMult: 2.6, // service takes this much longer when ground vehicles can't reach the stand
     deplaneInterval: { small: 0.42, regional: 0.24, narrow: 0.13 },
     boardInterval: { small: 0.42, regional: 0.24, narrow: 0.13 },
-    boardingOpensMin: 45, // boarding call this many in-game minutes before departure
+    boardingOpensMin: 40, // boarding call this many in-game minutes before departure
     minTurnFrac: 0.8, // a late inbound pushes departure back to at least this much of a normal turnaround
     onTimeGraceMin: 15,
   },
 
   passengers: {
-    walkSpeed: 3.4,
+    walkSpeed: 4.2,
     queueSpacing: 1.15,
-    spawnWindowStartMin: 150, // departing passengers start turning up this long before departure
-    spawnWindowEndMin: 38,
+    spawnWindowStartMin: 200, // departing passengers start turning up this long before departure
+    spawnWindowEndMin: 60,
     maxActive: 1600,
     startHappiness: [72, 88],
     queuePatience: 22, // seconds in a queue before happiness starts to drop
@@ -140,7 +142,8 @@ export const BALANCE = {
     perStar: 3, // extra flights a day for each star above 1
     maxPerStandPerDay: 7,
     jitterMin: 14, // inbound flights can turn up this many minutes early or late
-    firstFlightDelayMin: 45, // the very first flight is scheduled this long after the airport opens
+    firstFlightDelayMin: 30, // the very first flight is scheduled this long after the airport opens
+    taxiInMin: 25, // inbounds are timed to land this long before their on-block time (STA)
   },
 
   contracts: {

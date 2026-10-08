@@ -4,7 +4,7 @@ import { clamp } from '../core/math.js';
 // profile (corner limits + braking so the plane stops at the end).
 export class Path {
   // pts: [{ x, z, v? }] where v caps the speed of the segment starting there
-  constructor(pts, { radius = 9, cruise = 13, decel = 2.4, endSpeed = 0, latAccel = 2.2, minTurn = 3.2 } = {}) {
+  constructor(pts, { radius = 9, cruise = 13, decel = 2.4, endSpeed = 0, latAccel = 2.8, minTurn = 3.2 } = {}) {
     const raw = [];
     for (const p of pts) {
       const last = raw[raw.length - 1];

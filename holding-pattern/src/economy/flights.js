@@ -19,11 +19,12 @@ export class Flights {
     this.numbers = new Set();
   }
 
-  // in-game minutes from appearing on the radar edge to touching down
+  // in-game minutes from appearing on the radar edge to reaching the stand:
+  // STA is on-block time, so inbounds aim to land a little before it
   static leadMinutes() {
     const F = BALANCE.flight;
     const sec = (F.radarRadius - F.holdingFixDistance) / F.inboundSpeed + 80;
-    return sec * T.gameMinPerSec;
+    return sec * T.gameMinPerSec + BALANCE.schedule.taxiInMin;
   }
 
   flightNumber(code) {

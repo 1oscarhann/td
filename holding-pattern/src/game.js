@@ -23,6 +23,9 @@ import { PassengerManager } from './passengers/passengerManager.js';
 import { JetBridges } from './terminal/jetbridge.js';
 import { GroundVehicles } from './planes/groundVehicles.js';
 import { RoomMeshes } from './terminal/roomMesh.js';
+import { Scheduler } from './economy/schedule.js';
+import { Contracts } from './economy/contracts.js';
+import { Operations } from './economy/ops.js';
 
 // Wires every system together and runs the frame loop.
 export class Game {
@@ -45,6 +48,9 @@ export class Game {
     this.planes = new PlaneManager(this);
     this.turnarounds = new Turnarounds(this);
     this.flights = new Flights(this);
+    this.contracts = new Contracts(this);
+    this.scheduler = new Scheduler(this);
+    this.ops = new Operations(this);
     this.passengers = new PassengerManager(this);
     this.jetbridges = new JetBridges(this);
     this.vehicles = new GroundVehicles(this);
@@ -54,7 +60,7 @@ export class Game {
     this.selection = new Selection(this);
     this.debugSpawn = (any) => this.planes.debugSpawn(any);
     // simulation systems with update(simDt), in order
-    this.systems = [this.flights, this.atc, this.planes, this.passengers, this.jetbridges, this.vehicles];
+    this.systems = [this.scheduler, this.flights, this.atc, this.planes, this.passengers, this.jetbridges, this.vehicles];
     this.time = 0;
     this.simTime = 0;
     this.frame = 0;
@@ -99,6 +105,15 @@ export class Game {
           break;
       }
     });
+  }
+
+  // The clock races through the small hours while the airport sleeps.
+  nightBoost() {
+    const h = this.clock.hour;
+    const T = BALANCE.time;
+    const night = h >= T.nightFrom || h < T.nightTo;
+    if (!night || this.planes.size || this.passengers.list.length) return 1;
+    return T.nightBoost;
   }
 
   // Is a structure in use (blocks bulldozing)? Returns a reason or null.
