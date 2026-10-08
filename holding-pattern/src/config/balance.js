@@ -12,7 +12,7 @@ export const BALANCE = {
   },
 
   time: {
-    gameMinPerSec: 1.5, // in-game minutes that pass per simulation second at 1x
+    gameMinPerSec: 1.2, // in-game minutes that pass per simulation second at 1x
     startHour: 6, // a new game starts at 06:00 on day 1
     nightBoost: 5, // the clock runs this much faster 00:00-05:00 while the airport is empty
     speeds: [1, 2, 4],
@@ -62,27 +62,28 @@ export const BALANCE = {
   },
 
   flight: {
-    taxiSpeed: 13, // m/s
+    taxiSpeed: 14, // m/s
     taxiTurnSpeed: 6,
-    pushbackSpeed: 2.6,
+    pushbackSpeed: 3.4,
     taxiAccel: 3.5,
-    rolloutDecel: 3.2,
-    takeoffAccel: 3.6,
+    rolloutDecel: 4.0,
+    takeoffAccel: 4.2,
     climbRate: 9, // m/s
-    turnRadius: 260, // airborne turn radius, metres
-    inboundSpeed: 52,
-    holdingSpeed: 46,
-    approachSpeed: 48,
-    touchdownSpeed: 40,
-    rotateSpeed: 44,
-    finalLength: 1250, // final approach fix distance from the threshold
-    finalAltitude: 125,
+    turnRadius: 300, // airborne turn radius, metres
+    inboundSpeed: 70,
+    holdingSpeed: 58,
+    approachSpeed: 60,
+    touchdownSpeed: 46,
+    rotateSpeed: 46,
+    finalLength: 1000, // final approach fix distance from the threshold
+    finalAltitude: 100,
     decisionDistance: 380, // go-around decision point before the threshold
-    holdingRadius: 340,
+    holdingRadius: 360,
     holdingAltitude: 320,
     holdingStep: 110, // altitude between stacked holding planes
     radarRadius: 2300, // inbound planes appear at this distance from the airport centre
-    holdingFixDistance: 1150,
+    holdingFixDistance: 1000,
+    holdingOffset: 950, // holding fix sits this far to the side of the main runway's approach
     touchdownTiles: 7, // touchdown point, tiles past the threshold
   },
 

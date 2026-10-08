@@ -199,7 +199,8 @@ export function buildStand(grid, s) {
   // gap in the back outline where the lead-in enters
   // label
   // label near the front-left corner, always reading north-up in world space
-  for (const g of segText(s.label, Math.min(6, size * 0.16), 0.18)) {
+  // remote stands paint just their number (a 7-segment S reads as a 5)
+  for (const g of segText(s.gate ? s.label : String(s.number), Math.min(6, size * 0.16), 0.18)) {
     g.rotateY(-s.heading);
     g.translate(-half + 6.5, y, half - 7.5);
     local.add(M.paint, g);

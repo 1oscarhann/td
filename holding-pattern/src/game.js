@@ -13,6 +13,12 @@ import { TerminalMesh } from './terminal/terminalMesh.js';
 import { Economy } from './economy/economy.js';
 import { Rating } from './rating/rating.js';
 import { UI } from './ui/ui.js';
+import { TaxiGraph } from './pathfinding/taxiGraph.js';
+import { Reservations } from './pathfinding/reservations.js';
+import { ATC } from './atc/atc.js';
+import { PlaneManager } from './planes/planeManager.js';
+import { Turnarounds } from './planes/turnaround.js';
+import { Flights } from './economy/flights.js';
 
 // Wires every system together and runs the frame loop.
 export class Game {
@@ -29,9 +35,18 @@ export class Game {
     this.terminalMesh = new TerminalMesh(this.renderer.scene, this);
     this.economy = new Economy(this.events);
     this.rating = new Rating(this.events);
+    this.graph = new TaxiGraph(this);
+    this.reservations = new Reservations();
+    this.atc = new ATC(this);
+    this.planes = new PlaneManager(this);
+    this.turnarounds = new Turnarounds(this);
+    this.flights = new Flights(this);
     this.build = new BuildController(this);
     this.ui = new UI(this);
-    this.systems = []; // simulation systems with update(simDt)
+    this.selection = new Selection(this);
+    this.debugSpawn = (any) => this.planes.debugSpawn(any);
+    // simulation systems with update(simDt), in order
+    this.systems = [this.flights, this.atc, this.planes];
     this.time = 0;
     this.simTime = 0;
     this.frame = 0;
@@ -121,8 +136,35 @@ export class Game {
     const termTool = ['terminal', 'checkin', 'security', 'lounge'].includes(this.build.tool);
     this.terminalMesh.update(realDt, termTool);
     this.scenery.update(realDt);
+    this.planes.visualUpdate(realDt, this.time);
     for (const v of this.visuals || []) v.update(realDt);
     this.ui.update(realDt);
     this.renderer.render(this.time);
+  }
+}
+
+// Which plane is selected (flight card + ring). Click a plane to select it.
+export class Selection {
+  constructor(game) {
+    this.game = game;
+    this.plane = null;
+    const dom = game.renderer.canvas;
+    let down = null;
+    dom.addEventListener('pointerdown', (e) => {
+      if (e.button === 0) down = { x: e.clientX, y: e.clientY };
+    });
+    dom.addEventListener('pointerup', (e) => {
+      if (e.button !== 0 || !down) return;
+      const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
+      down = null;
+      if (moved > 6 || game.build.tool) return;
+      const p = game.radar?.active ? game.radar.pickBlip(e.clientX, e.clientY) : game.planes.pick(game.camera.ray(e.clientX, e.clientY));
+      this.select(p);
+    });
+  }
+  select(p) {
+    if (this.plane === p) return;
+    this.plane = p;
+    this.game.events.emit('selected', p);
   }
 }
