@@ -14,6 +14,13 @@ export class Path {
       }
       raw.push({ x: p.x, z: p.z, v: p.v ?? cruise, r: p.r });
     }
+    // drop points in the middle of straight runs so corners get a full radius
+    for (let i = raw.length - 2; i > 0; i--) {
+      const a = raw[i - 1], p = raw[i], b = raw[i + 1];
+      const cross = (p.x - a.x) * (b.z - p.z) - (p.z - a.z) * (b.x - p.x);
+      const dot = (p.x - a.x) * (b.x - p.x) + (p.z - a.z) * (b.z - p.z);
+      if (Math.abs(cross) < 1e-6 && dot > 0 && p.v === a.v && p.r === undefined) raw.splice(i, 1);
+    }
     const out = [];
     for (let i = 0; i < raw.length; i++) {
       const p = raw[i];

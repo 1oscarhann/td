@@ -18,10 +18,18 @@ export class StructureRenderer {
     this.group = new THREE.Group();
     scene.add(this.group);
     this.runwayMeshes = new Map();
-    this.standMeshes = new Map();
     this.taxiMesh = null;
     this.dirty = true;
     events.on('gridChanged', () => (this.dirty = true));
+  }
+
+  clear() {
+    for (const m of this.runwayMeshes.values()) {
+      this.group.remove(m);
+      disposeTree(m);
+    }
+    this.runwayMeshes.clear();
+    this.dirty = true;
   }
 
   update() {

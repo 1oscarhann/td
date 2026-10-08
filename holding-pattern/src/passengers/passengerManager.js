@@ -128,6 +128,31 @@ export class PassengerManager {
     return p;
   }
 
+  // after loading a save: passengers who were already through the terminal
+  // wait in a lounge again
+  restoreWaiting(flight, n) {
+    this.terminal.refresh();
+    const lounges = this.terminal.roomsOf('lounge');
+    for (let i = 0; i < n; i++) {
+      if (this.list.length >= PX.maxActive) break;
+      const rt = lounges.length ? pick(lounges) : null;
+      if (!rt) {
+        if (!this.spawnDeparting(flight)) break;
+        flight.depSpawned--;
+        continue;
+      }
+      const free = rt.seats.filter((s) => !s.taken);
+      const seat = free.length ? pick(free) : null;
+      const at = seat || { x: rt.room.center.x + rand(-6, 6), z: rt.room.center.z + rand(-6, 6) };
+      const p = this.make(flight, P.SEATED, at.x, at.z, FLOOR_Y);
+      p.dep = true;
+      p.bag = false;
+      p.lounge = rt;
+      p.seat = seat;
+      if (seat) seat.taken = p;
+    }
+  }
+
   // an arriving passenger steps off a parked plane
   deplane(plane, stand) {
     const flight = plane.flight;

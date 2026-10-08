@@ -246,7 +246,7 @@ export class ATC {
       plane.atcNote = plan.reason;
       return false;
     }
-    if (!this.game.reservations.tryReserve(plane.id, plan.reserve, plan.exclusive)) {
+    if (!this.game.reservations.tryReserve(plane.id, plan.reserve, [])) {
       plane.atcNote = 'Waiting for taxi route';
       return false;
     }
@@ -261,6 +261,19 @@ export class ATC {
     plane.clearToLand(r, plan);
     this.game.events.emit('cleared', plane);
     return true;
+  }
+
+  // A runway exit node can be planned for if nobody holds it, or only arrivals
+  // that land ahead of us (they'll have rolled through it by our turn; we
+  // re-check at the decision point and go around if not).
+  exitUsable(node, plane) {
+    const q = this.game.reservations.queue(node);
+    if (!q) return true;
+    return q.every((id) => {
+      if (id === plane.id) return true;
+      const o = this.planes.get(id);
+      return o && (o.state === S.APPROACH || o.state === S.LANDING || o.state === S.ROLLOUT || o.state === S.TAXI_IN) && !o.isDeparting();
+    });
   }
 
   rolloutIndex(cls) {
@@ -314,13 +327,13 @@ export class ATC {
     let best = null;
     for (const { s, score } of ranked) {
       for (const e of cand) {
-        if (!res.isExclusiveFree(e.node.id, plane.id)) continue;
+        if (!this.exitUsable(e.node.id, plane)) continue;
         const route = astar(graph, e.node.id, STAND_BASE + s.id, { penalty });
         if (!route) continue;
         if (route.nodes.some((n, i) => i > 0 && graph.edge(route.nodes[i - 1], n)?.cross === r.id)) continue;
         const reserve = graph.withSweeps(route.nodes);
         const exclusive = reserve.slice(0, clearLen + 1);
-        if (!res.canReserve(plane.id, exclusive)) continue;
+        if (!exclusive.every((n) => this.exitUsable(n, plane))) continue;
         const back = e.index < minIdx;
         const total = score + route.cost + (back ? (minIdx - e.index) * TILE * 2.5 + 250 : (e.index - minIdx) * TILE * 0.3);
         if (!best || total < best.total) best = { stand: s, exit: e, route, reserve, exclusive, total, backtrack: back, minIdx };
@@ -428,11 +441,15 @@ export class ATC {
   }
 
   // arrival reaching the decision point: land if the runway is ours, else go around
+  // Returns null to land, or the reason to go around.
   landingDecision(plane) {
     const r = plane.runway;
     const st = this.state(r.id);
-    if (st.lock && st.lock.planeId !== plane.id) return false;
-    return this.tryLock(r.id, plane, 'landing', this.now() + 20);
+    if (st.lock && st.lock.planeId !== plane.id) return 'Runway occupied';
+    // our runway exit must be clear before we commit to landing
+    const res = this.game.reservations;
+    if (!plane.arrPlan.exclusive.every((n) => res.isHead(plane.id, n))) return 'Runway exit blocked';
+    return this.tryLock(r.id, plane, 'landing', this.now() + 20) ? null : 'Runway occupied';
   }
 
   // ---- safety net ------------------------------------------------------------------

@@ -102,7 +102,7 @@ export const BALANCE = {
   atc: {
     separation: 20, // seconds between touchdowns, same class
     wakePenalty: 7, // extra seconds when a smaller plane follows a bigger one
-    departureFairness: 24, // seconds a departure can wait before arrivals are held back for it
+    departureFairness: 6, // seconds a departure can wait at the hold line before arrivals leave it a gap
     runwayBuffer: 4,
   },
 

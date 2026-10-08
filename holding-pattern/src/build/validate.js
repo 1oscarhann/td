@@ -174,6 +174,20 @@ function standCheckAt(game, cx, cz, size, rot, gate) {
   const entryT = grid.get(links.entry[0], links.entry[1]);
   const frontT = grid.get(links.front[0], links.front[1]);
   if (!reason && entryT !== T.TAXI) reason = 'Stand entrance must face a taxiway';
+  // planes swing their tails turning in and pushing back: stands facing each
+  // other across one taxiway need a tile of space between them
+  if (!reason) {
+    const [fx, fz] = DIRS[rot];
+    const msg = 'Too close to the stand across the taxiway: leave a 1-tile gap';
+    // the three tiles straight across the taxiway from the entrance
+    const across = (ex, ez, ffx, ffz) => [-1, 0, 1].map((k) => [ex - ffx + k * ffz, ez - ffz + k * ffx]);
+    for (const [x, z] of across(links.entry[0], links.entry[1], fx, fz)) if (grid.get(x, z) === T.STAND) reason = msg;
+    const foot = new Set(grid.standFootprint(tx, tz, n).map(([x, z]) => grid.idx(x, z)));
+    for (const s of grid.stands) {
+      const ex = grid.txOf(s.entry), ez = grid.tzOf(s.entry);
+      for (const [x, z] of across(ex, ez, s.fwd.x, s.fwd.z)) if (grid.inBounds(x, z) && foot.has(grid.idx(x, z))) reason = reason || msg;
+    }
+  }
   if (!reason && gate) {
     if (frontT !== T.TERMINAL) reason = 'Gate nose must touch the terminal';
     else if (grid.room[grid.idx(links.front[0], links.front[1])] >= 0) reason = 'Gate door is blocked by a room';

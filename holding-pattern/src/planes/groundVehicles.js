@@ -4,7 +4,7 @@ import { M, mat } from '../render/materials.js';
 import { MeshBuilder, place, rbox } from '../render/geom.js';
 import { T, DIRS } from '../world/grid.js';
 import { TARMAC_Y } from '../build/structures.js';
-import { clamp, dampAngle, pick } from '../core/math.js';
+import { clamp, dampAngle } from '../core/math.js';
 
 const TILE = BALANCE.map.tile;
 
@@ -354,4 +354,3 @@ export class GroundVehicles {
   }
 }
 
-export { pick };

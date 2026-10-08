@@ -19,6 +19,12 @@ export class Terminal {
     this.standDoors = new Map(); // standId -> door info
   }
 
+  reset() {
+    this.roomRt.clear();
+    this.standDoors.clear();
+    this.version = -1;
+  }
+
   refresh() {
     const grid = this.game.grid;
     if (this.version === grid.version) return false;

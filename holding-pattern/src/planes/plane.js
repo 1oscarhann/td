@@ -6,7 +6,6 @@ import { buildPlaneModel } from './models.js';
 import { Path } from './path.js';
 import { dubins, yawToTh } from './dubins.js';
 import { S, STATE_LABEL } from './states.js';
-import { STAND_BASE } from '../pathfinding/taxiGraph.js';
 import { TARMAC_Y, RUNWAY_Y } from '../build/structures.js';
 
 const F = BALANCE.flight;
@@ -200,8 +199,9 @@ export class Plane {
     if (toThr < 260 && this.state === S.APPROACH) this.setState(S.LANDING);
     if (!ap.decided && toThr <= F.decisionDistance) {
       ap.decided = true;
-      if (!this.game.atc.landingDecision(this)) {
-        this.goAround('Runway occupied');
+      const why = this.game.atc.landingDecision(this);
+      if (why) {
+        this.goAround(why);
         return;
       }
     }
@@ -280,7 +280,7 @@ export class Plane {
       if (n.kind === 'stand') {
         const s = grid.structures.get(n.standId);
         if (i === nodes.length - 1) {
-          pts.push({ x: s.backEdge.x, z: s.backEdge.z, v: 6, node: id });
+          // straight in along the stand's axis from the taxiway (a roomy turn)
           const pp = this.parkingPoint(s);
           pts.push({ x: pp.x, z: pp.z, v: 4, node: id });
         }
@@ -339,7 +339,7 @@ export class Plane {
     pts.push({ x: exitPt.x, z: exitPt.z, v: plan.backtrack ? 8 : 45, r: 17 });
     const rp = this.routePoints(plan.route.nodes);
     for (const p of rp.pts) pts.push(p);
-    const path = new Path(pts, { radius: 11, cruise: F.taxiSpeed, decel: F.rolloutDecel, minTurn: 4, latAccel: 3.2 });
+    const path = new Path(pts, { radius: 13, cruise: F.taxiSpeed, decel: F.rolloutDecel, minTurn: 4, latAccel: 3.2 });
     const crossings = this.crossingPoints(path, rp.crossMarks);
     return { path, crossings, route: this.routeInfo(path, plan.reserve) };
   }
@@ -536,8 +536,10 @@ export class Plane {
       d = hasL ? { x: -px, z: -pz } : { x: px, z: pz };
     }
     const b = { x: -d.x, z: -d.z };
-    const reach = 8 + this.halfLen + 4;
-    const end = { x: entry.x + b.x * 8, z: entry.z + b.z * 8 };
+    // push back in a wide arc so the tail tracks along the taxiway
+    const push = this.halfLen + 12;
+    const reach = push + this.halfLen + 4;
+    const end = { x: entry.x + b.x * push, z: entry.z + b.z * push };
     const zone = [];
     for (const n of graph.nodes.values()) {
       if (n.kind !== 'taxi') continue;
@@ -548,7 +550,7 @@ export class Plane {
       if (lat < 8) zone.push(n.id);
     }
     // the nose swings round into the taxiway ahead as the plane straightens up
-    const ahead = Math.ceil(Math.max(0, this.halfLen - 8 + 6) / TILE);
+    const ahead = Math.ceil(Math.max(0, this.halfLen - push + 12) / TILE);
     for (let k = 1; k <= ahead; k++) {
       const id = this.game.grid.idx(entry.tx + Math.round(d.x * k), entry.tz + Math.round(d.z * k));
       if (graph.nodes.has(id) && !zone.includes(id)) zone.push(id);
@@ -582,11 +584,10 @@ export class Plane {
     const pp = this.parkingPoint(stand);
     const pts = [
       { x: pp.x, z: pp.z, v: F.pushbackSpeed },
-      { x: stand.backEdge.x, z: stand.backEdge.z, v: F.pushbackSpeed },
       { x: pb.entry.x, z: pb.entry.z, v: F.pushbackSpeed },
       { x: pb.end.x, z: pb.end.z, v: F.pushbackSpeed },
     ];
-    this.path = new Path(pts, { radius: 9, cruise: F.pushbackSpeed, decel: 1.1, minTurn: 2.2, latAccel: 1.4 });
+    this.path = new Path(pts, { radius: 14, cruise: F.pushbackSpeed, decel: 1.1, minTurn: 2.2, latAccel: 1.4 });
     // keep the whole reserved route held while pushing back; only the stand
     // and pushback zone may be released as the plane clears them
     this.route = this.routeInfo(this.path, plan.route.nodes.slice(0, 1));
@@ -608,7 +609,7 @@ export class Plane {
   startTaxiOut() {
     const plan = this.depPlan;
     const rp = this.routePoints(plan.route.nodes.slice(1), { from: { x: this.pushEnd.x, z: this.pushEnd.z } });
-    this.path = new Path(rp.pts, { radius: 9, cruise: F.taxiSpeed, decel: 2.4 });
+    this.path = new Path(rp.pts, { radius: 13, cruise: F.taxiSpeed, decel: 2.4 });
     // the stand is behind us now; it's released once the tail clears it
     this.route = this.routeInfo(this.path, plan.reserve.slice(1));
     this.crossings = this.crossingPoints(this.path, rp.crossMarks);

@@ -26,6 +26,9 @@ import { RoomMeshes } from './terminal/roomMesh.js';
 import { Scheduler } from './economy/schedule.js';
 import { Contracts } from './economy/contracts.js';
 import { Operations } from './economy/ops.js';
+import { Radar } from './atc/radar.js';
+import { Milestones } from './rating/milestones.js';
+import { writeSave } from './save/save.js';
 
 // Wires every system together and runs the frame loop.
 export class Game {
@@ -56,7 +59,10 @@ export class Game {
     this.vehicles = new GroundVehicles(this);
     this.roomMeshes = new RoomMeshes(this.renderer.scene, this);
     this.build = new BuildController(this);
+    this.radar = new Radar(this);
     this.ui = new UI(this);
+    this.milestones = new Milestones(this);
+    this.tutorial = this.ui.tutorial;
     this.selection = new Selection(this);
     this.debugSpawn = (any) => this.planes.debugSpawn(any);
     // simulation systems with update(simDt), in order
@@ -66,6 +72,53 @@ export class Game {
     this.frame = 0;
     this.started = false;
     this.bindKeys();
+    // autosave every in-game day and when the tab goes away
+    this.events.on('dayStart', () => this.autosave());
+    window.addEventListener('beforeunload', () => this.autosave());
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') this.autosave();
+    });
+  }
+
+  autosave() {
+    if (!this.started || this.ops.bankrupt || document.body.classList.contains('title')) return false;
+    return writeSave(this, 'auto');
+  }
+
+  // Wipe everything back to an empty field (used by New Game and Load).
+  resetWorld() {
+    this.build.setTool(null);
+    this.selection.select(null);
+    if (this.radar.active) this.radar.toggle(false);
+    this.planes.clearAll();
+    this.passengers.reset();
+    this.vehicles.clear();
+    this.jetbridges.clear();
+    this.reservations.reset();
+    this.atc.reset();
+    this.flights.reset();
+    this.contracts.reset();
+    this.scheduler.reset();
+    this.ops.reset();
+    this.economy.reset();
+    this.rating.reset();
+    this.milestones.reset();
+    this.clock.reset();
+    this.grid.reset();
+    this.structures.clear();
+    this.terminal.reset();
+    this.simTime = 0;
+    this.grid.changed('reset');
+  }
+
+  newGame() {
+    this.resetWorld();
+    this.started = true;
+    this.camera.focusOn(0, 60, 900);
+    this.camera.goal.az = THREE_DEG(-28);
+    this.camera.goal.pol = THREE_DEG(52);
+    this.tutorial.start();
+    this.events.emit('newGame');
   }
 
   bindKeys() {
@@ -151,6 +204,9 @@ export class Game {
     this.frame++;
     const speed = this.started ? this.clock.speed * (this.nightBoost?.() || 1) : 0;
     if (speed > 0) this.step(Math.min(realDt, 0.1) * speed);
+    // a slow fly-around behind the title screen
+    if (document.body.classList.contains('title')) this.camera.goal.az += realDt * 0.04;
+    this.radar.update(realDt);
     this.camera.update(realDt, !document.body.classList.contains('title'));
     const focus = this.camera.radarT > 0.5 ? { x: 0, z: 0 } : this.camera.target;
     this.renderer.updateShadow(focus, this.camera.viewDistance());
@@ -163,11 +219,13 @@ export class Game {
     this.roomMeshes.update();
     this.jetbridges.sync();
     this.passengers.render(this.time, (this.radar?.t ?? 0) < 0.55);
-    for (const v of this.visuals || []) v.update(realDt);
+    this.milestones.update(realDt);
     this.ui.update(realDt);
     this.renderer.render(this.time);
   }
 }
+
+const THREE_DEG = (d) => (d * Math.PI) / 180;
 
 // Which plane is selected (flight card + ring). Click a plane to select it.
 export class Selection {

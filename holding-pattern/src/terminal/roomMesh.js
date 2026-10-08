@@ -26,9 +26,8 @@ function stanchions(mb, rows, x0, x1, z0, dz) {
   // posts and belts that make the queue snake
   for (let r = 0; r <= rows; r++) {
     const z = z0 + r * dz;
-    const open = r % 2 === 0 ? x0 : x1; // gap alternates ends
+    // the gap alternates ends
     const a = r % 2 === 0 ? x0 + 1.2 : x0, b = r % 2 === 0 ? x1 : x1 - 1.2;
-    void open;
     for (const x of [a, b]) {
       mb.add(M.metal, place(new THREE.CylinderGeometry(0.05, 0.06, 1.0, 6), x, Y + 0.5, z));
       mb.add(M.metal, place(new THREE.CylinderGeometry(0.16, 0.18, 0.05, 10), x, Y + 0.03, z));

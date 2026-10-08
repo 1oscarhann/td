@@ -11,8 +11,7 @@ function boot() {
   }
   const game = new Game(canvas);
   window.__hp = game;
-  game.started = true;
-  document.body.classList.remove('title');
+  game.ui.menus.showTitle();
   let last = performance.now();
   const loop = (now) => {
     const dt = Math.min(0.1, (now - last) / 1000);

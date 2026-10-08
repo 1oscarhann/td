@@ -93,9 +93,9 @@ export class Scheduler {
     if (!classes.length) return made;
     const stars = g.rating.value;
     let n = Math.round(SC.baseFlights + SC.perStar * (stars - 1));
-    // can't schedule more than the stands can turn round
-    const cap = g.grid.stands.length * SC.maxPerStandPerDay;
-    n = Math.min(n, cap);
+    // can't schedule more than the stands can turn round (contract flights count too)
+    const cap = g.grid.stands.length * SC.maxPerStandPerDay - made;
+    n = Math.max(0, Math.min(n, cap));
     const pickFlight = () => {
       const cls = weightedPick(classes, (c) => {
         const t = PLANE_TYPES[c];

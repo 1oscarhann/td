@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { BALANCE } from '../config/balance.js';
 import { Plane, hashBearing } from './plane.js';
-import { S, WAITING_TO_LAND } from './states.js';
-import { rand, clamp } from '../core/math.js';
+import { WAITING_TO_LAND } from './states.js';
+import { rand } from '../core/math.js';
 
 const F = BALANCE.flight;
 
@@ -128,4 +128,3 @@ export class PlaneManager extends Map {
   }
 }
 
-export { S, clamp };
