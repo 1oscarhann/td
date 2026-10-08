@@ -1,0 +1,18 @@
+{
+  "name": "holding-pattern",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Holding Pattern: a 3D toy-diorama airport tycoon for the browser",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "vite": "6.4.4"
+  }
+}
