@@ -80,3 +80,7 @@ Pick Auto / High / Medium / Low in settings or on the title screen. Auto starts 
 | High | up to 2 | 2048 VSM | GTAO (half-res on hi-DPI), bloom, tilt-shift DOF, vignette, glass transmission |
 | Medium | up to 1.5 | 2048 VSM | bloom, tilt-shift DOF, vignette |
 | Low | 1 | 1024 VSM | none |
+
+## Also in this repo
+
+[`train-sim/`](train-sim/) is a separate project: a first-person Class 377 train driving sim on the West Coastway and Arun Valley lines (Vite + Three.js). See its own README.

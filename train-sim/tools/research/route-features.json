@@ -1,0 +1,70 @@
+{
+  "about": "Features on Chichester – Barnham – Ford – Arundel Jn – Arundel – Amberley, gathered for Milestone 2. Coordinates from OpenStreetMap (queried 2026-10-11, © OpenStreetMap contributors, ODbL). approxKm is straight-line distance from Chichester station between consecutive features (real chainage is slightly longer on curves): good to ±0.2 km, NOT survey grade. Verify against the Network Rail Sectional Appendix, OpenRailwayMap and Ordnance Survey before trusting any of it.",
+  "stations": [
+    { "name": "Chichester", "crs": "CCH", "lat": 50.83188, "lon": -0.78185, "approxKm": 0.0 },
+    { "name": "Barnham", "crs": "BAA", "lat": 50.83074, "lon": -0.6402, "approxKm": 9.95 },
+    { "name": "Ford", "crs": "FOD", "lat": 50.82936, "lon": -0.5783, "approxKm": 14.3 },
+    { "name": "Arundel", "crs": "ARU", "lat": 50.84801, "lon": -0.54627, "approxKm": 17.9 },
+    { "name": "Amberley", "crs": "AMY", "lat": 50.89642, "lon": -0.54203, "approxKm": 23.5 }
+  ],
+  "junctions": [
+    { "name": "Barnham Junction", "lat": 50.83073, "lon": -0.64306, "approxKm": 9.75, "what": "Bognor Regis branch leaves at the west end of Barnham station, facing towards Ford. For an eastbound (Up) train from Chichester the points are TRAILING; a facing route to Bognor only exists for westbound (Down) trains, i.e. on the drive back.", "osmBranchSpeedMph": 20 },
+    { "name": "Ford Junction", "lat": 50.82747, "lon": -0.57255, "approxKm": 14.75, "what": "West curve to Littlehampton (Ford Junction – Littlehampton Junction) leaves the coast line here, just east of the River Arun bridge. Chichester – Amberley trains go STRAIGHT ON here.", "osmCurveSpeedMph": 40 },
+    { "name": "Arundel Junction", "lat": 50.82739, "lon": -0.56456, "approxKm": 15.3, "what": "THIS is where the Arun Valley line diverges north towards Arundel. OSM also marks Arundel Junction North and South nodes (the Littlehampton east curve and the line towards Angmering)." }
+  ],
+  "riverArun": [
+    { "name": "Ford river bridge", "lat": 50.828, "lon": -0.5742, "approxKm": 14.6, "osmSpeedMph": 40, "note": "Between Ford station (and its level crossing) and Ford Junction. The line climbs to it on a visible gradient (Wikipedia, Ford station)." },
+    { "name": "Black Rabbit bridge", "note": "Over the Arun just north of Arundel, near the Black Rabbit pub at Offham. Replaced August 2009 (Network Rail). Exact position not yet matched to an OSM bridge." },
+    { "name": "Peppering bridge", "note": "Over the Arun between Arundel and Amberley near Burpham/Peppering. Replaced August 2009 (Network Rail). Exact position not yet matched." },
+    { "name": "OSM rail bridges Arundel – Amberley", "note": "OSM marks main-line bridges at about lat 50.865, 50.869, 50.874, 50.875, 50.879 (tagged viaduct), 50.882, 50.883 and 50.885. Which of these span the river, side channels or roads needs checking on a map." }
+  ],
+  "tunnels": [{ "name": "North Stoke Tunnel", "lengthM": 76, "note": "83 yd, between Arundel and Amberley (Wikipedia route diagram). Position not yet pinned down." }],
+  "speedLimitsFromOsm": {
+    "note": "OSM maxspeed tags, NOT authoritative: the Sectional Appendix is.",
+    "segments": [
+      { "from": "Chichester", "to": "approach to Barnham", "mph": 75 },
+      { "from": "Barnham station area", "to": "", "mph": 55 },
+      { "from": "east of Barnham", "to": "approach to Ford", "mph": 75 },
+      { "from": "Ford station (east end)", "to": "over the Arun bridge", "mph": 40 },
+      { "from": "Ford Junction", "to": "Arundel Junction (coast line)", "mph": 30 },
+      { "from": "Arundel Junction", "to": "Amberley (Arun Valley, ELR TBH1)", "mph": 75 },
+      { "from": "Barnham Junction", "to": "Bognor branch turnout", "mph": 20 }
+    ]
+  },
+  "engineersLineReferences": {
+    "TBH": "Three Bridges – Havant via Horsham. Covers Arun Valley line AND the coast line west of Arundel Jn through Ford, Barnham and Chichester (TBH1 Arun Valley, TBH2 Ford area per OSM).",
+    "BLI": "Brighton – Littlehampton: the coast line east of Arundel Jn towards Angmering.",
+    "FJL": "Ford Junction – Littlehampton Junction (west curve)."
+  },
+  "levelCrossings": [
+    { "name": "Stockbridge Road", "road": "Stockbridge Road (primary road)", "lat": 50.83188, "lon": -0.78109, "approxKm": 0.05, "type": "full barrier", "lights": true, "atStation": "Chichester, just east of the OSM station node" },
+    { "name": "Basin Road", "road": "Basin Road", "lat": 50.83189, "lon": -0.77985, "approxKm": 0.14, "type": "full barrier", "lights": true, "atStation": "Chichester, just east of the OSM station node" },
+    { "name": "Whyke Road", "road": "B2145", "lat": 50.83208, "lon": -0.76588, "approxKm": 1.12, "type": "full barrier", "lights": true },
+    { "name": "Drayton", "road": "Drayton Lane B2144", "lat": 50.83241, "lon": -0.73677, "approxKm": 3.17, "type": "full barrier", "lights": true },
+    { "name": "(footpath)", "road": "footway", "lat": 50.83216, "lon": -0.72891, "approxKm": 3.72, "type": "footpath crossing with gates" },
+    { "name": "Woodhorn Lane", "road": "Woodhorn Lane", "lat": 50.83138, "lon": -0.70598, "approxKm": 5.33, "type": "automatic half barrier (AHB)", "lights": true },
+    { "name": "(farm track)", "road": "track", "lat": 50.83084, "lon": -0.6747, "approxKm": 7.53, "type": "user-worked / accommodation crossing? (barrier type not tagged)" },
+    { "name": "Woodgate", "road": "A29 Westergate Street / Lidsey Road", "lat": 50.83083, "lon": -0.66951, "approxKm": 7.89, "type": "full barrier", "lights": true, "note": "Notorious for long closures; connected to the new Barnham control centre during resignalling (Bognor Observer)." },
+    { "name": "(farm track)", "road": "track (supervised=no)", "lat": 50.83084, "lon": -0.65632, "approxKm": 8.82, "type": "user-worked crossing? (barrier type not tagged)" },
+    { "name": "(footpath WSx/323)", "road": "public footpath", "lat": 50.83086, "lon": -0.64716, "approxKm": 9.46, "type": "footpath crossing" },
+    { "name": "(footpath)", "road": "footway", "lat": 50.83082, "lon": -0.63628, "approxKm": 10.2, "type": "footpath crossing" },
+    { "name": "(footpath)", "road": "footway", "lat": 50.83083, "lon": -0.62642, "approxKm": 10.9, "type": "footpath crossing" },
+    { "name": "(footpath)", "road": "footway", "lat": 50.83082, "lon": -0.6182, "approxKm": 11.5, "type": "footpath crossing" },
+    { "name": "Maypole Lane", "road": "bridleway", "lat": 50.83081, "lon": -0.61387, "approxKm": 11.8, "type": "bridleway crossing" },
+    { "name": "Yapton", "road": "Yapton Lane B2132", "lat": 50.83077, "lon": -0.60842, "approxKm": 12.2, "type": "full barrier", "lights": true, "note": "Network Rail planned conversion from AHB to CCTV-controlled full barriers; OSM now shows full barriers. Confirm it's done." },
+    { "name": "(footpath FP YAP-355)", "road": "public footpath", "lat": 50.83065, "lon": -0.59817, "approxKm": 12.9, "type": "footpath crossing" },
+    { "name": "(footpath)", "road": "footway, chicane", "lat": 50.83053, "lon": -0.58788, "approxKm": 13.6, "type": "footpath crossing" },
+    { "name": "Ford", "road": "Ford Road", "lat": 50.82921, "lon": -0.57775, "approxKm": 14.35, "type": "full barrier", "atStation": "Ford, east end, before the river bridge", "note": "Wikipedia: 'A busy level crossing is also found to the east of the station, before the river bridge.'" },
+    { "name": "(track near Arundel Jn)", "road": "track", "lat": 50.8274, "lon": -0.56452, "approxKm": 15.3, "type": "open crossing, no barriers? Check which line it is on." },
+    { "name": "(track, Arun Valley)", "road": "track", "lat": 50.83458, "lon": -0.55649, "approxKm": 16.3, "type": "tagged full barrier on a farm track: odd, verify" },
+    { "name": "(track, Arun Valley)", "road": "track", "lat": 50.84232, "lon": -0.5506, "approxKm": 17.2, "type": "barrier type not tagged" },
+    { "name": "(footpath FP 2222)", "road": "public footpath", "lat": 50.85581, "lon": -0.53811, "approxKm": 19.0, "type": "footpath crossing" },
+    { "name": "(footpath FP 2223)", "road": "public footpath", "lat": 50.8643, "lon": -0.53605, "approxKm": 20.0, "type": "footpath crossing" },
+    { "name": "(track, Arun Valley)", "road": "track", "lat": 50.86862, "lon": -0.5357, "approxKm": 20.4, "type": "barrier type not tagged" },
+    { "name": "(footpath)", "road": "public footpath", "lat": 50.87408, "lon": -0.53564, "approxKm": 21.0, "type": "footpath crossing" }
+  ],
+  "notOnRoute": [
+    "Lyminster (50.8253, -0.5425) and Toddington (50.8244, -0.5330) crossings are on the coast line EAST of Arundel Jn towards Angmering.",
+    "Brockham and Cragside 'stations' near Amberley are the Amberley Museum narrow-gauge railway, not Network Rail."
+  ]
+}

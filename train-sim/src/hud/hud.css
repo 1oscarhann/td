@@ -1,0 +1,389 @@
+/* Cab desk and overlays. Colours are tokens so a night-time cab theme can swap them later. */
+:root {
+  --desk: #2a2d31;
+  --desk-edge: #1b1d20;
+  --panel: #33373c;
+  --panel-text: #d9dde2;
+  --muted: #8e959d;
+  --lamp-off: #3b3f44;
+  --red: #ff4434;
+  --amber: #ffb020;
+  --green: #36e07a;
+  --yellow: #ffd21a;
+  --log-bg: rgba(12, 14, 16, 0.55);
+}
+
+#hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  font-family: 'Helvetica Neue', Arial, system-ui, sans-serif;
+  color: var(--panel-text);
+}
+
+/* ── top: message log, alert, driving aid ───────────────────────────── */
+.hud-log {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-width: min(46vw, 520px);
+  font-size: 13px;
+}
+.hud-log li {
+  background: var(--log-bg);
+  padding: 4px 8px;
+  margin-bottom: 3px;
+  border-radius: 4px;
+  animation: log-fade 12s forwards;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hud-log .log-spad,
+.hud-log .log-penalty {
+  background: rgba(160, 20, 10, 0.75);
+}
+.hud-log .log-aws-horn,
+.hud-log .log-overspeed {
+  background: rgba(150, 95, 0, 0.7);
+}
+@keyframes log-fade {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.hud-alert {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+  max-width: 90vw;
+}
+.hud-alert[data-kind='danger'] {
+  background: rgba(190, 20, 10, 0.88);
+  animation: flash 0.8s steps(2, jump-none) infinite;
+}
+.hud-alert[data-kind='caution'] {
+  background: rgba(200, 130, 0, 0.88);
+  color: #111;
+}
+.hud-alert[data-kind='good'] {
+  background: rgba(20, 130, 60, 0.88);
+}
+
+.hud-assist {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--log-bg);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+  max-width: 340px;
+}
+.assist-advice {
+  color: var(--amber);
+}
+.assist-keys {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.aspect {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -1px;
+  background: var(--lamp-off);
+}
+.aspect-R {
+  background: var(--red);
+}
+.aspect-Y {
+  background: var(--amber);
+}
+.aspect-YY {
+  background: var(--amber);
+  box-shadow: 14px 0 0 var(--amber);
+  margin-right: 20px;
+}
+.aspect-G {
+  background: var(--green);
+}
+
+/* ── bottom: the desk ───────────────────────────────────────────────── */
+.hud-desk {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 12px;
+  padding: 10px 12px 12px;
+  background: linear-gradient(var(--desk), var(--desk-edge));
+  border-top: 3px solid #121315;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.panel {
+  background: var(--panel);
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+.panel-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.key-hint,
+.cell-label,
+.gauge-legend {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.gauge {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dial {
+  width: 100%;
+  height: auto;
+}
+.dial-bezel {
+  fill: #15171a;
+}
+.dial-face {
+  fill: #0d0e10;
+  stroke: #4b5056;
+  stroke-width: 1.5;
+}
+.tick {
+  stroke: #9aa1a8;
+  stroke-width: 1.2;
+}
+.tick.major {
+  stroke: #e7eaee;
+  stroke-width: 2.4;
+}
+.tick-label {
+  fill: #e7eaee;
+  font-size: 12px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.dial-label,
+.dial-unit {
+  fill: var(--muted);
+  font-size: 11px;
+  text-anchor: middle;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.dial-digital {
+  fill: #9cf0b8;
+  font: 600 18px ui-monospace, 'SF Mono', Menlo, monospace;
+  text-anchor: middle;
+}
+.dial-bug {
+  fill: var(--amber);
+}
+.dial-hub {
+  fill: #2c3035;
+  stroke: #777;
+}
+
+.controller .notches {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 2px;
+}
+.notch {
+  font: 600 11px ui-monospace, Menlo, monospace;
+  padding: 1px 10px;
+  border-radius: 3px;
+  text-align: center;
+  color: var(--muted);
+  background: #26292d;
+}
+.notch.active.notch-power {
+  background: #2f8f4d;
+  color: #fff;
+}
+.notch.active.notch-off {
+  background: #66707a;
+  color: #fff;
+}
+.notch.active.notch-brake {
+  background: #b5651d;
+  color: #fff;
+}
+
+.safety {
+  min-width: 300px;
+}
+.safety-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px 14px;
+  align-items: center;
+}
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.cell.tpws,
+.cell.lamps {
+  align-items: stretch;
+}
+.sunflower {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid #555;
+  background: #000;
+}
+.petal {
+  fill: #050505;
+}
+.petal.on {
+  fill: var(--yellow);
+}
+
+.lamp {
+  font: 700 10px Arial, sans-serif;
+  letter-spacing: 0.05em;
+  padding: 3px 6px;
+  border-radius: 3px;
+  text-align: center;
+  background: var(--lamp-off);
+  color: #777;
+}
+.lamp.red.on {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 0 10px var(--red);
+}
+.lamp.amber.on {
+  background: var(--amber);
+  color: #111;
+  box-shadow: 0 0 8px var(--amber);
+}
+.lamp.green.on {
+  background: var(--green);
+  color: #062;
+  box-shadow: 0 0 8px var(--green);
+}
+.lamp.warn {
+  background: var(--amber);
+  color: #111;
+  animation: flash 0.5s steps(2, jump-none) infinite;
+}
+.lamp.flash {
+  animation: flash 0.6s steps(2, jump-none) infinite;
+}
+
+.dra {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font: 700 11px Arial, sans-serif;
+  background: #3a1010;
+  color: #844;
+  border: 4px solid #555;
+}
+.dra.on {
+  background: var(--red);
+  color: #fff;
+  box-shadow: 0 0 14px var(--red);
+}
+
+.info {
+  min-width: 170px;
+}
+.clock {
+  font: 600 26px ui-monospace, 'SF Mono', Menlo, monospace;
+  color: #9cf0b8;
+  margin-bottom: 4px;
+}
+.info-line {
+  font-size: 12px;
+  color: var(--panel-text);
+  margin-top: 2px;
+}
+
+@keyframes flash {
+  to {
+    opacity: 0.35;
+  }
+}
+
+/* Narrower screens: shrink the desk rather than scroll. */
+@media (max-width: 1100px) {
+  .hud-desk {
+    gap: 6px;
+    padding: 6px;
+  }
+  .gauge {
+    width: 130px;
+  }
+  .safety {
+    min-width: 220px;
+  }
+  .info {
+    min-width: 120px;
+  }
+  .clock {
+    font-size: 20px;
+  }
+}
+@media (max-width: 760px) {
+  .hud-desk .controller,
+  .hud-desk .info {
+    display: none;
+  }
+  .gauge {
+    width: 110px;
+  }
+  .hud-assist {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-alert[data-kind='danger'],
+  .lamp.warn,
+  .lamp.flash {
+    animation: none;
+  }
+}
