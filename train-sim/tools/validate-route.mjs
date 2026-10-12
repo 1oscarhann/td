@@ -17,13 +17,14 @@ if (targets.length === 0) {
   process.exit(2);
 }
 
-const files = targets.flatMap((t) =>
-  statSync(t).isDirectory()
-    ? readdirSync(t)
-        .filter((f) => f.endsWith('.json'))
-        .map((f) => join(t, f))
-    : [t],
-);
+/** Route files: *.json directly in a folder, or route.json in its subfolders. */
+const findRoutes = (/** @type {string} */ dir) =>
+  readdirSync(dir).flatMap((f) => {
+    const path = join(dir, f);
+    if (statSync(path).isDirectory()) return readdirSync(path).includes('route.json') ? [join(path, 'route.json')] : [];
+    return f.endsWith('.json') ? [path] : [];
+  });
+const files = targets.flatMap((t) => (statSync(t).isDirectory() ? findRoutes(t) : [t]));
 
 let failed = 0;
 for (const file of files) {

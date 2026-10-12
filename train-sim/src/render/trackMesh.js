@@ -13,12 +13,13 @@ export const TRACK = Object.freeze({
 });
 
 /**
- * Sweep a cross-section along the alignment, like squeezing toothpaste along the track. Works on
- * curves because every slice is placed with the alignment. One function builds ballast, rails,
- * the third rail and platforms.
+ * Sweep a cross-section along a line, like squeezing toothpaste along the track. Works on curves
+ * because every slice is placed with the alignment. Builds ballast, rails, the third rail,
+ * platforms and hedges.
  *
  * @param {import('./coords.js').WorldMapper} mapper
  * @param {object} o
+ * @param {string} o.line
  * @param {number} o.from chainage to start at
  * @param {number} o.to chainage to finish at
  * @param {number} o.lateral centre of the profile, metres right of increasing chainage
@@ -26,8 +27,8 @@ export const TRACK = Object.freeze({
  * @param {number} [o.step] metres between slices
  * @param {number} [o.vRepeat] metres of track per texture repeat along the line
  */
-export function sweepProfile(mapper, { from, to, lateral, profile, step = 5, vRepeat = 1 }) {
-  const slices = Math.max(1, Math.ceil((to - from) / step));
+export function sweepProfile(mapper, { line, from, to, lateral, profile, step = 5, vRepeat = 1 }) {
+  const slices = Math.max(1, Math.ceil(Math.abs(to - from) / step));
   const n = profile.length;
   const positions = new Float32Array((slices + 1) * n * 3);
   const uvs = new Float32Array((slices + 1) * n * 2);
@@ -38,7 +39,7 @@ export function sweepProfile(mapper, { from, to, lateral, profile, step = 5, vRe
     const s = from + ((to - from) * i) / slices;
     for (let j = 0; j < n; j++) {
       const [lat, h] = profile[j];
-      mapper.point(s, lateral + lat, h, v);
+      mapper.point(line, s, lateral + lat, h, v);
       const k = i * n + j;
       positions.set([v.x, v.y, v.z], k * 3);
       uvs.set([(lat - minLat) / span, s / vRepeat], k * 2);
@@ -66,7 +67,7 @@ export function sweepProfile(mapper, { from, to, lateral, profile, step = 5, vRe
  * @param {number} bottom
  * @returns {[number, number][]} a box-shaped profile with sides and a top
  */
-const boxProfile = (halfWidth, top, bottom) => [
+export const boxProfile = (halfWidth, top, bottom) => [
   [-halfWidth, bottom],
   [-halfWidth, top],
   [halfWidth, top],
@@ -74,23 +75,27 @@ const boxProfile = (halfWidth, top, bottom) => [
 ];
 
 /**
- * Ballast, sleepers, running rails and the third rail for every track in the route.
- * @param {import('../route/route.js').Route} route
+ * Ballast, sleepers, running rails and the third rail for every track on the network.
+ * Branch tracks start a little way along so they don't z-fight with the main line at the junction.
+ * @param {import('../route/network.js').Network} network
  * @param {import('./coords.js').WorldMapper} mapper
  * @param {{ ballast: THREE.Texture }} textures
  */
-export function buildTrack(route, mapper, textures) {
+export function buildTrack(network, mapper, textures) {
   const group = new THREE.Group();
   group.name = 'track';
-  const from = 0;
-  const to = route.length;
   const ballastMat = new THREE.MeshLambertMaterial({ map: textures.ballast });
   const railMat = new THREE.MeshLambertMaterial({ color: 0x8a8580 });
   const conductorMat = new THREE.MeshLambertMaterial({ color: 0x6b6660 });
   const sleeperTop = -TRACK.railHeight;
 
-  for (const track of route.tracks.values()) {
+  for (const track of network.tracks.values()) {
+    const line = track.line;
+    const from = line.ends.start === 'junction' ? 6 : 0;
+    const to = line.length;
+    const step = 8;
     const bed = sweepProfile(mapper, {
+      line: line.id,
       from,
       to,
       lateral: track.offset,
@@ -100,32 +105,46 @@ export function buildTrack(route, mapper, textures) {
         [TRACK.bedTopHalfWidth, sleeperTop],
         [TRACK.bedHalfWidth, sleeperTop - TRACK.bedDepth],
       ],
-      step: 10,
+      step,
       vRepeat: 2.6,
     });
-    // The texture spans the whole bed, so stretch u across the full 4.8 m rather than per face.
     group.add(new THREE.Mesh(bed, ballastMat));
-
     for (const side of [-1, 1]) {
       const rail = sweepProfile(mapper, {
+        line: line.id,
         from,
         to,
         lateral: track.offset + side * TRACK.railCentre,
         profile: boxProfile(TRACK.railHeadWidth / 2, 0, sleeperTop),
-        step: 10,
+        step,
       });
       group.add(new THREE.Mesh(rail, railMat));
     }
-
     const conductorSide = track.conductorRail === 'left' ? -1 : 1;
     const third = sweepProfile(mapper, {
-      from,
+      line: line.id,
+      from: from + 10,
       to,
       lateral: track.offset + conductorSide * TRACK.conductorRailOffset,
       profile: boxProfile(0.04, TRACK.conductorRailRise, sleeperTop + 0.05),
-      step: 10,
+      step,
     });
     group.add(new THREE.Mesh(third, conductorMat));
+  }
+
+  // Buffer stops at the ends of terminus lines.
+  const bufferMat = new THREE.MeshLambertMaterial({ color: 0xc23b22 });
+  for (const track of network.tracks.values()) {
+    for (const [end, type] of [
+      [track.line.length, track.line.ends.end],
+      [0, track.line.ends.start],
+    ]) {
+      if (type !== 'buffers') continue;
+      const stop = new THREE.Mesh(new THREE.BoxGeometry(3, 1.1, 0.8), bufferMat);
+      mapper.point(track.line.id, end === 0 ? 1 : /** @type {number} */ (end) - 1, track.offset, 0.4, stop.position);
+      stop.rotation.y = mapper.yaw(track.line.id, /** @type {number} */ (end), 1);
+      group.add(stop);
+    }
   }
   return group;
 }

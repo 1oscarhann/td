@@ -387,3 +387,47 @@
     animation: none;
   }
 }
+
+/* ── signaller radio, timetable, extra lamps ───────────────────────── */
+.hud-radio {
+  position: absolute;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(720px, 90vw);
+  padding: 10px 16px 10px 40px;
+  border-radius: 8px;
+  background: rgba(16, 32, 52, 0.9);
+  border: 1px solid #3c6a9c;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #e3eefb;
+}
+.hud-radio::before {
+  content: '📻';
+  position: absolute;
+  left: 12px;
+  top: 10px;
+}
+.hud-radio[hidden] {
+  display: none;
+}
+.assist-row.dim {
+  opacity: 0.75;
+}
+.clock-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.warp {
+  color: var(--amber);
+  font: 700 14px ui-monospace, Menlo, monospace;
+}
+.next-stop {
+  font-weight: 600;
+  color: #fff;
+}
+.info-line.late {
+  color: var(--amber);
+}

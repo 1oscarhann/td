@@ -59,7 +59,10 @@ export class Hud {
     this.alert.setAttribute('role', 'alert');
     this.assist = h('div', 'hud-assist');
     this.assistHtml = '';
-    root.append(this.log, this.alert, this.assist);
+    this.radio = h('div', 'hud-radio');
+    this.radio.hidden = true;
+    this.radioUntil = 0;
+    root.append(this.log, this.alert, this.assist, this.radio);
 
     // Bottom: the desk.
     const desk = h('div', 'hud-desk');
@@ -91,16 +94,18 @@ export class Hud {
     const tpws = h('div', 'cell tpws');
     this.tpwsBrake = h('span', 'lamp red', 'BRAKE DEMAND');
     this.tpwsIsol = h('span', 'lamp amber', 'TEMP ISOL / FAULT');
-    this.tpwsOverride = h('span', 'lamp amber', 'TRAIN STOP O/RIDE');
+    this.tpwsOverride = h('span', 'lamp amber', 'TRAIN STOP O/RIDE (O)');
     tpws.append(h('span', 'cell-label', 'TPWS'), this.tpwsBrake, this.tpwsIsol, this.tpwsOverride);
     this.draLamp = h('span', 'dra', 'DRA');
     const draCell = h('div', 'cell');
     draCell.append(this.draLamp, h('span', 'cell-label', 'Reminder (R)'));
     this.dsdLamp = h('span', 'lamp green', 'DSD');
     this.doorsLamp = h('span', 'lamp amber', 'DOORS CLOSED');
+    this.raLamp = h('span', 'lamp green', 'RIGHT AWAY');
     this.powerLamp = h('span', 'lamp red', 'NO POWER');
+    this.wspLamp = h('span', 'lamp amber', 'WSP / SLIP');
     const lampsCell = h('div', 'cell lamps');
-    lampsCell.append(this.dsdLamp, this.doorsLamp, this.powerLamp);
+    lampsCell.append(this.dsdLamp, this.doorsLamp, this.raLamp, this.powerLamp, this.wspLamp);
     grid.append(awsCell, tpws, draCell, lampsCell);
     safety.append(grid);
 
@@ -111,10 +116,15 @@ export class Hud {
 
     const info = h('div', 'panel info');
     this.clock = h('div', 'clock', '--:--:--');
+    this.warp = h('span', 'warp');
     this.notchText = h('div', 'info-line');
     this.lineSpeed = h('div', 'info-line');
     this.doorsText = h('div', 'info-line');
-    info.append(h('div', 'panel-title', 'Clock'), this.clock, this.notchText, this.lineSpeed, this.doorsText);
+    this.nextStop = h('div', 'info-line next-stop');
+    this.punctuality = h('div', 'info-line');
+    const clockRow = h('div', 'clock-row');
+    clockRow.append(this.clock, this.warp);
+    info.append(h('div', 'panel-title', 'Clock · timetable'), clockRow, this.nextStop, this.punctuality, this.notchText, this.lineSpeed, this.doorsText);
 
     desk.append(ctrl, this.speedoHolder, safety, brakeHolder, info);
     this.applySettings(settings);
@@ -174,13 +184,21 @@ export class Hud {
    * @param {number} clockStart time of day the run started, in seconds
    */
   pushEvent(ev, clockStart) {
+    if (ev.type === 'signaller') {
+      this.radio.textContent = ev.text;
+      this.radio.hidden = false;
+      this.radioUntil = performance.now() + 22000;
+    }
     const li = h('li', `log-${ev.type}`, `${formatClock(ev.time + clockStart)}  ${ev.text}`);
     this.log.prepend(li);
     while (this.log.children.length > 6) this.log.lastElementChild?.remove();
   }
 
-  /** @param {import('../sim/simulation.js').Simulation} sim */
-  update(sim) {
+  /**
+   * @param {import('../sim/simulation.js').Simulation} sim
+   * @param {number} [timeScale] 1 = real time
+   */
+  update(sim, timeScale = 1) {
     const train = sim.train;
 
     this.speedo.setNeedle(0, this.speedValue(train.speed));
@@ -192,42 +210,78 @@ export class Hud {
 
     for (const n of NOTCHES) setClass(this.notchEls[n], 'active', n === sim.controller.notch);
 
-    // Safety lights. Flashing is done in CSS with the "flash" class.
     for (const petal of this.sunflower.children) setClass(petal, 'on', sim.aws.sunflower && petal.classList.contains('odd'));
-    setClass(this.tpwsBrake, 'on', sim.tpws.brakeDemand);
-    setClass(this.tpwsBrake, 'flash', sim.tpws.brakeDemand);
+    setClass(this.tpwsBrake, 'on', sim.tpws.brakeDemand || sim.penalty === 'oss');
+    setClass(this.tpwsBrake, 'flash', sim.tpws.brakeDemand || sim.penalty === 'oss');
+    setClass(this.tpwsOverride, 'on', sim.tsoActive);
     setClass(this.draLamp, 'on', sim.draSet);
     const dsdMode = this.settings.dsdMode;
     setText(this.dsdLamp, dsdMode === 'off' ? 'DSD OFF' : dsdMode === 'vigilance' ? 'VIGILANCE' : 'DSD');
     setClass(this.dsdLamp, 'on', dsdMode === 'hold' ? sim.held.dsd : dsdMode === 'vigilance' && !sim.dsd.warning);
     setClass(this.dsdLamp, 'warn', sim.dsd.warning);
     setClass(this.doorsLamp, 'on', sim.doors.closedAndLocked);
+    const call = sim.journey.current;
+    setClass(this.raLamp, 'on', call?.status === 'arrived' && call.raGiven);
     const inhibit = sim.tractionInhibitReason;
     setClass(this.powerLamp, 'on', inhibit !== null);
+    setClass(this.wspLamp, 'on', train.sliding || train.slipping);
+    setClass(this.wspLamp, 'flash', train.sliding || train.slipping);
 
     setText(this.clock, formatClock(sim.clock));
+    setText(this.warp, timeScale > 1 ? `×${timeScale}` : '');
     setText(this.notchText, NOTCH_TEXT[/** @type {keyof typeof NOTCH_TEXT} */ (sim.controller.notch)]);
-    setText(this.lineSpeed, `Line speed ${this.speedText(sim.lineSpeed)}`);
+    setText(this.lineSpeed, `Line speed ${this.speedText(sim.lineSpeed)}${sim.authority ? ' (caution)' : ''}`);
     setText(this.doorsText, `Doors ${sim.doors.state}${inhibit ? ` · no power: ${inhibit}` : ''}`);
+    this.updateTimetable(sim);
 
+    if (!this.radio.hidden && performance.now() > this.radioUntil) this.radio.hidden = true;
     this.updateAlert(sim);
     if (this.settings.assistOverlay) this.updateAssist(sim);
+  }
+
+  /** @param {import('../sim/simulation.js').Simulation} sim */
+  updateTimetable(sim) {
+    const next = sim.nextStop;
+    if (!next) {
+      setText(this.nextStop, sim.journey.complete ? 'Journey complete' : '');
+      setText(this.punctuality, '');
+      return;
+    }
+    const { call } = next;
+    if (call.status === 'arrived') {
+      const dep = call.dep === null ? '' : formatClock(call.dep).slice(0, 5);
+      setText(this.nextStop, `At ${call.name}${dep ? ` · dep ${dep}` : ''}`);
+      const wait = call.dep === null ? 0 : call.dep - sim.clock;
+      setText(this.punctuality, call.raGiven ? 'Right away given: go when the signal clears' : wait > 0 ? `Departure in ${Math.ceil(wait)} s: close doors (D) at time` : 'Close the doors (D) for the right away');
+      return;
+    }
+    const due = call.arr === null ? null : call.arr;
+    setText(this.nextStop, `Next: ${call.name}${due !== null ? ` · arr ${formatClock(due).slice(0, 5)}` : ''}`);
+    if (due !== null) {
+      const late = sim.clock - due;
+      setText(this.punctuality, late > 59 ? `Running ${Math.ceil(late / 60)} min late` : late > 0 ? 'Due now' : `${Math.ceil(-late / 60)} min to booked arrival`);
+      setClass(this.punctuality, 'late', late > 59);
+    }
   }
 
   /** @param {import('../sim/simulation.js').Simulation} sim */
   updateAlert(sim) {
     /** @type {[string, string] | null} */
     let alert = null;
-    if (sim.penalty) {
-      alert = ['danger', sim.train.isStationary ? 'Emergency brake applied. Press Q to reset.' : 'EMERGENCY BRAKE'];
+    if (sim.result) {
+      alert = [sim.result.ended ? 'danger' : 'good', sim.result.ended ? `Run ended: ${sim.result.ended}` : `Journey complete: ${sim.result.score} points (${sim.result.grade})`];
+    } else if (sim.penalty) {
+      alert = ['danger', sim.player.isStationary ? (sim.spadPending ? 'SPAD: call the signaller (C) before you move' : 'Emergency brake applied. Press Q to reset.') : 'EMERGENCY BRAKE'];
     } else if (sim.aws.hornSounding) {
       alert = ['caution', 'AWS warning: press Q to acknowledge'];
     } else if (sim.dsd.warning) {
       alert = ['caution', this.settings.dsdMode === 'vigilance' ? 'Vigilance: press Space' : "Dead man's handle: hold Space"];
+    } else if (sim.trespassers.some((t) => t.state === 'on-track' && t.seen)) {
+      alert = ['danger', 'Person on the line! Sound the horn (H)'];
     } else if (sim.overspeed) {
       alert = ['caution', `Overspeed: limit ${this.speedText(sim.lineSpeed)}`];
-    } else if (sim.result) {
-      alert = ['good', `Run complete: ${sim.result.score} points`];
+    } else if (sim.train.sliding) {
+      alert = ['caution', 'Wheel slide: low adhesion'];
     }
     this.alert.hidden = !alert;
     if (alert) {
@@ -242,31 +296,30 @@ export class Hud {
    */
   updateAssist(sim) {
     const lines = [];
-    const front = sim.train.position;
-    const next = sim.nextSignal;
-    if (next) {
-      const aspect = next.signal.aspect;
-      lines.push(`<div class="assist-row"><span class="aspect aspect-${aspect}"></span><b>${next.signal.id}</b> in ${Math.round(next.distance)} m: ${ASPECT_INFO[/** @type {keyof typeof ASPECT_INFO} */ (aspect)].name}</div>`);
-      if (aspect === Aspect.RED && sim.train.speed > 0.5) {
-        const need = requiredDeceleration(sim.train.speed, Math.max(1, next.distance - 20));
+    const front = sim.player.front;
+    const ahead = sim.signalling.signalsAhead(front, 4000, 2);
+    for (const [i, { signal, distance }] of ahead.entries()) {
+      const aspect = signal.aspect;
+      const feather = signal.featherLit ? ` + route ${signal.featherLit}` : '';
+      const held = signal.approachHeld ? ' (approach controlled)' : [...signal.held].some((r) => r.startsWith('lc:')) ? ' (level crossing)' : signal.failed ? ' (failed?)' : '';
+      lines.push(`<div class="assist-row${i ? ' dim' : ''}"><span class="aspect aspect-${aspect}"></span><b>${signal.id}</b> in ${Math.round(distance)} m: ${ASPECT_INFO[/** @type {keyof typeof ASPECT_INFO} */ (aspect)].name}${feather}${held}</div>`);
+      if (i === 0 && aspect === Aspect.RED && sim.player.speed > 0.5) {
+        const need = requiredDeceleration(sim.player.speed, Math.max(1, distance - 20));
         const advice = need < 0.15 ? 'coast for now' : need < 0.35 ? 'brake 1' : need < 0.65 ? 'brake 2' : need < 0.95 ? 'brake 3 now!' : 'too late, emergency!';
         lines.push(`<div class="assist-row assist-advice">To stop at it: ${need.toFixed(2)} m/s² → ${advice}</div>`);
       }
     }
-    const change = sim.route.speedLimits.nextChange(front, sim.dir);
-    if (change && Math.abs(change.position - front) < 4000) {
-      lines.push(`<div class="assist-row">Speed limit ${this.speedText(change.value)} in ${Math.round(Math.abs(change.position - front))} m</div>`);
-    }
-    const g = sim.dir * sim.route.gradientAt(front);
+    const change = sim.network.nextSpeedChange(front, 4000);
+    if (change) lines.push(`<div class="assist-row">Speed limit ${this.speedText(change.value)} in ${Math.round(change.distance)} m</div>`);
+    const g = sim.network.gradientAt(front);
     lines.push(`<div class="assist-row">Gradient: ${g === 0 ? 'level' : `1 in ${Math.round(1000 / Math.abs(g))} ${g > 0 ? 'rising' : 'falling'}`}</div>`);
-    const obj = sim.route.data.objective;
-    const platform = obj && sim.route.data.platforms.find((/** @type {any} */ p) => p.id === obj.platform);
-    if (platform && !sim.result) {
-      const marker = platform.stopMarkers?.[0]?.position ?? platform.to;
-      const d = sim.dir * (marker - front);
-      lines.push(`<div class="assist-row">Stop: ${platform.name} marker in ${d >= 0 ? `${Math.round(d)} m` : `${Math.round(-d)} m behind you`}</div>`);
+    const next = sim.nextStop;
+    if (next && next.call.status === 'pending' && Number.isFinite(next.distance)) {
+      const d = next.distance;
+      lines.push(`<div class="assist-row">Stop: ${next.call.name} marker in ${d >= 0 ? `${Math.round(d)} m` : `${Math.round(-d)} m behind you`}</div>`);
     }
-    lines.push('<div class="assist-keys">W/S controller · Q AWS / reset · Space DSD · D doors · R DRA · H horn · Tab hide · P pause</div>');
+    if (sim.authority) lines.push(`<div class="assist-row assist-advice">Signaller's authority: max ${this.speedText(sim.authority.maxSpeed)}${sim.authority.untilSignal ? ` until ${sim.authority.untilSignal}` : ''}</div>`);
+    lines.push('<div class="assist-keys">W/S controller · Q AWS/reset · Space DSD · D doors · R DRA · H horn · C radio · O TPWS override · T time warp · Tab hide · P pause</div>');
     const html = lines.join('');
     if (html !== this.assistHtml) {
       this.assistHtml = html;

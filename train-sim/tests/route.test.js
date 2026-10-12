@@ -108,33 +108,40 @@ describe('route files', () => {
     const bad = testTrack();
     bad.signals[0].track = 'NOPE';
     bad.signals[1].id = bad.signals[0].id;
-    bad.gradients[0].permille = 400;
+    bad.lines[0].gradients[0].permille = 400;
     bad.platforms[0].stopMarkers[0].position = 9999;
+    bad.services[0].calls[0].platform = 'ZZ';
     const problems = validateRoute(bad);
     expect(problems).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('unknown track "NOPE"'),
+        expect.stringContaining('unknown track "main/NOPE"'),
         expect.stringContaining('id used twice'),
         expect.stringContaining('gradients[0].permille'),
         expect.stringContaining('stop marker'),
+        expect.stringContaining('unknown platform "ZZ"'),
       ]),
     );
     expect(() => new Route(bad)).toThrow(RouteError);
   });
 
-  it('exposes gradients, heights and speed limits', () => {
-    const route = new Route(testTrack());
-    expect(route.length).toBe(8500);
-    expect(route.gradientAt(3500)).toBe(5);
-    expect(route.elevationAt(4200)).toBeCloseTo(5 + 6); // start height + 1200 m at 1 in 200
-    expect(route.speedLimitAt(100)).toBeCloseTo(mphToMps(75));
-    expect(route.speedLimitAt(6000)).toBeCloseTo(mphToMps(50));
-    expect(route.speedLimitOver(6380, 6460)).toBeCloseTo(mphToMps(50)); // rear still in the restriction
+  it('rejects the old single-line format with a clear message', () => {
+    expect(validateRoute({ id: 'x', name: 'x', version: 1 })).toEqual(expect.arrayContaining([expect.stringContaining('version: must be 2')]));
   });
 
-  it('knows which platform a train is alongside', () => {
+  it('builds the network with gradients, heights and speed limits', () => {
     const route = new Route(testTrack());
-    expect(route.platformAlongside('UP', 7540, 7622)?.id).toBe('PB');
-    expect(route.platformAlongside('UP', 7600, 7682)).toBeNull(); // front overhangs the end
+    const main = route.network.line('main');
+    expect(main.length).toBe(8500);
+    expect(main.gradientAt(3500)).toBe(5);
+    expect(main.elevationAt(4200)).toBeCloseTo(5 + 6); // start height + 1200 m at 1 in 200
+    expect(main.speedLimits.valueAt(100)).toBeCloseTo(mphToMps(75));
+    expect(main.speedLimits.valueAt(6000)).toBeCloseTo(mphToMps(40));
+    expect(route.network.gradientAt({ track: 'main/DOWN', s: 3500 })).toBe(-5); // downhill the other way
+  });
+
+  it('finds stop markers by train length', () => {
+    const route = new Route(testTrack());
+    expect(route.stopFor('PB', 4)).toEqual({ track: 'main/UP', s: 7625 });
+    expect(route.stopFor('PB', 12)).toEqual({ track: 'main/UP', s: 7635 }); // no 12-car marker: near the end
   });
 });

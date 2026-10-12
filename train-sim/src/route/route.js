@@ -1,108 +1,79 @@
-import { mphToMps } from '../core/units.js';
-import { Alignment } from './alignment.js';
-import { StepProfile } from './profile.js';
+import { Network } from './network.js';
 import { validateRoute } from './validate.js';
 
 export class RouteError extends Error {
   /** @param {string[]} problems */
   constructor(problems) {
-    super(`Route file has problems:\n- ${problems.join('\n- ')}`);
+    super(`Route file has problems:\n- ${problems.slice(0, 20).join('\n- ')}${problems.length > 20 ? `\n…and ${problems.length - 20} more` : ''}`);
     this.problems = problems;
   }
 }
 
 /**
- * A route loaded from JSON (format: docs/ROUTE_FORMAT.md, files: public/data/routes).
- * Positions are chainage in metres from the start of the route.
+ * A route loaded from JSON (format: docs/ROUTE_FORMAT.md, files: public/data/routes): the track
+ * network plus stations, platforms, signals, level crossings, services and scenery.
  */
 export class Route {
-  /** @param {any} data parsed route JSON */
-  constructor(data) {
+  /**
+   * @param {any} data parsed route JSON
+   * @param {string} [baseUrl] where to load companion files (terrain, buildings) from
+   */
+  constructor(data, baseUrl = '') {
     const problems = validateRoute(data);
     if (problems.length) throw new RouteError(problems);
     this.data = data;
+    this.baseUrl = baseUrl;
     this.id = /** @type {string} */ (data.id);
     this.name = /** @type {string} */ (data.name);
-    this.alignment = new Alignment(data.alignment.points);
-    this.length = this.alignment.length;
-    this.startElevationM = data.alignment.startElevationM ?? 0;
-    this.gradients = new StepProfile(
-      data.gradients.map((/** @type {any} */ g) => ({ from: g.from, to: g.to, value: g.permille })),
-    );
-    // The lowest limit wins where restrictions overlap; anywhere unlisted gets the line speed.
-    this.speedLimits = new StepProfile(
-      data.speedLimits.map((/** @type {any} */ l) => ({ from: l.from, to: l.to, value: mphToMps(l.mph) })),
-      { defaultValue: mphToMps(data.lineSpeedMph), combine: Math.min },
-    );
-    /** @type {Map<string, { id: string, name?: string, offset: number, dir: 1 | -1, conductorRail?: 'left' | 'right' }>} */
-    this.tracks = new Map(data.tracks.map((/** @type {any} */ t) => [t.id, t]));
+    this.network = new Network(data);
+    /** @type {Map<string, any>} */
+    this.platforms = new Map((data.platforms ?? []).map((/** @type {any} */ p) => [p.id, p]));
+    /** @type {Map<string, any>} */
+    this.stations = new Map((data.stations ?? []).map((/** @type {any} */ s) => [s.id, s]));
+    /** @type {any[]} */
+    this.services = data.services;
   }
 
   /** @param {string} url */
   static async load(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Couldn't load route ${url} (HTTP ${res.status})`);
-    return new Route(await res.json());
+    return new Route(await res.json(), new URL('.', url).href);
   }
 
-  /** @param {string} trackId */
-  track(trackId) {
-    const t = this.tracks.get(trackId);
-    if (!t) throw new Error(`Unknown track ${trackId}`);
-    return t;
+  /** @param {string} id */
+  service(id) {
+    const s = this.services.find((x) => x.id === id);
+    if (!s) throw new Error(`Unknown service ${id}`);
+    return s;
   }
 
-  /**
-   * Gradient in ‰, + = rising towards increasing chainage.
-   * @param {number} s
-   */
-  gradientAt(s) {
-    return this.gradients.valueAt(s);
-  }
-
-  /** @param {number} s */
-  elevationAt(s) {
-    return this.startElevationM + this.gradients.integral(s) / 1000;
-  }
-
-  /** @param {number} s @returns {number} m/s */
-  speedLimitAt(s) {
-    return this.speedLimits.valueAt(s);
+  /** @param {string} id */
+  platform(id) {
+    const p = this.platforms.get(id);
+    if (!p) throw new Error(`Unknown platform ${id}`);
+    return p;
   }
 
   /**
-   * Lowest limit anywhere under a train. The rear has to clear a restriction before you can
-   * speed up again, so the limit that matters is the lowest one between rear and front.
-   * @param {number} a
-   * @param {number} b
-   * @returns {number} m/s
+   * Where the front of a train of `cars` cars stops at a platform: its stop marker, or just short
+   * of the far end if there isn't one for that length.
+   * @param {string} platformId
+   * @param {number} cars
+   * @returns {import('./network.js').TrackPos}
    */
-  speedLimitOver(a, b) {
-    return this.speedLimits.minBetween(a, b);
+  stopFor(platformId, cars) {
+    const p = this.platform(platformId);
+    const track = this.network.track(`${p.line}/${p.track}`);
+    const markers = p.stopMarkers ?? [];
+    const exact = markers.find((/** @type {any} */ m) => m.cars === cars);
+    const fallback = markers.find((/** @type {any} */ m) => m.cars >= cars);
+    const s = (exact ?? fallback)?.position ?? (track.dir > 0 ? p.to - 5 : p.from + 5);
+    return { track: track.key, s };
   }
 
-  /** @param {string} trackId */
-  signalsOnTrack(trackId) {
-    const dir = this.track(trackId).dir;
-    return (this.data.signals ?? [])
-      .filter((/** @type {any} */ s) => s.track === trackId)
-      .map((/** @type {any} */ s) => ({ ...s, dir }));
-  }
-
-  /** @param {string} trackId */
-  platformsOnTrack(trackId) {
-    return (this.data.platforms ?? []).filter((/** @type {any} */ p) => p.track === trackId);
-  }
-
-  /**
-   * The platform a whole train is standing alongside, if any.
-   * @param {string} trackId
-   * @param {number} a one end of the train
-   * @param {number} b the other end
-   */
-  platformAlongside(trackId, a, b) {
-    const lo = Math.min(a, b);
-    const hi = Math.max(a, b);
-    return this.platformsOnTrack(trackId).find((/** @type {any} */ p) => p.from <= lo && hi <= p.to) ?? null;
+  /** Display name of a station id. @param {string} id */
+  stationName(id) {
+    return this.stations.get(id)?.name ?? id;
   }
 }

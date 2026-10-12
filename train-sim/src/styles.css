@@ -244,3 +244,32 @@ input:focus-visible {
 #fatal[hidden] {
   display: none;
 }
+
+.pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.bindings {
+  margin-top: 14px;
+  color: var(--card-muted);
+  font-size: 14px;
+}
+.bindings summary {
+  cursor: pointer;
+  color: var(--card-text);
+}
+.bindings button.rebind {
+  padding: 3px 8px;
+  font-size: 12px;
+}
+.bindings button.listening {
+  background: #7a5b00;
+}
+#loading:empty {
+  display: none;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}

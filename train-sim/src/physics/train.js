@@ -9,7 +9,16 @@ const STAND_EPS = 1e-4;
  * @property {number} powerDemand 0..1 share of max tractive effort
  * @property {number} brakeDemand requested deceleration in m/s² (0 = brakes released)
  * @property {number} gradientPermille gradient under the train; + is uphill in the direction of travel
+ * @property {number} [adhesion] wheel–rail friction coefficient μ available (dry ≈ 0.25, wet ≈ 0.12,
+ *   leaf mulch ≈ 0.03). Omit for unlimited grip.
  */
+
+/** Wheel-slide protection doesn't get all of the available grip while it's working. */
+const WSP_EFFICIENCY = 0.85;
+/** Sand improves grip once the automatic sanders kick in. */
+const SAND_FACTOR = 1.4;
+/** Seconds of slip or slide before the sanders start. */
+const SAND_DELAY_S = 0.6;
 
 /**
  * A train as a single point mass moving along the track (1D). Good enough for a train: it can
@@ -41,6 +50,14 @@ export class Train {
     /** Last step's forces in newtons, for the HUD, audio and debugging. */
     this.forces = { traction: 0, brake: 0, resistance: 0, gradient: 0 };
     this.odometer = 0;
+    /** Wheels sliding under braking (WSP working). */
+    this.sliding = false;
+    /** Wheels spinning under power (traction control working). */
+    this.slipping = false;
+    this.sanding = false;
+    this.slipTimer = 0;
+    /** Rate of change of acceleration (m/s³), for ride-comfort scoring. */
+    this.jerk = 0;
   }
 
   get speed() {
@@ -80,8 +97,9 @@ export class Train {
    * Advance the physics by one fixed step.
    * @param {number} dt seconds
    * @param {TrainControls} controls
+   * @returns {number} distance moved along the direction of travel (negative when rolling back)
    */
-  step(dt, { powerDemand, brakeDemand, gradientPermille }) {
+  step(dt, { powerDemand, brakeDemand, gradientPermille, adhesion = Infinity }) {
     const spec = this.spec;
     this.prevPosition = this.position;
 
@@ -97,9 +115,21 @@ export class Train {
 
     const v = this.velocity;
     const speed = Math.abs(v);
-    const traction = this.tractionLevel * this.availableTractiveEffort(speed); // only ever pushes forwards
+    let traction = this.tractionLevel * this.availableTractiveEffort(speed); // only ever pushes forwards
     const gradient = -this.mass * G * (gradientPermille / 1000); // small angles: sin θ ≈ tan θ
-    const brake = this.bcPressure * spec.brake.decelPerBar * this.effectiveMass; // load-weighed brake
+    let brake = this.bcPressure * spec.brake.decelPerBar * this.effectiveMass; // load-weighed brake
+
+    // Grip. Ask the wheels for more than the rail can give and they slide (braking) or spin
+    // (power). The train's protection systems claw back most of it; sand helps after a moment.
+    const mu = adhesion * (this.sanding ? SAND_FACTOR : 1);
+    const brakeLimit = mu * this.mass * G; // every axle is braked
+    const tractionLimit = mu * this.mass * G * spec.motoredAxleFraction;
+    this.sliding = speed > 0.5 && brake > brakeLimit;
+    this.slipping = traction > tractionLimit;
+    if (this.sliding) brake = brakeLimit * WSP_EFFICIENCY;
+    if (this.slipping) traction = tractionLimit * WSP_EFFICIENCY;
+    this.slipTimer = this.sliding || this.slipping ? this.slipTimer + dt : Math.max(0, this.slipTimer - dt * 0.5);
+    this.sanding = this.slipTimer > SAND_DELAY_S;
     const resistance = this.resistanceAt(speed);
     const drive = traction + gradient; // the forces that can get a train moving
 
@@ -116,7 +146,9 @@ export class Train {
       if (Math.sign(vNew) !== sign) vNew = 0;
     }
 
-    this.acceleration = (vNew - v) / dt;
+    const acceleration = (vNew - v) / dt;
+    this.jerk = (acceleration - this.acceleration) / dt;
+    this.acceleration = acceleration;
     const distance = 0.5 * (v + vNew) * dt; // trapezoid rule: exact for steady acceleration
     this.position += this.dir * distance;
     this.odometer += Math.abs(distance);
@@ -125,5 +157,6 @@ export class Train {
     this.forces.brake = brake;
     this.forces.resistance = resistance;
     this.forces.gradient = gradient;
+    return distance;
   }
 }

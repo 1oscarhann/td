@@ -8,6 +8,22 @@
  */
 
 /** @type {Readonly<Record<string, string[]>>} */
+/** What each action is called in the key-binding screen. */
+export const ACTION_NAMES = Object.freeze({
+  powerUp: 'Controller: towards power',
+  powerDown: 'Controller: towards brake',
+  horn: 'Horn (Shift for low tone)',
+  doors: 'Doors',
+  dsd: "Dead man's handle",
+  awsAck: 'AWS acknowledge / reset',
+  dra: 'Driver’s reminder appliance',
+  tso: 'TPWS train stop override',
+  radio: 'Call the signaller',
+  timeWarp: 'Time warp',
+  pause: 'Pause',
+  assist: 'Driving aid',
+});
+
 export const DEFAULT_BINDINGS = Object.freeze({
   powerUp: ['KeyW', 'ArrowUp'],
   powerDown: ['KeyS', 'ArrowDown'],
@@ -16,6 +32,9 @@ export const DEFAULT_BINDINGS = Object.freeze({
   dsd: ['Space'],
   awsAck: ['KeyQ'], // AWS acknowledge, and reset after a penalty brake
   dra: ['KeyR'],
+  tso: ['KeyO'], // TPWS train stop override
+  radio: ['KeyC'], // call the signaller
+  timeWarp: ['KeyT'],
   pause: ['KeyP', 'Escape'],
   assist: ['Tab'],
 });
@@ -33,6 +52,9 @@ export const DEFAULT_BINDINGS = Object.freeze({
  * @property {boolean} draToggle
  * @property {boolean} pause
  * @property {boolean} assistToggle
+ * @property {boolean} tso
+ * @property {boolean} radio
+ * @property {boolean} timeWarp
  */
 
 /** @returns {DriverInput} */
@@ -48,6 +70,9 @@ export function emptyInput() {
     draToggle: false,
     pause: false,
     assistToggle: false,
+    tso: false,
+    radio: false,
+    timeWarp: false,
   };
 }
 
@@ -60,17 +85,28 @@ export class KeyboardInput {
     this.target = target;
     /** @type {Map<string, string>} */
     this.codeToAction = new Map();
-    for (const [action, codes] of Object.entries(bindings)) {
-      for (const code of codes) this.codeToAction.set(code, action);
-    }
+    this.setBindings(bindings);
     /** @type {Set<string>} key codes currently down */
     this.down = new Set();
     /** @type {Map<string, number>} presses per action since the last poll */
     this.presses = new Map();
     this.shift = false;
+    /** @type {null | ((code: string) => void)} next key press goes here (for rebinding) */
+    this.capture = null;
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
     this.releaseAll = this.releaseAll.bind(this);
+  }
+
+  /**
+   * Use these bindings (any action not listed keeps its default).
+   * @param {Readonly<Record<string, string[]>>} bindings
+   */
+  setBindings(bindings) {
+    this.codeToAction.clear();
+    for (const [action, codes] of Object.entries({ ...DEFAULT_BINDINGS, ...bindings })) {
+      for (const code of codes) this.codeToAction.set(code, action);
+    }
   }
 
   attach() {
@@ -89,6 +125,13 @@ export class KeyboardInput {
   /** @param {KeyboardEvent} e */
   onKeyDown(e) {
     this.shift = e.shiftKey;
+    if (this.capture) {
+      e.preventDefault();
+      const done = this.capture;
+      this.capture = null;
+      done(e.code);
+      return;
+    }
     const action = this.codeToAction.get(e.code);
     if (!action || e.ctrlKey || e.metaKey || e.altKey) return; // leave browser shortcuts alone
     // Let menus keep their own keys (arrow keys in a dropdown, Space on a button).
@@ -134,6 +177,9 @@ export class KeyboardInput {
       draToggle: presses('dra') > 0,
       pause: presses('pause') > 0,
       assistToggle: presses('assist') > 0,
+      tso: presses('tso') > 0,
+      radio: presses('radio') > 0,
+      timeWarp: presses('timeWarp') > 0,
     };
     this.presses.clear();
     return input;

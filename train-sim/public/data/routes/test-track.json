@@ -1,79 +1,83 @@
 {
   "id": "test-track",
   "name": "Test Track",
-  "description": "Straight 8.5 km double-track test line for Milestone 1. A train ahead holds the first signal at red, then clears it step by step. Drive to Test Platform B and stop at the 4-car marker.",
-  "version": 1,
+  "description": "Straight 8.5 km double-track test line. A train ahead holds the first signal at red, then clears it step by step. Includes a full-barrier crossing, an automatic half barrier and a footpath crossing to practise on.",
+  "version": 2,
   "units": {
-    "position": "metres of chainage from the start of the route",
+    "position": "metres of chainage from the start of each line",
     "speed": "mph",
     "gradient": "per-mille (‰): + rises towards increasing chainage. 1 in 200 = 5"
   },
-  "startTime": "09:00:00",
-  "lineSpeedMph": 75,
-  "alignment": {
-    "points": [[0, 0], [8500, 0]],
-    "startElevationM": 5
-  },
-  "tracks": [
-    { "id": "UP", "name": "Up Main", "offset": -1.7, "dir": 1, "conductorRail": "right" },
-    { "id": "DOWN", "name": "Down Main", "offset": 1.7, "dir": -1, "conductorRail": "right" }
-  ],
-  "gradients": [
-    { "from": 0, "to": 3000, "permille": 0 },
-    { "from": 3000, "to": 4200, "permille": 5, "note": "1 in 200 rising" },
-    { "from": 4200, "to": 5400, "permille": -4, "note": "1 in 250 falling" },
-    { "from": 5400, "to": 8500, "permille": 0 }
-  ],
-  "speedLimits": [
-    { "from": 5900, "to": 6400, "mph": 50, "note": "test permanent speed restriction" }
-  ],
-  "signalling": { "overlapM": 180, "endOfLine": "open" },
-  "signals": [
-    { "id": "TT1", "track": "UP", "position": 2500, "aspects": "4" },
-    { "id": "TT2", "track": "UP", "position": 4000, "aspects": "4" },
-    { "id": "TT3", "track": "UP", "position": 5500, "aspects": "4" },
-    { "id": "TT4", "track": "UP", "position": 7000, "aspects": "4" }
-  ],
-  "platforms": [
+  "lines": [
     {
-      "id": "PA",
-      "name": "Test Platform A",
-      "track": "UP",
-      "from": 80,
-      "to": 330,
-      "side": "left",
-      "stopMarkers": [{ "cars": 4, "position": 320 }]
-    },
-    {
-      "id": "PB",
-      "name": "Test Platform B",
-      "track": "UP",
-      "from": 7400,
-      "to": 7640,
-      "side": "left",
-      "stopMarkers": [{ "cars": 4, "position": 7625 }]
+      "id": "main",
+      "name": "Test line",
+      "alignment": { "points": [[0, 0], [8500, 0]], "startElevationM": 5 },
+      "lineSpeedMph": 75,
+      "ends": { "start": "open", "end": "open" },
+      "tracks": [
+        { "id": "UP", "name": "Up Main", "offset": -1.7, "dir": 1, "conductorRail": "right" },
+        { "id": "DOWN", "name": "Down Main", "offset": 1.7, "dir": -1, "conductorRail": "right" }
+      ],
+      "gradients": [
+        { "from": 0, "to": 3000, "permille": 0 },
+        { "from": 3000, "to": 4200, "permille": 5, "note": "1 in 200 rising" },
+        { "from": 4200, "to": 5400, "permille": -4, "note": "1 in 250 falling" },
+        { "from": 5400, "to": 8500, "permille": 0 }
+      ],
+      "speedLimits": [{ "from": 5900, "to": 6400, "mph": 40, "note": "test permanent speed restriction" }]
     }
   ],
-  "levelCrossings": [],
-  "junctions": [],
-  "trains": {
-    "player": { "track": "UP", "frontPosition": 320, "notch": "B3" },
-    "ai": [
-      {
-        "id": "1A23",
-        "track": "UP",
-        "frontPosition": 2900,
-        "lengthM": 81.6,
-        "departAt": [25, 70],
-        "accelMps2": 0.55,
-        "maxSpeedMph": 60,
-        "note": "The train ahead. It holds TT1 at red until it leaves the section, so every run starts with a signal check."
-      }
-    ]
-  },
-  "objective": {
-    "platform": "PB",
-    "description": "Drive to Test Platform B, stop at the 4-car marker and open the doors."
-  },
+  "points": [],
+  "signalling": { "overlapM": 180 },
+  "signals": [
+    { "id": "TT1", "line": "main", "track": "UP", "position": 2500, "aspects": "4", "kind": "protecting" },
+    { "id": "TT2", "line": "main", "track": "UP", "position": 4000, "aspects": "4" },
+    { "id": "TT3", "line": "main", "track": "UP", "position": 5500, "aspects": "4" },
+    { "id": "TT4", "line": "main", "track": "UP", "position": 7000, "aspects": "4" },
+    { "id": "TD1", "line": "main", "track": "DOWN", "position": 7000, "aspects": "4" },
+    { "id": "TD2", "line": "main", "track": "DOWN", "position": 3900, "aspects": "4", "kind": "protecting" },
+    { "id": "TD3", "line": "main", "track": "DOWN", "position": 2400, "aspects": "4" }
+  ],
+  "stations": [
+    { "id": "TPA", "name": "Test Platform A", "line": "main", "position": 200 },
+    { "id": "TPB", "name": "Test Platform B", "line": "main", "position": 7520 }
+  ],
+  "platforms": [
+    { "id": "PA", "station": "TPA", "name": "Test Platform A", "line": "main", "track": "UP", "from": 80, "to": 330, "side": "left", "stopMarkers": [{ "cars": 4, "position": 320 }] },
+    { "id": "PB", "station": "TPB", "name": "Test Platform B", "line": "main", "track": "UP", "from": 7400, "to": 7640, "side": "left", "stopMarkers": [{ "cars": 4, "position": 7625 }] }
+  ],
+  "levelCrossings": [
+    { "id": "TLANE", "name": "Test Lane", "line": "main", "position": 3300, "type": "MCB", "road": "Test Lane" },
+    { "id": "TFP", "name": "Test footpath", "line": "main", "position": 5200, "type": "FP", "whistle": true },
+    { "id": "TAHB", "name": "Test Road AHB", "line": "main", "position": 6700, "type": "AHB", "road": "Test Road" }
+  ],
+  "services": [
+    {
+      "id": "TEST",
+      "headcode": "2T01",
+      "name": "Test Platform A → Test Platform B",
+      "description": "The Milestone 1 test run: a red signal, a crossing, a speed restriction and a platform stop.",
+      "plan": {},
+      "calls": [
+        { "platform": "PA", "dep": "09:01:30" },
+        { "platform": "PB", "arr": "09:11:00" }
+      ]
+    }
+  ],
+  "traffic": [
+    {
+      "id": "1A23",
+      "name": "The train ahead",
+      "once": true,
+      "appear": "09:00:00",
+      "entry": { "line": "main", "track": "UP", "position": 2900 },
+      "speedMph": 0,
+      "holdS": [55, 100],
+      "maxSpeedMph": 60,
+      "calls": [],
+      "note": "Holds TT1 at red until it leaves the section."
+    }
+  ],
   "scenery": { "seed": 1377, "hills": "left" }
 }

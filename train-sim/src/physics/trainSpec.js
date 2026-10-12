@@ -11,6 +11,7 @@ import { mphToMps } from '../core/units.js';
  * @property {number} tareMassKg empty weight
  * @property {number} payloadKg default passenger load
  * @property {number} rotationalMassFactor spinning wheels, gears and motor rotors act like extra mass when you speed up or slow down
+ * @property {number} motoredAxleFraction share of the train's weight on driven axles (limits pulling power on a slippery rail)
  * @property {number} maxSpeedMps
  * @property {TractionSpec} traction
  * @property {BrakeSpec} brake
@@ -52,6 +53,7 @@ export const CLASS_377_4 = Object.freeze({
   payloadKg: 10_000, // (A) about 130 passengers at 75 kg
   rotationalMassFactor: 1.08, // (A) typical EMU is 6–10 %
   maxSpeedMps: mphToMps(100), // Wikipedia
+  motoredAxleFraction: 0.375, // 3 motor cars × one powered bogie = 6 of 16 axles (Wikipedia formation)
   traction: {
     maxPowerW: 1_200_000, // 6 × 200 kW motors (Wikipedia)
     maxTractiveEffortN: 160_000, // (A) gives about 0.8 m/s² from a stand
