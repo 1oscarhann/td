@@ -11,7 +11,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { area, cumulative, inPolygon, makeProjection, pointAlong, projectOnto, simplify } from './lib/geo.mjs';
+import { area, cumulative, dist, inPolygon, makeProjection, pointAlong, projectOnto, simplify } from './lib/geo.mjs';
 import { RailGraph } from './lib/railgraph.mjs';
 import { Dem } from './lib/dem.mjs';
 import { TERRAIN_ZOOM } from './fetch-terrain.mjs';
@@ -648,8 +648,40 @@ const riverLines = water
   .filter((e) => e.tags?.waterway === 'river' && e.geometry)
   .map((e) => simplify(e.geometry.map((/** @type {any} */ g) => P(g.lat, g.lon)), 3).map(([x, y]) => [round(x), round(y)]));
 
+/** Not buildings we can extrude: platform canopies and roofs are drawn with the platforms. */
+const NOT_BUILDINGS = /^(roof|canopy|carport|bridge|construction|no)$/;
+/** Which side of the line a track's platforms are on (−1 left, +1 right of increasing chainage). */
+const platformSide = (/** @type {string} */ line, /** @type {string} */ track) => ((line === 'main') === (track === 'UP') ? -1 : 1);
+
+/**
+ * Footprints that would stand on the track or on a platform (OSM often maps the station roof or
+ * a canopy as a building, which extruded becomes a wall across the platform).
+ * @param {[number, number][]} pts
+ */
+function encroaches(pts) {
+  if (!pts.some((p) => locate(p, 60))) return false;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i];
+    const b = pts[(i + 1) % pts.length];
+    const n = Math.max(1, Math.ceil(dist(a, b) / 3));
+    for (let k = 0; k <= n; k++) {
+      const hit = locate([a[0] + ((b[0] - a[0]) * k) / n, a[1] + ((b[1] - a[1]) * k) / n], 9);
+      if (!hit) continue;
+      if (hit.d < 4.5) return true;
+      if (chosen.some((p) => p.line === hit.line && hit.s >= p.from - 10 && hit.s <= p.to + 10 && Math.sign(hit.lateral) === platformSide(p.line, p.track))) return true;
+    }
+  }
+  return false;
+}
+
+let dropped = 0;
 const buildings = layer('buildings')
-  .filter((e) => e.type === 'way' && e.geometry && e.geometry.length >= 4)
+  .filter((e) => e.type === 'way' && e.geometry && e.geometry.length >= 4 && !NOT_BUILDINGS.test(e.tags?.building ?? ''))
+  .filter((e) => {
+    const bad = encroaches(e.geometry.map((/** @type {any} */ g) => P(g.lat, g.lon)));
+    if (bad) dropped++;
+    return !bad;
+  })
   .map((e) => {
     const pts = simplify(e.geometry.map((/** @type {any} */ g) => P(g.lat, g.lon)), 0.6).slice(0, -1);
     const t = e.tags ?? {};
@@ -742,5 +774,5 @@ writeFileSync(join(OUT, 'terrain.bin'), Buffer.from(terrain.data.buffer));
 writeFileSync(join(OUT, 'scenery.json'), JSON.stringify({ woods, riverAreas, riverLines, buildings, roads }));
 writeFileSync(join(OUT, 'route.json'), JSON.stringify(route, null, 1));
 const kb = (/** @type {string} */ f) => `${Math.round(readFileSync(join(OUT, f)).length / 1024)} kB`;
-console.log(`wrote route.json (${kb('route.json')}), terrain.bin (${kb('terrain.bin')}, ${terrain.header.nx}×${terrain.header.ny}), scenery.json (${kb('scenery.json')}: ${buildings.length} buildings, ${roads.length} roads, ${woods.length} woods)`);
+console.log(`wrote route.json (${kb('route.json')}), terrain.bin (${kb('terrain.bin')}, ${terrain.header.nx}×${terrain.header.ny}), scenery.json (${kb('scenery.json')}: ${buildings.length} buildings (${dropped} on the track or platforms left out), ${roads.length} roads, ${woods.length} woods)`);
 if (!existsSync(join(OUT, 'route.json'))) process.exit(1);

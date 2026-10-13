@@ -34,7 +34,7 @@ export function buildBuildings(data, terrain) {
     if (THREE.ShapeUtils.isClockWise(pts)) pts.reverse();
     const cx = pts.reduce((a, p) => a + p.x, 0) / pts.length;
     const cy = pts.reduce((a, p) => a + p.y, 0) / pts.length;
-    const base = Math.min(...pts.map((p) => terrain.rawHeight(p.x, p.y)), terrain.rawHeight(cx, cy)) - 0.3;
+    const base = Math.min(...pts.map((p) => terrain.height(p.x, p.y)), terrain.height(cx, cy)) - 0.3;
     let geo;
     try {
       geo = new THREE.ExtrudeGeometry(new THREE.Shape(pts), { depth: height, bevelEnabled: false });
@@ -100,7 +100,7 @@ export function buildRoads(data, terrain) {
       const nx = -(b[1] - a[1]) / len;
       const ny = (b[0] - a[0]) / len;
       const [x, y] = dense[i];
-      const h = terrain.rawHeight(x, y) + 0.25;
+      const h = terrain.height(x, y) + 0.25;
       positions.push(x + nx * w, h, -(y + ny * w), x - nx * w, h, -(y - ny * w));
       if (i > 0) {
         const k = start + (i - 1) * 2;
@@ -220,7 +220,7 @@ export function buildTrees(data, terrain, network) {
   const tmp = new THREE.Object3D();
   const c = new THREE.Color();
   trees.forEach(([x, y, h], i) => {
-    const g = terrain.rawHeight(x, y);
+    const g = terrain.height(x, y);
     tmp.position.set(x, g + h * 0.3, -y);
     tmp.scale.set(1, h * 0.6, 1);
     tmp.rotation.set(0, 0, 0);
@@ -256,7 +256,7 @@ export function buildLandmarks(landmarks, terrain) {
   const copper = new THREE.MeshLambertMaterial({ color: 0x6f9a86 });
   for (const lm of landmarks) {
     const g = new THREE.Group();
-    const h0 = terrain.rawHeight(lm.x, lm.y);
+    const h0 = terrain.height(lm.x, lm.y);
     if (lm.kind === 'castle') {
       const big = /Arundel/.test(lm.name);
       const keep = new THREE.Mesh(new THREE.CylinderGeometry(big ? 14 : 8, big ? 15 : 8, big ? 22 : 12, 16), stone);

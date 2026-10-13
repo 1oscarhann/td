@@ -128,7 +128,7 @@ export class WorldView {
     this.dynamic.clear();
     this.signalViews = [...sim.signalling.signals.values()].map((sig) => new SignalView(sig, this.mapper, this.glow));
     for (const view of this.signalViews) this.dynamic.add(view.group, view.trackside);
-    const ground = this.terrain ? { height: (/** @type {number} */ x, /** @type {number} */ y) => /** @type {import('./terrain.js').Terrain} */ (this.terrain).rawHeight(x, y) } : null;
+    const ground = this.terrain ? { height: (/** @type {number} */ x, /** @type {number} */ y) => /** @type {import('./terrain.js').Terrain} */ (this.terrain).height(x, y) } : null;
     this.crossingViews = sim.crossings.crossings.map((lc) => new CrossingView(lc, this.mapper, this.glow, ground));
     for (const view of this.crossingViews) this.dynamic.add(view.group);
     this.dynamic.add(buildBoards(sim.network, this.mapper, sim.trackside));
