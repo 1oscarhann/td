@@ -240,12 +240,29 @@ const elevationAt = (/** @type {{ start: number, segs: { from: number, to: numbe
   return e;
 };
 
+/**
+ * Speeds over the junction turnouts. Sampling OSM near a junction picks up the faster main-line
+ * ways alongside, so these come straight from the OSM maxspeed tags on the turnout ways (A: check
+ * the Sectional Appendix).
+ */
+const JUNCTION_SPEEDS = { bognor: { to: 300, mph: 20 }, littlehampton: { to: 300, mph: 40 }, coast: { to: 250, mph: 30 } };
+
+/** @param {string} id @param {{ from: number, to: number, mph: number }[]} segs */
+function withJunctionSpeed(id, segs) {
+  const j = JUNCTION_SPEEDS[/** @type {keyof typeof JUNCTION_SPEEDS} */ (id)];
+  if (!j) return segs;
+  const rest = segs
+    .map((sg) => ({ ...sg, from: Math.max(sg.from, j.to) }))
+    .filter((sg) => sg.to > sg.from);
+  return [{ from: 0, to: j.to, mph: j.mph }, ...rest];
+}
+
 const mainGrad = gradients('main');
 const lineDefs = {
   main: { name: 'Chichester – Ford – Arundel – Amberley (ELR TBH)', speed: speedLimits('main'), grad: mainGrad, ends: { start: 'open', end: 'open' } },
-  bognor: { name: 'Barnham Junction – Bognor Regis (ELR BBR)', speed: speedLimits('bognor'), grad: gradients('bognor', elevationAt(mainGrad, bognor.junctionS)), ends: { start: 'junction', end: 'buffers' } },
-  littlehampton: { name: 'Ford Junction – Littlehampton (ELR FJL / BLI)', speed: speedLimits('littlehampton'), grad: gradients('littlehampton', elevationAt(mainGrad, lhamp.junctionS)), ends: { start: 'junction', end: 'buffers' } },
-  coast: { name: 'Arundel Junction – towards Angmering (ELR BLI)', speed: speedLimits('coast'), grad: gradients('coast', elevationAt(mainGrad, coast.junctionS)), ends: { start: 'junction', end: 'open' } },
+  bognor: { name: 'Barnham Junction – Bognor Regis (ELR BBR)', speed: withJunctionSpeed('bognor', speedLimits('bognor')), grad: gradients('bognor', elevationAt(mainGrad, bognor.junctionS)), ends: { start: 'junction', end: 'buffers' } },
+  littlehampton: { name: 'Ford Junction – Littlehampton (ELR FJL / BLI)', speed: withJunctionSpeed('littlehampton', speedLimits('littlehampton')), grad: gradients('littlehampton', elevationAt(mainGrad, lhamp.junctionS)), ends: { start: 'junction', end: 'buffers' } },
+  coast: { name: 'Arundel Junction – towards Angmering (ELR BLI)', speed: withJunctionSpeed('coast', speedLimits('coast')), grad: gradients('coast', elevationAt(mainGrad, coast.junctionS)), ends: { start: 'junction', end: 'open' } },
 };
 
 /** Most common limit becomes the line speed; the rest are listed. */
@@ -393,7 +410,16 @@ const crossings = [];
     else if (hw === 'track' || barrier === 'gate' || barrier === 'no' || !barrier) type = /^(primary|secondary|tertiary|unclassified|residential|trunk)$/.test(hw) ? 'MCB' : 'UWC';
     else type = 'MCB';
     const roadName = [c.road?.name, c.road?.ref].filter(Boolean).join(' ') || c.road?.prow_ref || '';
-    const name = roadName && type !== 'UWC' && type !== 'FP' ? roadName.replace(/ [AB]\d+$/, '') : type === 'UWC' ? 'Farm crossing' : roadName ? `Footpath ${roadName}` : 'Footpath crossing';
+    // Prefer the crossing's own name from the research list (e.g. "Woodgate"), then the road's.
+    const known = RESEARCH.levelCrossings.find((/** @type {any} */ r) => !r.name.startsWith('(') && Math.hypot((r.lat - c.lat) * 111000, (r.lon - c.lon) * 70000) < 40);
+    const name =
+      type === 'MCB' || type === 'AHB'
+        ? known?.name ?? (roadName ? roadName.replace(/ [AB]\d+$/, '') : 'Level crossing')
+        : type === 'UWC'
+          ? 'Farm crossing'
+          : roadName
+            ? `${type === 'BW' ? 'Bridleway' : 'Footpath'} ${roadName}`
+            : 'Footpath crossing';
     // Road geometry near the crossing, for drawing it.
     const road = c.roadGeom
       ? simplify(
@@ -468,7 +494,8 @@ function generateSignals() {
       }
       // Junction signals before facing points; a feather for the diverging way.
       for (const pt of points.filter((x) => x.type === 'facing' && x.at.line === line && x.at.track === track)) {
-        const diverging = divergingRoute(pt);
+        const known = DIVERGING[/** @type {keyof typeof DIVERGING} */ (pt.id)];
+        const diverging = known ? { ...known, speedMph: known.state === 'R' ? JUNCTION_SPEEDS[/** @type {keyof typeof JUNCTION_SPEEDS} */ (pt.other.line)]?.mph ?? 40 : 30 } : divergingRoute(pt);
         const branchSpeed = lineDefs[/** @type {keyof typeof lineDefs} */ (pt.other.line)].speed[0].mph;
         const s = pt.at.position - dir * 230;
         fixed.push({ s, kind: 'junction', priority: 4, feather: { points: pt.id, state: diverging.state, side: diverging.side }, approachControl: diverging.speedMph <= 40 || branchSpeed <= 40 });
@@ -520,6 +547,18 @@ function generateSignals() {
 }
 
 /**
+ * The diverging (turnout) route at each junction, from the OSM track layout: the Bognor branch
+ * leaves the Down main to the left at Barnham; the Littlehampton curve leaves the Up main to the
+ * right at Ford Junction; at Arundel Junction the Arun Valley line (our main line) is the one
+ * that turns off, to the left, while the coast line runs straight on.
+ */
+const DIVERGING = Object.freeze({
+  'BJ-D': { state: 'R', side: 'left' },
+  'FJ-U': { state: 'R', side: 'right' },
+  'AJ-U': { state: 'N', side: 'left' },
+});
+
+/**
  * Which way at a set of facing points is the diverging route (the one that turns more), its
  * side, and its speed.
  * @param {any} pt
@@ -529,7 +568,10 @@ function divergingRoute(pt) {
   const other = geo[pt.other.line];
   const dir = dirOf(pt.at.line, pt.at.track);
   const here = pointAlong(main.pts, main.cum, pt.at.position);
-  const heading = [here.t[0] * dir, here.t[1] * dir];
+  // Judge "straight on" by the direction trains approach from, not the track at the points
+  // (the main line may already be curving away there, as at Arundel Junction).
+  const approach = pointAlong(main.pts, main.cum, pt.at.position - dir * 250);
+  const heading = [approach.t[0] * dir, approach.t[1] * dir];
   const turn = (/** @type {[number, number]} */ p) => {
     const v = [p[0] - here.p[0], p[1] - here.p[1]];
     const len = Math.hypot(v[0], v[1]);

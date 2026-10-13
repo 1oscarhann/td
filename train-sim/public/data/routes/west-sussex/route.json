@@ -3,7 +3,7 @@
  "name": "West Sussex: Chichester – Amberley",
  "description": "The West Coastway from Chichester through Barnham and Ford, over the River Arun to Arundel Junction, then up the Arun Valley line through Arundel to Amberley. Branches to Bognor Regis and Littlehampton.",
  "version": 2,
- "generated": "2026-10-12",
+ "generated": "2026-10-13",
  "attribution": "Track, stations, crossings and scenery © OpenStreetMap contributors (ODbL). Terrain: Mapzen/Tilezen terrain tiles (SRTM, EU-DEM). Signals, gradients and timetables are generated: see docs/ASSUMPTIONS.md.",
  "origin": {
   "lat": 50.83188,
@@ -12970,8 +12970,8 @@
    "speedLimits": [
     {
      "from": 0,
-     "to": 120,
-     "mph": 55
+     "to": 300,
+     "mph": 20
     },
     {
      "from": 5000,
@@ -14123,6 +14123,11 @@
    "speedLimits": [
     {
      "from": 0,
+     "to": 300,
+     "mph": 40
+    },
+    {
+     "from": 300,
      "to": 540,
      "mph": 40
     },
@@ -14803,11 +14808,11 @@
    "speedLimits": [
     {
      "from": 0,
-     "to": 180,
+     "to": 250,
      "mph": 30
     },
     {
-     "from": 180,
+     "from": 250,
      "to": 560,
      "mph": 65
     }
@@ -15010,6 +15015,22 @@
    "aspects": "4"
   },
   {
+   "line": "coast",
+   "track": "DOWN",
+   "position": 400.5,
+   "kind": "protecting",
+   "id": "AJ2",
+   "aspects": "4"
+  },
+  {
+   "line": "coast",
+   "track": "UP",
+   "position": 720.5,
+   "kind": "protecting",
+   "id": "AJ3",
+   "aspects": "4"
+  },
+  {
    "line": "littlehampton",
    "track": "UP",
    "position": 180,
@@ -15052,7 +15073,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 510.5,
+   "position": 512.2,
    "kind": "starting",
    "id": "CH1",
    "aspects": "4"
@@ -15060,7 +15081,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 682.5,
+   "position": 684.2,
    "kind": "protecting",
    "id": "CH4",
    "aspects": "4"
@@ -15068,7 +15089,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 1431,
+   "position": 1431.9,
    "kind": "protecting",
    "id": "CH3",
    "aspects": "4"
@@ -15076,7 +15097,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 1751,
+   "position": 1751.9,
    "kind": "protecting",
    "id": "CH6",
    "aspects": "4"
@@ -15084,7 +15105,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 2453.4,
+   "position": 2453.6,
    "kind": "auto",
    "id": "CH5",
    "aspects": "4"
@@ -15092,7 +15113,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 2773.4,
+   "position": 2773.6,
    "kind": "auto",
    "id": "CH8",
    "aspects": "4"
@@ -15100,7 +15121,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 3475.7,
+   "position": 3475.3,
    "kind": "protecting",
    "id": "CH7",
    "aspects": "4"
@@ -15108,7 +15129,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 3795.7,
+   "position": 3795.3,
    "kind": "protecting",
    "id": "CH10",
    "aspects": "4"
@@ -15116,7 +15137,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 5051.8,
+   "position": 5051.5,
    "kind": "auto",
    "id": "CH9",
    "aspects": "4"
@@ -15124,7 +15145,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 5371.8,
+   "position": 5371.5,
    "kind": "auto",
    "id": "CH12",
    "aspects": "4"
@@ -15132,7 +15153,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 6627.9,
+   "position": 6627.8,
    "kind": "auto",
    "id": "BN1",
    "aspects": "4"
@@ -15140,7 +15161,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 6947.9,
+   "position": 6947.8,
    "kind": "auto",
    "id": "BN2",
    "aspects": "4"
@@ -15195,6 +15216,7 @@
     "state": "R",
     "side": "left"
    },
+   "approachControl": true,
    "id": "BN10",
    "aspects": "4"
   },
@@ -15209,7 +15231,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 11559,
+   "position": 11558.8,
    "kind": "auto",
    "id": "BN9",
    "aspects": "4"
@@ -15217,7 +15239,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 11663.8,
+   "position": 11663.6,
    "kind": "auto",
    "id": "BN12",
    "aspects": "4"
@@ -15225,7 +15247,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 12494.4,
+   "position": 12494,
    "kind": "protecting",
    "id": "BN11",
    "aspects": "4"
@@ -15233,7 +15255,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 12814.4,
+   "position": 12814,
    "kind": "protecting",
    "id": "FD2",
    "aspects": "4"
@@ -15241,7 +15263,7 @@
   {
    "line": "main",
    "track": "UP",
-   "position": 13656.1,
+   "position": 13655.9,
    "kind": "auto",
    "id": "FD1",
    "aspects": "4"
@@ -15249,7 +15271,7 @@
   {
    "line": "main",
    "track": "DOWN",
-   "position": 13727.6,
+   "position": 13727.4,
    "kind": "auto",
    "id": "FD4",
    "aspects": "4"
@@ -15307,8 +15329,8 @@
    "kind": "junction",
    "feather": {
     "points": "AJ-U",
-    "state": "R",
-    "side": "right"
+    "state": "N",
+    "side": "left"
    },
    "approachControl": true,
    "id": "FD7",
@@ -15763,278 +15785,1119 @@
  "levelCrossings": [
   {
    "id": "LC01",
-   "name": "Stockbridge Road (primary road)",
-   "road": "Stockbridge Road (primary road)",
-   "roadClass": "track",
-   "line": "main",
-   "position": 522.5,
-   "type": "MCB",
-   "lights": true,
-   "whistle": false
+   "name": "Footpath WSx/323",
+   "road": "WSx/323",
+   "roadClass": "path",
+   "line": "bognor",
+   "position": 279.7,
+   "type": "FP",
+   "lights": false,
+   "whistle": true,
+   "roadPath": [
+    [
+     9523.5,
+     -210.4
+    ],
+    [
+     9556.7,
+     -256.9
+    ],
+    [
+     9561.6,
+     -257.6
+    ],
+    [
+     9565.8,
+     -254.2
+    ],
+    [
+     9574.4,
+     -261.3
+    ],
+    [
+     9577.1,
+     -257.9
+    ],
+    [
+     9584,
+     -262.9
+    ],
+    [
+     9622.2,
+     -357.4
+    ]
+   ]
   },
   {
    "id": "LC02",
-   "name": "Basin Road",
-   "road": "Basin Road",
-   "roadClass": "track",
-   "line": "main",
-   "position": 609.6,
-   "type": "MCB",
-   "lights": true,
-   "whistle": false
+   "name": "Footpath WSx/200",
+   "road": "WSx/200",
+   "roadClass": "path",
+   "line": "bognor",
+   "position": 1114.4,
+   "type": "FP",
+   "lights": false,
+   "whistle": true,
+   "roadPath": [
+    [
+     9157.3,
+     -961.4
+    ],
+    [
+     9138.5,
+     -955
+    ],
+    [
+     9109.9,
+     -951.9
+    ],
+    [
+     9104.9,
+     -950.3
+    ],
+    [
+     9063.8,
+     -944.3
+    ],
+    [
+     9027,
+     -946.8
+    ],
+    [
+     8988.6,
+     -958.7
+    ]
+   ]
   },
   {
    "id": "LC03",
-   "name": "B2145",
-   "road": "B2145",
-   "roadClass": "track",
-   "line": "main",
-   "position": 1591,
-   "type": "MCB",
-   "lights": true,
-   "whistle": false
+   "name": "Footpath crossing",
+   "road": "",
+   "roadClass": "footway",
+   "line": "bognor",
+   "position": 2808.1,
+   "type": "FP",
+   "lights": false,
+   "whistle": true,
+   "roadPath": [
+    [
+     8740.2,
+     -2587.5
+    ],
+    [
+     8730.8,
+     -2582
+    ],
+    [
+     8713,
+     -2558
+    ],
+    [
+     8691,
+     -2526.2
+    ],
+    [
+     8666.9,
+     -2507.1
+    ],
+    [
+     8660.6,
+     -2476.7
+    ]
+   ]
   },
   {
    "id": "LC04",
-   "name": "Drayton Lane",
-   "road": "Drayton Lane B2144",
-   "roadClass": "track",
-   "line": "main",
-   "position": 3635.7,
-   "type": "MCB",
-   "lights": true,
-   "whistle": false
+   "name": "Footpath crossing",
+   "road": "",
+   "roadClass": "footway",
+   "line": "bognor",
+   "position": 3797.1,
+   "type": "FP",
+   "lights": false,
+   "whistle": true,
+   "roadPath": [
+    [
+     8395.2,
+     -3498.9
+    ],
+    [
+     8373.9,
+     -3506.9
+    ],
+    [
+     8360.3,
+     -3521.2
+    ],
+    [
+     8358.5,
+     -3529.4
+    ],
+    [
+     8353.7,
+     -3540.9
+    ],
+    [
+     8340.2,
+     -3543.9
+    ],
+    [
+     8339.5,
+     -3547.3
+    ]
+   ]
   },
   {
    "id": "LC05",
-   "name": "Footpath footway",
-   "road": "footway",
-   "roadClass": "footway",
-   "line": "main",
-   "position": 4188.4,
-   "type": "FP",
+   "name": "Farm crossing",
+   "road": "",
+   "roadClass": "service",
+   "line": "bognor",
+   "position": 3850.4,
+   "type": "UWC",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     8339.5,
+     -3547.3
+    ],
+    [
+     8349.6,
+     -3550.9
+    ],
+    [
+     8352.8,
+     -3554.3
+    ],
+    [
+     8366.7,
+     -3560.1
+    ],
+    [
+     8380.1,
+     -3567.9
+    ],
+    [
+     8389.7,
+     -3576.3
+    ]
+   ]
   },
   {
    "id": "LC06",
-   "name": "Woodhorn Lane",
-   "road": "Woodhorn Lane",
+   "name": "Level crossing",
+   "road": "",
    "roadClass": "track",
-   "line": "main",
-   "position": 5801.2,
-   "type": "AHB",
+   "line": "coast",
+   "position": 560.5,
+   "type": "MCB",
    "lights": true,
-   "whistle": false
+   "whistle": false,
+   "roadPath": [
+    [
+     15852,
+     -544.3
+    ],
+    [
+     15871.2,
+     -509.3
+    ]
+   ]
   },
   {
    "id": "LC07",
    "name": "Farm crossing",
-   "road": "track",
+   "road": "",
    "roadClass": "track",
-   "line": "main",
-   "position": 7999.5,
+   "line": "littlehampton",
+   "position": 687,
    "type": "UWC",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     15202,
+     -1002
+    ],
+    [
+     15217,
+     -989.6
+    ],
+    [
+     15232.9,
+     -978.1
+    ]
+   ]
   },
   {
    "id": "LC08",
-   "name": "A29 Westergate Street / Lidsey Road",
-   "road": "A29 Westergate Street / Lidsey Road",
+   "name": "Stockbridge Road",
+   "road": "Stockbridge Road",
+   "roadClass": "primary",
+   "line": "main",
+   "position": 524.2,
+   "type": "MCB",
+   "lights": true,
+   "whistle": false,
+   "roadPath": [
+    [
+     55,
+     0.9
+    ],
+    [
+     65.6,
+     14.7
+    ]
+   ]
+  },
+  {
+   "id": "LC09",
+   "name": "Basin Road",
+   "road": "Basin Road",
+   "roadClass": "tertiary",
+   "line": "main",
+   "position": 610.5,
+   "type": "MCB",
+   "lights": true,
+   "whistle": false,
+   "roadPath": [
+    [
+     146.8,
+     16.7
+    ],
+    [
+     109.4,
+     -72.5
+    ]
+   ]
+  },
+  {
+   "id": "LC10",
+   "name": "Whyke Road",
+   "road": "Whyke Road B2145",
+   "roadClass": "secondary",
+   "line": "main",
+   "position": 1591.9,
+   "type": "MCB",
+   "lights": true,
+   "whistle": false,
+   "roadPath": [
+    [
+     1131.5,
+     73.5
+    ],
+    [
+     1102.1,
+     -93.9
+    ]
+   ]
+  },
+  {
+   "id": "LC11",
+   "name": "Drayton",
+   "road": "Drayton Lane B2144",
+   "roadClass": "secondary",
+   "line": "main",
+   "position": 3635.3,
+   "type": "MCB",
+   "lights": true,
+   "whistle": false,
+   "roadPath": [
+    [
+     3196.7,
+     -46.9
+    ],
+    [
+     3165.5,
+     60.3
+    ],
+    [
+     3138.2,
+     148.3
+    ],
+    [
+     3125.9,
+     166.4
+    ],
+    [
+     3107.6,
+     187.1
+    ]
+   ]
+  },
+  {
+   "id": "LC12",
+   "name": "Footpath crossing",
+   "road": "",
+   "roadClass": "footway",
+   "line": "main",
+   "position": 4188.1,
+   "type": "FP",
+   "lights": false,
+   "whistle": true,
+   "roadPath": [
+    [
+     3711.7,
+     131.2
+    ],
+    [
+     3712,
+     75.1
+    ],
+    [
+     3718.1,
+     58.3
+    ],
+    [
+     3717.5,
+     16.8
+    ],
+    [
+     3698.2,
+     14.5
+    ]
+   ]
+  },
+  {
+   "id": "LC13",
+   "name": "Woodhorn Lane",
+   "road": "Woodhorn Lane",
+   "roadClass": "unclassified",
+   "line": "main",
+   "position": 5801.3,
+   "type": "AHB",
+   "lights": true,
+   "whistle": false,
+   "roadPath": [
+    [
+     5271,
+     72.9
+    ],
+    [
+     5273.4,
+     64.3
+    ],
+    [
+     5276.8,
+     57.2
+    ],
+    [
+     5290.1,
+     39.2
+    ],
+    [
+     5299.3,
+     28.7
+    ],
+    [
+     5309.6,
+     19
+    ],
+    [
+     5348.4,
+     -11.7
+    ],
+    [
+     5350.7,
+     -15.9
+    ],
+    [
+     5350.1,
+     -22.2
+    ],
+    [
+     5347.1,
+     -27.3
+    ],
+    [
+     5332.7,
+     -43.6
+    ],
+    [
+     5330.1,
+     -47.7
+    ],
+    [
+     5329.1,
+     -50.5
+    ],
+    [
+     5327.7,
+     -65.9
+    ],
+    [
+     5325.1,
+     -70.8
+    ],
+    [
+     5319.7,
+     -73.8
+    ],
+    [
+     5278.4,
+     -75.7
+    ],
+    [
+     5264.5,
+     -78.6
+    ],
+    [
+     5215.9,
+     -94.2
+    ]
+   ]
+  },
+  {
+   "id": "LC14",
+   "name": "Farm crossing",
+   "road": "",
    "roadClass": "track",
+   "line": "main",
+   "position": 7999.3,
+   "type": "UWC",
+   "lights": false,
+   "whistle": true,
+   "roadPath": [
+    [
+     7521.5,
+     -247
+    ],
+    [
+     7518.3,
+     -164.7
+    ],
+    [
+     7525.2,
+     -116.1
+    ],
+    [
+     7530.6,
+     -58.4
+    ],
+    [
+     7534.3,
+     -30.7
+    ],
+    [
+     7536.4,
+     -26.8
+    ],
+    [
+     7563.2,
+     -13.6
+    ]
+   ]
+  },
+  {
+   "id": "LC15",
+   "name": "Woodgate",
+   "road": "Lidsey Road A29",
+   "roadClass": "primary",
    "line": "main",
    "position": 8364,
    "type": "MCB",
    "lights": true,
-   "whistle": false
+   "whistle": false,
+   "roadPath": [
+    [
+     7889.7,
+     -115.1
+    ],
+    [
+     7889.6,
+     -162.7
+    ],
+    [
+     7890.9,
+     -232.3
+    ],
+    [
+     7892.2,
+     -249.6
+    ]
+   ]
   },
   {
-   "id": "LC09",
+   "id": "LC16",
    "name": "Farm crossing",
-   "road": "track (supervised=no)",
+   "road": "",
    "roadClass": "track",
    "line": "main",
-   "position": 9290.3,
+   "position": 9290.6,
    "type": "UWC",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     8817.1,
+     -101.2
+    ],
+    [
+     8815.3,
+     -134.8
+    ],
+    [
+     8815.8,
+     -154.3
+    ],
+    [
+     8817.5,
+     -167.4
+    ],
+    [
+     8820.7,
+     -170.9
+    ],
+    [
+     8845.8,
+     -175.7
+    ]
+   ]
   },
   {
-   "id": "LC10",
-   "name": "Footpath public footpath",
-   "road": "public footpath",
-   "roadClass": "footway",
+   "id": "LC17",
+   "name": "Footpath crossing",
+   "road": "",
+   "roadClass": "steps",
    "line": "main",
-   "position": 9933.6,
+   "position": 9935.6,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     9458.4,
+     -111
+    ],
+    [
+     9455.8,
+     -103.5
+    ]
+   ]
   },
   {
-   "id": "LC11",
-   "name": "Footpath footway",
-   "road": "footway",
+   "id": "LC18",
+   "name": "Footpath crossing",
+   "road": "",
    "roadClass": "footway",
    "line": "main",
-   "position": 10697.8,
+   "position": 10699,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     10183.9,
+     -203.9
+    ],
+    [
+     10209.8,
+     -134.2
+    ],
+    [
+     10229.4,
+     -112
+    ],
+    [
+     10246.9,
+     -112
+    ],
+    [
+     10256.9,
+     -66.7
+    ]
+   ]
   },
   {
-   "id": "LC12",
-   "name": "Footpath footway",
-   "road": "footway",
+   "id": "LC19",
+   "name": "Footpath crossing",
+   "road": "",
    "roadClass": "footway",
    "line": "main",
-   "position": 11390.2,
+   "position": 11391,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     10915.7,
+     -119.5
+    ],
+    [
+     10918.5,
+     -109.3
+    ],
+    [
+     10902.7,
+     -109.1
+    ]
+   ]
   },
   {
-   "id": "LC13",
-   "name": "Footpath footway",
-   "road": "footway",
+   "id": "LC20",
+   "name": "Footpath crossing",
+   "road": "",
    "roadClass": "footway",
    "line": "main",
    "position": 11967.5,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     11492.7,
+     -131.5
+    ],
+    [
+     11493.3,
+     -107.6
+    ],
+    [
+     11543.1,
+     -106.8
+    ],
+    [
+     11542.4,
+     -0.9
+    ]
+   ]
   },
   {
-   "id": "LC14",
-   "name": "Farm crossing",
-   "road": "bridleway",
-   "roadClass": "track",
+   "id": "LC21",
+   "name": "Bridleway Maypole Lane",
+   "road": "Maypole Lane",
+   "roadClass": "bridleway",
    "line": "main",
-   "position": 12271.6,
-   "type": "UWC",
+   "position": 12271.7,
+   "type": "BW",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     11797.1,
+     -113.8
+    ],
+    [
+     11797.7,
+     -126
+    ]
+   ]
   },
   {
-   "id": "LC15",
-   "name": "Yapton Lane",
+   "id": "LC22",
+   "name": "Yapton",
    "road": "Yapton Lane B2132",
-   "roadClass": "track",
+   "roadClass": "secondary",
    "line": "main",
-   "position": 12654.4,
+   "position": 12654,
    "type": "MCB",
    "lights": true,
-   "whistle": false
+   "whistle": false,
+   "roadPath": [
+    [
+     12136.5,
+     -28.1
+    ],
+    [
+     12155,
+     -60
+    ],
+    [
+     12170.9,
+     -93.1
+    ],
+    [
+     12176.2,
+     -107.7
+    ],
+    [
+     12183.5,
+     -138.2
+    ]
+   ]
   },
   {
-   "id": "LC16",
-   "name": "Footpath public footpath",
-   "road": "public footpath",
+   "id": "LC23",
+   "name": "Footpath FP YAP-355",
+   "road": "FP YAP-355",
    "roadClass": "footway",
    "line": "main",
-   "position": 13374.4,
+   "position": 13374.6,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     12896,
+     -246.7
+    ],
+    [
+     12890.4,
+     -199
+    ],
+    [
+     12900.6,
+     -149.2
+    ],
+    [
+     12900.1,
+     -135.2
+    ],
+    [
+     12908.3,
+     -128.7
+    ]
+   ]
   },
   {
-   "id": "LC17",
-   "name": "Footpath footway, chicane",
-   "road": "footway, chicane",
+   "id": "LC24",
+   "name": "Footpath crossing",
+   "road": "",
    "roadClass": "footway",
    "line": "main",
-   "position": 14097.2,
+   "position": 14097.3,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     13636.7,
+     -276.6
+    ],
+    [
+     13633.6,
+     -233.1
+    ],
+    [
+     13629.5,
+     -196.9
+    ],
+    [
+     13630.3,
+     -166.5
+    ],
+    [
+     13626.5,
+     -156.4
+    ],
+    [
+     13622.7,
+     -156.2
+    ],
+    [
+     13622.7,
+     -148.2
+    ]
+   ]
   },
   {
-   "id": "LC18",
-   "name": "Ford Road",
+   "id": "LC25",
+   "name": "Ford",
    "road": "Ford Road",
-   "roadClass": "track",
+   "roadClass": "tertiary",
    "line": "main",
    "position": 14829.7,
    "type": "MCB",
    "lights": true,
-   "whistle": false
+   "whistle": false,
+   "roadPath": [
+    [
+     14352.6,
+     -243.5
+    ],
+    [
+     14342.8,
+     -275.1
+    ],
+    [
+     14333.2,
+     -299
+    ],
+    [
+     14328.8,
+     -312.8
+    ],
+    [
+     14317.7,
+     -327.7
+    ],
+    [
+     14297.3,
+     -350.2
+    ],
+    [
+     14283.9,
+     -361.1
+    ],
+    [
+     14248.2,
+     -382.4
+    ],
+    [
+     14236.9,
+     -395.4
+    ]
+   ]
   },
   {
-   "id": "LC19",
+   "id": "LC26",
    "name": "Farm crossing",
-   "road": "track",
+   "road": "",
    "roadClass": "track",
    "line": "main",
-   "position": 15822.3,
+   "position": 15822.9,
    "type": "UWC",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     15234.4,
+     -478.3
+    ],
+    [
+     15246.8,
+     -483.9
+    ],
+    [
+     15257.1,
+     -490.4
+    ],
+    [
+     15260.2,
+     -493.4
+    ],
+    [
+     15264.6,
+     -499.8
+    ],
+    [
+     15274.6,
+     -522
+    ],
+    [
+     15277.1,
+     -525.5
+    ],
+    [
+     15280.1,
+     -527.9
+    ],
+    [
+     15284.1,
+     -529.6
+    ],
+    [
+     15294.1,
+     -531.4
+    ],
+    [
+     15308.3,
+     -530.4
+    ]
+   ]
   },
   {
-   "id": "LC20",
-   "name": "track",
-   "road": "track",
+   "id": "LC27",
+   "name": "Level crossing",
+   "road": "",
    "roadClass": "track",
    "line": "main",
    "position": 16824.9,
    "type": "MCB",
    "lights": true,
-   "whistle": false
+   "whistle": false,
+   "roadPath": [
+    [
+     15699.5,
+     337
+    ],
+    [
+     15728.5,
+     327.7
+    ],
+    [
+     15804.3,
+     309.5
+    ],
+    [
+     15845.1,
+     293.2
+    ],
+    [
+     15891.3,
+     278.7
+    ],
+    [
+     15920.4,
+     271
+    ],
+    [
+     15952.4,
+     265.6
+    ]
+   ]
   },
   {
-   "id": "LC21",
+   "id": "LC28",
    "name": "Farm crossing",
-   "road": "track",
+   "road": "",
    "roadClass": "track",
    "line": "main",
-   "position": 17779.8,
+   "position": 17779.9,
    "type": "UWC",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     16144.7,
+     1205
+    ],
+    [
+     16156.5,
+     1193.9
+    ],
+    [
+     16170.5,
+     1175.9
+    ],
+    [
+     16174.6,
+     1171.9
+    ],
+    [
+     16180.3,
+     1168.8
+    ],
+    [
+     16229.9,
+     1165.9
+    ],
+    [
+     16242.8,
+     1160
+    ],
+    [
+     16252.2,
+     1157.7
+    ],
+    [
+     16266.7,
+     1158.8
+    ],
+    [
+     16357.6,
+     1149.8
+    ],
+    [
+     16372.9,
+     1147.5
+    ]
+   ]
   },
   {
-   "id": "LC22",
-   "name": "Footpath public footpath",
-   "road": "public footpath",
+   "id": "LC29",
+   "name": "Footpath FP 2222",
+   "road": "FP 2222",
    "roadClass": "footway",
    "line": "main",
-   "position": 19525.7,
+   "position": 19525.6,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     17122.6,
+     2659
+    ],
+    [
+     17110.4,
+     2662.8
+    ],
+    [
+     17095,
+     2652.7
+    ]
+   ]
   },
   {
-   "id": "LC23",
-   "name": "Footpath public footpath",
-   "road": "public footpath",
+   "id": "LC30",
+   "name": "Footpath FP 2223",
+   "road": "FP 2223",
    "roadClass": "footway",
    "line": "main",
-   "position": 20486.9,
+   "position": 20485.5,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     17303.8,
+     3591.2
+    ],
+    [
+     17274.7,
+     3599.8
+    ],
+    [
+     17260.9,
+     3604.8
+    ],
+    [
+     17250.5,
+     3610.5
+    ],
+    [
+     17164.9,
+     3644.5
+    ]
+   ]
   },
   {
-   "id": "LC24",
+   "id": "LC31",
    "name": "Farm crossing",
-   "road": "track",
+   "road": "",
    "roadClass": "track",
    "line": "main",
-   "position": 20967.9,
+   "position": 20967.4,
    "type": "UWC",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     17273.4,
+     4084.8
+    ],
+    [
+     17326.3,
+     4085.9
+    ]
+   ]
   },
   {
-   "id": "LC25",
-   "name": "Footpath public footpath",
-   "road": "public footpath",
+   "id": "LC32",
+   "name": "Footpath crossing",
+   "road": "",
    "roadClass": "footway",
    "line": "main",
-   "position": 21575.8,
+   "position": 21575.2,
    "type": "FP",
    "lights": false,
-   "whistle": true
+   "whistle": true,
+   "roadPath": [
+    [
+     17220.8,
+     4691.3
+    ],
+    [
+     17259.6,
+     4690.9
+    ],
+    [
+     17310.9,
+     4691.9
+    ]
+   ]
   }
  ],
  "leafZones": [],
@@ -16133,12 +16996,12 @@
     },
     {
      "platform": "BAA-DOWN",
-     "arr": "10:03:00",
-     "dep": "10:04:00"
+     "arr": "10:03:30",
+     "dep": "10:04:30"
     },
     {
      "platform": "BOG-DOWN",
-     "arr": "10:10:30"
+     "arr": "10:11:30"
     }
    ]
   },
@@ -16182,22 +17045,22 @@
     },
     {
      "platform": "BAA-UP",
-     "arr": "09:36:00",
-     "dep": "09:37:00"
+     "arr": "09:37:00",
+     "dep": "09:38:00"
     },
     {
      "platform": "FOD-UP",
-     "arr": "09:41:00",
-     "dep": "09:42:00"
+     "arr": "09:42:00",
+     "dep": "09:43:00"
     },
     {
      "platform": "ARU-UP",
-     "arr": "09:47:00",
-     "dep": "09:48:00"
+     "arr": "09:48:00",
+     "dep": "09:49:00"
     },
     {
      "platform": "AMY-UP",
-     "arr": "09:53:00"
+     "arr": "09:54:00"
     }
    ]
   }

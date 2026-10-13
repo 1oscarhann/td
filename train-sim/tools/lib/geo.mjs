@@ -140,6 +140,11 @@ export function inPolygon(q, poly) {
  */
 export function simplify(pts, tolerance) {
   if (pts.length < 3) return pts;
+  // A closed ring (first point = last) has a zero-length baseline: simplify each half instead.
+  if (pts.length > 4 && dist(pts[0], pts[pts.length - 1]) < 1e-6) {
+    const mid = Math.floor(pts.length / 2);
+    return [...simplify(pts.slice(0, mid + 1), tolerance).slice(0, -1), ...simplify(pts.slice(mid), tolerance)];
+  }
   const keep = new Uint8Array(pts.length);
   keep[0] = keep[pts.length - 1] = 1;
   /** @type {[number, number][]} */
