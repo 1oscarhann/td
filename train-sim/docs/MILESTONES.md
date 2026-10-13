@@ -1,10 +1,10 @@
 # Milestone plan
 
-Each milestone ends with something you can drive. Nothing later needs a rewrite of anything
-earlier: the simulation core (physics, signalling, safety systems) is already route-agnostic and
-tested, and every route feature is data in a JSON file.
+Each milestone ended with something you can drive. Status as of this commit: **M1 to M7 and
+the "later" list are built.** What's left is mostly verification against real-world sources
+(see [ASSUMPTIONS](ASSUMPTIONS.md)) and polish.
 
-## M1: Test track foundations ✅ (this commit)
+## M1: Test track foundations ✅
 
 Straight 8.5 km double-track test line, one train, the bones of everything.
 
@@ -12,70 +12,78 @@ Straight 8.5 km double-track test line, one train, the bones of everything.
 - Class 377/4 physics: mass, traction curve (constant force, then constant power), Davis
   resistance, gradients, notched brake with brake-cylinder lag, emergency brake, roll-back.
 - Combined power/brake controller: EB, B3–B1, OFF, P1–P4.
-- Four-aspect automatic signalling with overlaps, driven by train occupancy. A scripted train
-  ahead holds the first signal at red, then clears it R → Y → YY → G.
-- AWS (magnet 180 m before each signal, horn/bell, 2.7 s acknowledgement, sunflower),
-  TPWS train stop (SPAD → emergency brake), dead man's handle (hold / vigilance / off), DRA,
-  doors with traction interlock, penalty brake latch and reset.
-- HUD: speedometer with line-speed marker, brake gauge, controller position, AWS sunflower,
-  TPWS panel, DRA, DSD, doors, clock, message log, driving aid.
-- Synthesised sound: inverter whine, rolling noise, brake air, AWS horn and bell, horn, buzzers.
-- Run objective (stop at Platform B), score, best runs and settings in localStorage.
-- 82 Vitest tests, including a headless "careful driver" completing the run.
+- Four-aspect signalling driven by train occupancy; AWS, TPWS train stop, dead man's handle,
+  DRA, doors with traction interlock, penalty brake latch and reset.
+- HUD, synthesised sound, score, best runs and settings in localStorage.
 
-## M2: The real line, part 1: Chichester → Barnham → Ford (the MVP)
+## M2: The real line, Chichester → Ford (the MVP) ✅
 
-- `tools/osm-to-route.mjs`: pull the track centreline from OpenStreetMap, project to local
-  metres, compute chainage, snap stations/crossings/bridges onto it (seed data is already in
-  `tools/research/route-features.json`).
-- Gradient profile from open elevation data (OS Terrain 50), smoothed. Flat coastal plain, so
-  this is mostly about the climb to the Arun bridge at Ford.
-- Real speed limits (OSM as a first pass, flagged until checked), permanent speed boards.
-- Signals placed to a plausible four-aspect layout (real positions are the big unknown; see
-  ASSUMPTIONS), platform starting signals, AWS/TPWS at each.
-- Station stops: stop markers by train length, door side, dwell, "right away" (on this route
-  the driver closes the doors and departs on a proceed aspect), timetable with arrival and
-  departure times, punctuality on the HUD.
-- Other trains: AI drivers that obey signals, Down-line traffic coming the other way.
-- Level crossings appear as scenery with working lights, no logic yet.
+- `tools/fetch-osm.mjs` + `tools/build-route.mjs`: track centrelines from OpenStreetMap (a
+  shortest path through the rail graph between fixed waypoints, averaged into a double-track
+  centreline and smoothed), projected to local metres, with chainage.
+- Gradients from open elevation tiles (`tools/fetch-terrain.mjs`), sampled along the line,
+  with bridges and cuttings bridged over and the result smoothed into 400 m steps.
+- Speed limits from OSM `maxspeed`, platforms, stations and stop markers from OSM.
+- Generated four-aspect signalling (see ASSUMPTIONS G4), AWS and TPWS at each signal.
+- Station stops: stop markers, doors, dwell, right away, timetable with punctuality.
+- Other trains: AI drivers that obey signals, both directions.
 
-## M3: Rules and protection
+## M3: Rules and protection ✅
 
-- TPWS overspeed sensors (OSS) on the approach to red signals and big speed reductions.
+- TPWS overspeed sensors 150 m before signals and 300 m before big speed reductions; train stop
+  override for passing a red with authority.
 - AWS for permanent speed restrictions (warning boards with magnets).
-- Overspeed penalties, SPAD consequences (configurable: penalty or end of run).
-- DRA prompts, start-up and shut-down procedure (optional), signaller contact after a penalty.
+- Overspeed and SPAD penalties (SPAD can end the run: setting).
+- Cab radio to the signaller: authority to pass a red at caution, required after a SPAD.
 
-## M4: Junctions and route setting
+## M4: Junctions and route setting ✅
 
-- Interlocking-lite: routes, points (normal/reverse), locking, flank protection.
-- Junction signals with route indicators (feathers), approach control on diverging routes.
-- Barnham Junction: trailing for Up trains from Chichester, facing on the Down (route a train to
-  Bognor Regis on the drive back).
-- Ford Junction (straight on; the Littlehampton west curve diverges) and **Arundel Junction**
-  (diverge north onto the Arun Valley line). Junction speed restrictions.
-- Extend to Arundel and Amberley. Reversible: drive Amberley → Chichester on the Down line.
+- A track network: lines, tracks, facing and trailing points; trains that span junctions.
+- Interlocking: points set for each train's booked route, 5 s to move, track and approach
+  locking; signals held at red while points move or are set against them.
+- Junction signals with feathers and approach control.
+- Barnham Junction (Bognor branch: facing on the Down, trailing on the Up), Ford Junction
+  (Littlehampton west curve), Arundel Junction (the Arun Valley line), with junction speeds.
+- The whole line to Amberley, both directions, plus Bognor Regis.
 
-## M5: Level crossings and scenery
+## M5: Level crossings and scenery ✅
 
-- Barrier sequence (amber, red flashers, barriers lower, crossing proved clear), interlocked
-  with the protecting signal; failure states (barriers fail to lower, obstruction) with the
-  matching driver procedure. AHB at Woodhorn Lane behaves differently (no protecting signal).
-- Footpath crossings with whistle boards: the horn finally earns its keep.
-- Terrain from elevation data, the chalk South Downs, the Arun valley and floodplain, Arun
-  bridges, North Stoke tunnel, Arundel Castle on the skyline, Amberley chalk pits.
+- Full barrier crossings: amber, red, barriers down, proved clear, protecting signal released;
+  raised once the train is clear. Automatic half barriers with timed warnings. Footpath,
+  bridleway and farm crossings with whistle boards.
+- Failure: barriers stuck up; the signal stays red and the signaller authorises you over at
+  10 mph after a check.
+- Terrain from elevation tiles, graded around the track; buildings, roads, rivers and woods
+  from OSM; bridges, tunnel portals, platforms with canopies and nameboards; landmarks.
 
-## M6: Sound
+## M6: Sound ✅
 
-Swap synth voices for recorded samples (Howler.js), passing-train Doppler, PA announcements.
+- Passing-train sound, right-away bells, PA announcements (speech synthesis: departures and
+  approaching each stop).
+- Recorded samples can replace any synth voice via `public/audio/samples.json`. Howler.js
+  turned out to be unnecessary: Web Audio plays samples fine.
 
-## M7: Scoring, polish, gamepad
+## M7: Scoring, polish, gamepad ✅
 
-Timetable punctuality, ride comfort (jerk), safety record, career/progression, Gamepad API
-controls, rebindable keys, performance work (LOD, chunked terrain), save/resume.
+- Scoring: punctuality, stop accuracy, ride comfort (jerk), safety record, whistles; grades A–D.
+- Gamepad API controls, rebindable keys, save/resume at each departure, time warp.
 
-## Later
+## Later ✅ (first versions)
 
-Weather and low adhesion (autumn leaf fall: the Arun valley is a classic low-adhesion site;
-rain; wheel-slide protection and sanders), time of day and night running, random signal
-failures, trespass events, PA announcements, disruption.
+- Weather (clear, overcast, rain, fog) affecting visibility and adhesion.
+- Autumn leaf fall: low adhesion in wooded stretches, with wheel-slide protection and sanding.
+- Time of day: sun position by season and clock, darkness, headlights, platform lamps.
+- Random signal failures, crossing failures and trespassers (frequency setting).
+
+## Next, if you want it
+
+- **Verify the generated signalling** against the Sectional Appendix or cab-ride videos and
+  replace generated signals with real positions and IDs (it's data: edit `generateSignals` in
+  `tools/build-route.mjs`, or hand-edit `route.json`).
+- **Flat junction conflicts:** the `crosses` field on trailing points (an Up train crossing the
+  Down line at Barnham, Ford and Arundel junctions) is recorded but not yet interlocked, so an
+  AI train could in theory be routed across another's path. Hasn't happened in testing because
+  the timetable keeps them apart.
+- Littlehampton services (the branch is built but nothing is booked on it).
+- Recorded sounds; a modelled cab interior; LOD for distant buildings.
+- Degraded working: driving on a caution aspect through a section of failed signals.

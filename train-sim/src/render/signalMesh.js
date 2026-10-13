@@ -114,10 +114,11 @@ export class SignalView {
     this.feather = [];
     if (signal.feather) {
       const sign = signal.feather.side === 'left' ? -1 : 1;
-      // The head faces back towards the train, so the driver's left is the head's +x.
-      const sx = -sign;
+      // The head faces back towards the train (its +z points at the driver), so the driver's
+      // left is the head's −x, exactly as for a camera looking down −z.
+      const sx = sign;
       const base = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.4, 0.1), dark);
-      base.position.set((sx * 0.5) / 1, HEAD_BASE + headHeight + 0.55, -0.05);
+      base.position.set(sx * 0.5, HEAD_BASE + headHeight + 0.55, -0.05);
       this.group.add(base);
       for (let i = 0; i < 5; i++) {
         const glow = makeGlow(glowTexture, 0xfff6dc);

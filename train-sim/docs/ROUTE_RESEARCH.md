@@ -90,13 +90,45 @@ the Sectional Appendix.
 
 750 V DC third rail throughout (Southern Railway, 1938 on the Arun Valley line).
 
-## Still unknown (needed for M2–M5)
+## How the built route compares
 
-- Real signal positions, numbers and types (4-aspect vs 3-aspect), and which junction signals
-  have feathers or approach control. Not in OSM for this area.
-- Exact gradients. Will come from elevation data, which is approximate.
-- Which crossings are CCTV vs obstacle-detection controlled.
-- Platform lengths and stop-marker positions.
+The route builder (`tools/build-route.mjs`) works from OSM geometry rather than this table, so
+the two are independent checks on each other. Distances from Chichester station along the
+built line (its chainage minus 0.47 km, where the line starts west of the station):
+
+| Feature | Research (≈ km) | Built route (km) |
+| --- | --- | --- |
+| Stockbridge Road crossing | 0.05 | 0.05 |
+| Basin Road crossing | 0.14 | 0.14 |
+| Whyke Road crossing | 1.12 | 1.12 |
+| Drayton crossing | 3.17 | 3.17 |
+| Woodhorn Lane AHB | 5.33 | 5.33 |
+| Woodgate crossing | 7.89 | 7.89 |
+| Barnham station | 9.95 | 9.95 |
+| Barnham Junction (Bognor branch) | | 9.81 |
+| Yapton crossing | 12.2 | 12.18 |
+| Ford station | 14.3 | 14.32 |
+| Ford Road crossing | 14.35 | 14.36 |
+| Ford Junction (Littlehampton west curve) | | 14.82 |
+| Arundel Junction | ≈1 km east of Ford | 15.42 |
+| Arundel station | 17.9 | 18.01 |
+| Amberley station | 23.5 | 23.68 |
+
+Branches as built: Barnham Junction → Bognor Regis 5.6 km; Ford Junction → Littlehampton
+2.7 km; and 1.5 km of the coast line east of Arundel Junction, so trains heading for Brighton
+have somewhere to go.
+
+## Still unknown
+
+- **Real signal positions, numbers and types.** Not in OSM for this area. The built route
+  uses generated signals (rules in ASSUMPTIONS G4). Cab-ride videos would settle most of it.
+- **Exact gradients.** The built route takes them from ≈30 m elevation tiles, which is a
+  surface model (trees and embankments show up), filtered and smoothed. Real gradient posts
+  would be better.
+- **Which crossings are CCTV and which obstacle detection.** The sim treats them the same.
+- **Stop-marker positions.** Generated from OSM platform ends: the 4-car marker up to 40 m
+  short of the far end, longer-train markers 6 m short of it.
+- **Platform sides at Barnham** (island platform): the sim opens the doors on the left everywhere.
 
 ## Sources
 

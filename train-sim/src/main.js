@@ -125,7 +125,7 @@ async function boot() {
   /** @param {import('./sim/simulation.js').SimOptions} opts */
   const begin = (opts) => {
     sim = new Simulation(route, { settings, ...opts });
-    if (import.meta.env.DEV) /** @type {any} */ (window).__sim = sim;
+    if (import.meta.env.DEV) Object.assign(/** @type {any} */ (window), { __sim: sim, __view: view });
     view.setSim(sim);
     hud.reset();
     warp = 1;
