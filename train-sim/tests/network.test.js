@@ -271,3 +271,91 @@ describe('Interlocking', () => {
     expect(il.update(0, [train('C', 'br/UP', 900)])).toEqual([{ points: 'J-D', to: 'R', for: 'C' }]);
   });
 });
+
+describe('Flat crossings (diamonds)', () => {
+  // As the fixture, but the branch route off the Up line cuts across the Down line at 2500 m.
+  const diamondRoute = () => {
+    const data = junctionRoute();
+    data.points[0].crosses = ['main/DOWN'];
+    return data;
+  };
+  const setup = () => {
+    const data = diamondRoute();
+    const n = new Network(data);
+    const s = new Signalling(n, data.signals);
+    return { n, s, il: new Interlocking(n, s) };
+  };
+  /** @param {string} id @param {string} track @param {number} front @param {number} rear */
+  const train = (id, track, front, rear, plan = {}) => ({
+    id,
+    front: { track, s: front },
+    body: [{ track, from: rear, to: front }],
+    plan: new Map(Object.entries(plan)),
+  });
+  const occ = (/** @type {Record<string, [number, number][]>} */ o) => new Map(Object.entries(o));
+
+  it('holds the Down line signal at red while the route across it is set', () => {
+    const { n, s } = setup();
+    s.update(occ({}), []);
+    expect(s.aspectOf('D2')).not.toBe(R);
+    n.points.get('J-U').state = 'R';
+    n.version++;
+    s.update(occ({}), []);
+    expect(s.aspectOf('D2')).toBe(R);
+  });
+
+  it("won't signal a train across the diamond while the Down line is occupied there", () => {
+    const { n, s } = setup();
+    n.points.get('J-U').state = 'R';
+    n.version++;
+    const upFront = [{ track: 'main/UP', s: 2100 }]; // inside S2's approach release
+    s.update(occ({ 'main/UP': [[2020, 2100]] }), upFront);
+    expect(s.aspectOf('S2')).not.toBe(R);
+    s.update(occ({ 'main/UP': [[2020, 2100]], 'main/DOWN': [[2490, 2570]] }), upFront);
+    expect(s.aspectOf('S2')).toBe(R);
+  });
+
+  it('a Down train past its last signal keeps the points from being reversed across its path', () => {
+    const { s, il } = setup();
+    s.update(occ({}), []);
+    const down = train('D', 'main/DOWN', 2700, 2780); // past D2 (2800), heading for the diamond
+    const up = train('U', 'main/UP', 2400, 2320, { 'J-U': 'R' }); // nearer, wants the branch
+    expect(il.update(0, [down, up])).toEqual([]);
+  });
+
+  it('a Down train given a clear signal over the diamond keeps it', () => {
+    const { s, il } = setup();
+    s.update(occ({}), []);
+    expect(s.aspectOf('D2')).not.toBe(R);
+    const down = train('D', 'main/DOWN', 3500, 3580); // 700 m from D2
+    const up = train('U', 'main/UP', 2300, 2220, { 'J-U': 'R' });
+    expect(il.update(0, [down, up])).toEqual([]);
+  });
+
+  it('a Down train nearest the diamond gets the points put back to normal', () => {
+    const { n, s, il } = setup();
+    n.points.get('J-U').state = 'R';
+    n.version++;
+    s.update(occ({}), []);
+    const down = train('D', 'main/DOWN', 3000, 3080);
+    expect(il.update(0, [down])).toEqual([{ points: 'J-U', to: 'N', for: 'D' }]);
+  });
+
+  it('with the Down line clear, the branch train gets its route', () => {
+    const { s, il } = setup();
+    s.update(occ({}), []);
+    const up = train('U', 'main/UP', 2000, 1920, { 'J-U': 'R' });
+    expect(il.update(0, [up])).toEqual([{ points: 'J-U', to: 'R', for: 'U' }]);
+  });
+});
+
+describe('route validation of diamonds', () => {
+  it('accepts a diamond on the same line and rejects one elsewhere', () => {
+    const ok = junctionRoute();
+    ok.points[0].crosses = ['main/DOWN'];
+    expect(validateRoute(ok)).toEqual([]);
+    const bad = junctionRoute();
+    bad.points[0].crosses = ['br/UP'];
+    expect(validateRoute(bad).join(' ')).toMatch(/crosses/);
+  });
+});

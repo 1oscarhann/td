@@ -78,6 +78,9 @@ export function validateRoute(data) {
     check(p.type === 'facing' || p.type === 'trailing', `${where}.type: facing or trailing`);
     pos(p.at, `${where}.at`);
     pos(p.other, `${where}.other`);
+    for (const key of p.crosses ?? []) {
+      check(tracks.has(key) && key.split('/')[0] === p.at?.line, `${where}.crosses: "${key}" must be a track on line ${p.at?.line}`);
+    }
   }
 
   const signalIds = new Set();

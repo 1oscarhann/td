@@ -137,6 +137,12 @@ export class Points {
     this.movingUntil = 0;
     /** Which train (by id) the signaller set it for. */
     this.setFor = /** @type {string | null} */ (null);
+    /**
+     * Tracks the reverse route crosses on the flat (a diamond), at the same chainage as `at`:
+     * a train taking it cuts across the other line, so the two can't both be signalled.
+     * @type {TrackPos[]}
+     */
+    this.diamonds = (data.crosses ?? []).map((/** @type {string} */ key) => ({ track: key, s: data.at.position }));
   }
 
   get detected() {
@@ -188,6 +194,15 @@ export class Network {
       } else {
         at.merges.push(points);
         other.exitPoints = points;
+      }
+    }
+    /** @type {Map<string, { points: Points, s: number }[]>} diamonds on each track */
+    this.diamonds = new Map();
+    for (const p of this.points.values()) {
+      for (const d of p.diamonds) {
+        const crossed = this.track(d.track);
+        if (crossed.line !== this.track(p.at.track).line) throw new Error(`Points ${p.id}: a diamond must be on the same line as the points`);
+        this.diamonds.set(d.track, [...(this.diamonds.get(d.track) ?? []), { points: p, s: d.s }]);
       }
     }
     for (const t of this.tracks.values()) {

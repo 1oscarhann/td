@@ -82,12 +82,17 @@ stop there; `junction` means the line starts or ends at points (nothing is drawn
   "type": "facing",               // facing: a train on `at` chooses; trailing: `other` merges into `at`
   "at":    { "line": "main",   "track": "DOWN", "position": 10283.1 },
   "other": { "line": "bognor", "track": "DOWN", "position": 0 },
-  "crosses": ["main/DOWN"]        // optional: flat crossing (recorded, not interlocked yet)
+  "crosses": ["main/DOWN"]        // optional: tracks the reverse route crosses on the flat, at `at`'s chainage
 }
 ```
 
 State `N` (normal) keeps a train on `at`; `R` (reverse) sends it to `other`. Trains carry a
 `plan` (`{ "BJ-D": "R" }`) and the interlocking sets the points for the nearest train.
+
+Where the reverse route crosses another track on the flat (`crosses`), signals over that diamond
+stay red while the points are reversed or moving, the reverse route's own signal stays red while
+the crossed track is occupied there, and a train heading for the diamond asks for the points to
+be normal.
 
 ## Signals
 

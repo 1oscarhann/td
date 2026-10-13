@@ -29,7 +29,11 @@ import { Aspect, aspectBehind } from './aspects.js';
  * @property {SignalState | null} next
  * @property {null | 'open' | 'buffers'} end what lies beyond if there's no next signal
  * @property {{ points: import('../route/network.js').Points, state: 'N' | 'R' }[]} points every set of points the route crosses, and the way it needs them
+ * @property {{ points: import('../route/network.js').Points, track: string, s: number }[]} diamonds flat crossings on the section or overlap, and the points whose reverse route uses them
  */
+
+/** A train this close to a diamond is on it (m). */
+const DIAMOND_CLEAR_M = 15;
 
 /** Furthest we look for the next signal (m). Beyond this the line counts as open. */
 const MAX_SECTION_M = 15000;
@@ -125,7 +129,7 @@ export class Signalling {
     const cached = this.cache.get(sig.id);
     if (cached && cached.version === this.network.version) return cached.section;
     /** @type {Section} */
-    const section = { pieces: [], overlap: [], next: null, end: null, points: [] };
+    const section = { pieces: [], overlap: [], next: null, end: null, points: [], diamonds: [] };
     const res = this.network.walk(sig.key, sig.s, MAX_SECTION_M, {
       onPiece: (piece) => {
         const next = this.firstSignalIn(piece);
@@ -150,6 +154,13 @@ export class Signalling {
     } else {
       section.end = res.end ?? 'open';
     }
+    for (const piece of [...section.pieces, ...section.overlap]) {
+      const lo = Math.min(piece.from, piece.to);
+      const hi = Math.max(piece.from, piece.to);
+      for (const d of this.network.diamonds.get(piece.track) ?? []) {
+        if (d.s >= lo - 1 && d.s <= hi + 1) section.diamonds.push({ points: d.points, track: piece.track, s: d.s });
+      }
+    }
     this.cache.set(sig.id, { version: this.network.version, section });
     return section;
   }
@@ -171,6 +182,9 @@ export class Signalling {
         return spans.some(([a, b]) => b > lo && a < hi);
       });
 
+    const occupiedNear = (/** @type {string} */ track, /** @type {number} */ s) =>
+      (occupancy.get(track) ?? []).some(([a, b]) => b > s - DIAMOND_CLEAR_M && a < s + DIAMOND_CLEAR_M);
+
     /** @param {SignalState} sig @returns {string} */
     const resolve = (sig) => {
       const known = done.get(sig.id);
@@ -183,7 +197,11 @@ export class Signalling {
         sig.held.size > 0 ||
         occupied(sec.pieces) ||
         occupied(sec.overlap) ||
-        sec.points.some(({ points, state }) => !points.detected || points.state !== state);
+        sec.points.some(({ points, state }) => !points.detected || points.state !== state) ||
+        // A diamond ahead that another route is set (or being set) across.
+        sec.diamonds.some((d) => d.points.state === 'R' || !d.points.detected) ||
+        // Our route cuts across another line on the flat: that line must be clear there.
+        sec.points.some(({ points, state }) => state === 'R' && points.diamonds.some((d) => occupiedNear(d.track, d.s)));
       sig.approachHeld = false;
       if (!red && sig.approachControl && featherSet) {
         const near = fronts.some((f) => {

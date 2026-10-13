@@ -42,6 +42,8 @@ Straight 8.5 km double-track test line, one train, the bones of everything.
 - Interlocking: points set for each train's booked route, 5 s to move, track and approach
   locking; signals held at red while points move or are set against them.
 - Junction signals with feathers and approach control.
+- Flat crossings (diamonds) where a branch route cuts across the Down main at Barnham, Ford and
+  Arundel junctions: interlocked against each other.
 - Barnham Junction (Bognor branch: facing on the Down, trailing on the Up), Ford Junction
   (Littlehampton west curve), Arundel Junction (the Arun Valley line), with junction speeds.
 - The whole line to Amberley, both directions, plus Bognor Regis.
@@ -80,10 +82,6 @@ Straight 8.5 km double-track test line, one train, the bones of everything.
 - **Verify the generated signalling** against the Sectional Appendix or cab-ride videos and
   replace generated signals with real positions and IDs (it's data: edit `generateSignals` in
   `tools/build-route.mjs`, or hand-edit `route.json`).
-- **Flat junction conflicts:** the `crosses` field on trailing points (an Up train crossing the
-  Down line at Barnham, Ford and Arundel junctions) is recorded but not yet interlocked, so an
-  AI train could in theory be routed across another's path. Hasn't happened in testing because
-  the timetable keeps them apart.
 - Littlehampton services (the branch is built but nothing is booked on it).
 - Recorded sounds; a modelled cab interior; LOD for distant buildings.
 - Degraded working: driving on a caution aspect through a section of failed signals.

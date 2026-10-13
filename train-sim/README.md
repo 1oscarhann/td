@@ -87,7 +87,9 @@ so you can resume it.
   with 180 m overlaps, junction route indicators, approach control, and signals held at red by
   level crossings and by points that are moving or locked against you.
 - **Interlocking:** points are set for each train's booked route, take 5 s to move, and are
-  locked once a train is close or on them.
+  locked once a train is close or on them. The flat crossings at Barnham, Ford and Arundel
+  junctions are interlocked too: a branch train can't be signalled across the Down main in
+  front of a Down train.
 - **Safety systems:** AWS (signals and speed restrictions), TPWS (train stop at reds, overspeed
   sensors before reds and big speed drops, train stop override), dead man's handle, DRA.
 - **Level crossings:** full barriers (amber, red, barriers down, crossing proved, then the

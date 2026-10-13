@@ -68,7 +68,7 @@ second check; **fictional** = test-track only, never meant to be real.
 | --- | --- | --- | --- | --- |
 | J1 | Junction speeds | Barnham → Bognor 20 mph, Ford → Littlehampton 40 mph, Arundel Jn → Brighton 30 mph (first 250–300 m of the branch) | assumed / OSM where tagged | Check against the Sectional Appendix. |
 | J2 | Diverging route | Barnham: Bognor branch, left (Down). Ford Jn: Littlehampton west curve, right (Up). Arundel Jn: the Arun Valley line, left (Up; our "main" line continues that way) | from geography | |
-| J3 | Flat crossings | Up trains to/from the branches cross the Down main (`crosses` on the points) | recorded, **not interlocked** | Timetable keeps trains apart; see MILESTONES. |
+| J3 | Flat crossings | Trains to and from the branches cross the Down main on the flat (`crosses` on the points) | interlocked | Down signals over the diamond stay red while the crossing route is set; the crossing route can't be set across a Down train that's committed or has a clear signal. |
 
 ## Level crossings (`src/sim/crossings.js`)
 
@@ -109,7 +109,7 @@ second check; **fictional** = test-track only, never meant to be real.
 | R5 | Platform side | left of the driver everywhere | assumed; wrong for island platforms (check Barnham) |
 | R6 | Track alignment | OSM ways, averaged across the two tracks and smoothed over ±30 m | from OSM; good to a few metres |
 | R7 | Gradients | from 30 m elevation tiles (zoom 12), low-percentile filter, bridges spanned, smoothed into 400 m steps | approximate: real gradient posts would be better |
-| R8 | Terrain | 75 m grid, flattened to formation level within 30 m of the track and blended out to 110 m | approximate |
+| R8 | Terrain | 75 m grid from the elevation tiles; within about 55 m of the line it's redrawn on a 15 m mesh, at formation level for 30 m each side, then sloping (cutting or embankment) back to the natural ground | approximate |
 | R9 | Buildings | OSM footprints within 180 m of the line; height from `height`, else `building:levels` × 3 m + 1.5 m, else by type (houses 7.5 m, sheds 3 m, industrial and retail 8 m, churches 16 m) | footprints from OSM, heights mostly assumed |
 
 ## Test track (`public/data/routes/test-track.json`)
