@@ -41,6 +41,26 @@ describe('the real route: West Sussex', () => {
     expect(sim.journey.calls.every((c) => c.status !== 'missed')).toBe(true);
   });
 
+  it('generated signals stand clear of the platforms on their own track', () => {
+    const inside = data.signals.filter((sig) => data.platforms.some((p) => p.line === sig.line && p.track === sig.track && sig.position > p.from && sig.position < p.to));
+    expect(inside.map((s) => s.id)).toEqual([]);
+  });
+
+  it('the Barnham Down starter carries the Bognor feather, lit for 2H47', () => {
+    const starter = data.signals.find((s) => s.feather?.points === 'BJ-D');
+    expect(starter.kind).toBe('starting');
+    const sim = new Simulation(new Route(data), { settings: { ...DEFAULT_SETTINGS, failures: 'off' }, serviceId: '2H47', startCall: 3, rng: () => 0.5 });
+    expect(sim.journey.current?.station).toBe('BAA');
+    let lit = null;
+    for (let t = 0; t < 300 && !lit && !sim.result; t += 1 / 30) {
+      sim.applyInput({ ...emptyInput(), ...autopilot(sim) });
+      sim.step(1 / 30);
+      sim.drainEvents();
+      lit = sim.signalling.signals.get(starter.id).featherLit || null;
+    }
+    expect(lit).toBe('left');
+  });
+
   it('routes 2H47 through Barnham Junction onto the Bognor branch', () => {
     const { sim } = driveService('2H47');
     expect(sim.player.front.track).toBe('bognor/DOWN');

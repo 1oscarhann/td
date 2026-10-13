@@ -336,14 +336,19 @@ for (const e of layer('platforms')) {
   if (!st || Math.abs(st.position - (from + to) / 2) > 400) continue;
   const track = trackOfSide(line, lateral);
   platforms.push({ station: st.id, line, track, from: round(from), to: round(to), lateral, ref: e.tags?.ref ?? '' });
+  if (process.env.DEBUG_PLATFORMS) console.log(`platform ${st.id} ${e.tags?.ref ?? '-'} ${track} ${round(from)}–${round(to)} lateral ${lateral.toFixed(1)}`);
 }
 
-// One platform per station per track: the longest. Stations without OSM platforms get a 240 m one.
+// One platform per station per track: the face next to the track (Barnham has a second Down-side
+// platform beyond a bay line we don't model), else the longest. Stations without OSM platforms
+// get a 240 m one.
 /** @type {any[]} */
 const chosen = [];
 for (const st of stations) {
   for (const track of st.line === 'main' ? ['UP', 'DOWN'] : ['DOWN', 'UP']) {
-    const options = platforms.filter((p) => p.station === st.id && p.track === track).sort((a, b) => b.to - b.from - (a.to - a.from));
+    const all = platforms.filter((p) => p.station === st.id && p.track === track);
+    const longest = Math.max(0, ...all.map((p) => p.to - p.from));
+    const options = all.filter((p) => p.to - p.from >= 0.8 * longest).sort((a, b) => Math.abs(a.lateral) - Math.abs(b.lateral));
     let p = options[0];
     if (!p) {
       const len = lengthOf(st.line);
@@ -368,7 +373,7 @@ for (const st of stations) {
       track,
       from: p.from,
       to: p.to,
-      side: 'left', // UK platforms here are on the outside of double track: the driver's side (A for islands)
+      side: 'left', // platforms are given to the track on their side of the line, so always the driver's left
       stopMarkers: markers.length ? markers : [{ cars: 4, position: round(exitEnd - dir * 6) }],
       ...(p.synthetic ? { synthetic: true } : {}),
     });
@@ -497,11 +502,22 @@ function generateSignals() {
         const known = DIVERGING[/** @type {keyof typeof DIVERGING} */ (pt.id)];
         const diverging = known ? { ...known, speedMph: known.state === 'R' ? JUNCTION_SPEEDS[/** @type {keyof typeof JUNCTION_SPEEDS} */ (pt.other.line)]?.mph ?? 40 : 30 } : divergingRoute(pt);
         const branchSpeed = lineDefs[/** @type {keyof typeof lineDefs} */ (pt.other.line)].speed[0].mph;
+        const feather = { points: pt.id, state: diverging.state, side: diverging.side };
+        // A platform starter just before the points is the junction signal (Barnham: the Down
+        // starter carries the Bognor feather). Trains start from rest there, so no approach control.
+        const starter = fixed.find((f) => f.kind === 'starting' && u(pt.at.position) - u(f.s) > 0 && u(pt.at.position) - u(f.s) < 400);
+        if (starter) {
+          starter.feather = feather;
+          starter.priority = 4;
+          continue;
+        }
         const s = pt.at.position - dir * 230;
-        fixed.push({ s, kind: 'junction', priority: 4, feather: { points: pt.id, state: diverging.state, side: diverging.side }, approachControl: diverging.speedMph <= 40 || branchSpeed <= 40 });
+        fixed.push({ s, kind: 'junction', priority: 4, feather, approachControl: diverging.speedMph <= 40 || branchSpeed <= 40 });
       }
       // Signals before diamonds (another route crossing this track on the flat).
       for (const pt of points.filter((x) => x.crosses?.includes(key))) {
+        // A signal already just before the diamond (Barnham's Down starter) protects it.
+        if (fixed.some((f) => u(pt.at.position) - u(f.s) > 0 && u(pt.at.position) - u(f.s) < 400)) continue;
         const s = pt.at.position - dir * 200;
         fixed.push({ s, kind: 'controlled', priority: 3 });
       }

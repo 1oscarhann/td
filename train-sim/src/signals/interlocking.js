@@ -67,7 +67,7 @@ export class Interlocking {
         if (!p.moving) p.setFor = want.train;
         continue;
       }
-      if (this.isLocked(p, trains)) continue;
+      if (this.isLocked(p, trains, want.train)) continue;
       p.moving = want.state;
       p.movingUntil = time + POINTS_THROW_S;
       p.setFor = want.train;
@@ -78,11 +78,14 @@ export class Interlocking {
 
   /**
    * Can't move: a train is on or next to them, or a signal is cleared over them for a train
-   * that's approaching it.
+   * that's approaching it. Approach locking protects other trains, not the one asking for the
+   * change: a train that finds a junction signal cleared the wrong way for it (say, after a
+   * resume, or because nobody had asked for the junction yet) gets its own route instead.
    * @param {import('../route/network.js').Points} p
    * @param {TrainRouting[]} trains
+   * @param {string} [forTrain] the train that wants them moved
    */
-  isLocked(p, trains) {
+  isLocked(p, trains, forTrain) {
     const near = (/** @type {import('../route/network.js').Piece} */ piece, /** @type {import('../route/network.js').TrackPos} */ at) => {
       if (piece.track !== at.track) return false;
       const lo = Math.min(piece.from, piece.to) - TRACK_LOCK_M;
@@ -98,7 +101,7 @@ export class Interlocking {
       if (!sec.points.some((x) => x.points === p)) continue;
       const track = this.network.track(sig.key);
       for (const t of trains) {
-        if (t.front.track !== sig.key) continue;
+        if (t.id === forTrain || t.front.track !== sig.key) continue;
         const d = track.u(sig.s) - track.u(t.front.s);
         if (d >= 0 && d <= APPROACH_LOCK_M) return true;
       }

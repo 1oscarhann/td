@@ -242,6 +242,28 @@ describe('Interlocking', () => {
     expect(moved[0]).toMatchObject({ points: 'J-U', for: 'near' });
   });
 
+  it('a train approaching a junction signal cleared the wrong way still gets its route', () => {
+    const n = net();
+    const s = new Signalling(n, junctionRoute().signals);
+    const il = new Interlocking(n, s);
+    s.update(new Map(), []);
+    expect(s.aspectOf('S2')).not.toBe(R); // cleared for the straight route, nobody asked
+    const a = train('A', 'main/UP', 1900, { 'J-U': 'R' }); // 300 m from S2, inside approach locking
+    expect(il.update(0, [a])).toEqual([{ points: 'J-U', to: 'R', for: 'A' }]);
+  });
+
+  it('approach locking keeps the route for a train given a cleared signal', () => {
+    const n = net();
+    const s = new Signalling(n, junctionRoute().signals);
+    const il = new Interlocking(n, s);
+    s.update(new Map(), []);
+    expect(s.aspectOf('D2')).not.toBe(R); // reads over J-D, set for the main line
+    const main = train('M', 'main/DOWN', 3500); // 700 m from D2, wants the main line
+    main.body = [{ track: 'main/DOWN', from: 3580, to: 3500 }];
+    const branch = train('C', 'br/UP', 300); // nearer the points, wants to come off the branch
+    expect(il.update(0, [main, branch])).toEqual([]);
+  });
+
   it('a branch train coming off gets the trailing points reversed', () => {
     const n = net();
     const s = new Signalling(n, junctionRoute().signals);
