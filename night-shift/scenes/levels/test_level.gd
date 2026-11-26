@@ -15,6 +15,7 @@ extends Node2D
 ##   K  crisps shelf + "stack the shelf" job      R  drinks fridge + "check it" job
 ##   M  mop, bucket and the spill job             C  counter, till, CCTV (+ the torch)
 ##   X  breaker box (does nothing)
+## The CCTV figure stands left of the front door D (only ever seen on camera).
 ##   1-9  triggers, configured in TRIGGERS below
 ##
 ## Section by section (left to right, top to bottom):
@@ -36,7 +37,7 @@ const MAP := [
 	"#........................##............................#......########################################################################",
 	"#......................................................#......########################################################################",
 	"#.............................................................########################################################################",
-	"#.D...P...6K...R..M..C.7....X8.....S.....S.....S.....1.B..H...########################################################################",
+	"#.D...P...6K...R..M9.C.7....X8.....S.....S.....S.....1.B..H...########################################################################",
 	"##########################################################..##########################################################################",
 	"##########################################################..##########################################################################",
 	"##########################################################..##########################################################################",
@@ -64,6 +65,7 @@ const TRIGGERS := {
 	# Shop <-> storeroom doorway: zone 0 is the shop, zone 1 the back room.
 	"7": {"zone": 0, "repeat": true},
 	"8": {"zone": 1, "repeat": true},
+	"9": {"line": "check_cameras"},
 }
 
 ## Set dressing (Phase 3): things the torch finds as you sweep it around.
@@ -145,6 +147,7 @@ const COUNTER_SCENE := preload("res://scenes/props/counter.tscn")
 const MOP_SCENE := preload("res://scenes/props/mop_bucket.tscn")
 const BREAKER_SCENE := preload("res://scenes/props/breaker.tscn")
 const TASK_SCENE := preload("res://scenes/props/shop_task.tscn")
+const FIGURE_SCRIPT := preload("res://scenes/props/cctv_figure.gd")
 
 var player_start := Vector2.ZERO
 var thing: WedgedThing
@@ -154,6 +157,9 @@ var size_tiles := Vector2i.ZERO
 var _drip_timer := 3.0
 var _tasks: Array = []
 var _after_power: Array = []
+var _door_pos := Vector2.ZERO
+var _counter_pos := Vector2.ZERO
+var _window_pos := Vector2.ZERO
 var _variants := 1
 
 @onready var darkness: CanvasModulate = $Darkness
@@ -190,6 +196,17 @@ func _process(delta: float) -> void:
 		_drip_timer = randf_range(2.5, 7.0)
 		var p: Vector2 = GameState.player.global_position
 		AudioDirector.play_at("drip", p + Vector2(randf_range(-220, 220), randf_range(-40, 0)), -15.0, 0.15)
+
+
+## The four CCTV feeds (see CCTVView.setup). Shop floor framing puts the
+## figure's spot right at the left edge, half out of frame. Easy to miss.
+func cctv_feeds() -> Array:
+	return [
+		{"label": "CAM1 SHOP FLOOR", "pos": Vector2(_door_pos.x + 80.0, _door_pos.y - 36.0), "zoom": 1.0},
+		{"label": "CAM2 TILL", "pos": _counter_pos + Vector2(0, -22), "zoom": 2.0},
+		{"label": "CAM3 FORECOURT", "pos": _window_pos, "zoom": 3.0},
+		{"label": "CAM4 STOREROOM", "pos": panel.global_position + Vector2(-72, -36), "zoom": 1.0},
+	]
 
 
 func apply_camera_limits(cam: Camera2D) -> void:
@@ -252,6 +269,7 @@ func _place_decor(d: Dictionary) -> void:
 		"window":
 			var window: Node2D = WINDOW_SCENE.instantiate()
 			window.position = Vector2(x + TILE * 0.5, (ceil_y + floor_y) * 0.5 - 8.0)
+			_window_pos = window.position
 			props.add_child(window)
 		"tube", "vent":
 			var hung: Node2D = (TUBE_SCENE if d.type == "tube" else VENT_SCENE).instantiate()
@@ -375,6 +393,10 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			var door: Node2D = DOOR_SCENE.instantiate()
 			door.position = floor_point
 			props.add_child(door)
+			_door_pos = floor_point
+			var figure := FIGURE_SCRIPT.new() as CCTVFigure
+			figure.stage_points = [floor_point + Vector2(-13, 0)]   # far corner, half out of frame
+			props.add_child(figure)
 		"F", "f":
 			var sign_node: Node2D = SIGN_SCENE.instantiate()
 			sign_node.position = centre
@@ -399,7 +421,9 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			var counter: Node2D = COUNTER_SCENE.instantiate()
 			counter.position = floor_point
 			props.add_child(counter)
-			_add_task("torch", floor_point, ShopTask.Kind.NONE, 0.6)
+			_counter_pos = floor_point
+			_add_task("torch", floor_point + Vector2(12, 0), ShopTask.Kind.NONE, 0.6, Vector2(16, 28))
+			_add_task("cctv", floor_point + Vector2(-14, 0), ShopTask.Kind.NONE, 0.3, Vector2(16, 28), true)
 		"X":
 			var breaker: Node2D = BREAKER_SCENE.instantiate()
 			breaker.position = centre + Vector2(0, -8)
@@ -427,11 +451,14 @@ func _place_trigger(cfg: Dictionary, at: Vector2) -> void:
 	triggers.add_child(t)
 
 
-func _add_task(id: String, at: Vector2, kind: ShopTask.Kind, hold := 1.5) -> void:
+func _add_task(id: String, at: Vector2, kind: ShopTask.Kind, hold := 1.5,
+		zone := Vector2(28, 28), repeatable := false) -> void:
 	var task: ShopTask = TASK_SCENE.instantiate()
 	task.task_id = id
 	task.kind = kind
 	task.hold_time = hold
+	task.zone_size = zone
+	task.repeatable = repeatable
 	task.position = at
 	props.add_child(task)
 	_tasks.append(task)

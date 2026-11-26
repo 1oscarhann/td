@@ -17,6 +17,8 @@ enum Kind { NONE, BOX, SPILL }
 @export var kind := Kind.NONE
 ## Disabled tasks can't be done yet (the torch before the power cut).
 @export var enabled := true
+## Repeatable jobs (the CCTV) reset instead of staying done.
+@export var repeatable := false
 @export var zone_size := Vector2(28, 28)
 ## Where the prompt ring floats, relative to the root.
 @export var prompt_offset := Vector2(0, -34)
@@ -64,7 +66,7 @@ func interact_hold(_by: Node, delta: float) -> void:
 	progress += delta / hold_time
 	if progress >= 1.0:
 		progress = 0.0
-		done = true
+		done = not repeatable
 		AudioDirector.play_at("step", global_position, -12.0, 0.2, 400.0, 1.6)
 		queue_redraw()
 		completed.emit(self)

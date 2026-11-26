@@ -98,6 +98,24 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - Verified headless: full route from the first job to the tunnel. Renders: shop
   lit, shop after the cut, EXIT sign.
 
+#### M2.3: CCTV and the figure
+- Hold E at the monitor on the counter (repeatable `ShopTask` "cctv") to open a
+  full-screen view of 4 feeds: CAM1 shop floor, CAM2 till, CAM3 forecourt (through
+  the window), CAM4 storeroom (the boarded panel).
+- Each feed is a SubViewport sharing the game's World2D with a fixed Camera2D,
+  through a grainy B/W shader (`cctv.gdshader`): gain, grain, scanlines, vignette.
+  The feeds show the real shop live: lights, power cut, you.
+- `CCTVFigure`: grey man-shaped silhouette on **visibility layer 2**. Main sets
+  the root viewport to cull that layer, so he is never drawn in the shop, only on
+  the feeds.
+- Escalation in this slice: check 1 = empty shop, then "see" when you close it.
+  Check 2+ = him in the far corner of CAM1, half out of frame. He only moves
+  between checks.
+- Closing: E (after releasing), Esc, A/D or click. The player is locked while viewing.
+- "check the cameras" plays near the counter.
+- Verified with renders: feeds show the live world, the figure is on camera on
+  check 2, and he's absent from the real shop.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -119,6 +137,11 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - **The panel is locked until the power cut**, so you can't skip Act 0.
 - **Lines from the doc I didn't use:** "nobody comes in after two" (needs a
   look-at-the-door trigger; skipped), "it's fine" (still on the first board).
+- **CCTV keeps working after the power cut** (on backup, like the EXIT sign),
+  because the doc has you checking it on return trips.
+- **Figure stages:** only "empty" and "far corner" exist. The others need the
+  return trips upstairs, which the slice doesn't have.
+- **"see" bends the 20 s rule** (`min_gap` 6) so it lands right after the check.
 - **Spiders live in the tunnel**, not a separate Zone 1 cellar. The slice has
   no cellar section, and adding one is level design you should own.
 - **Boarded panel art = two textures** (hole + one plank) instead of one image,

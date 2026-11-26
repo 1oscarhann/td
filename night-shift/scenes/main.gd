@@ -29,6 +29,13 @@ func _ready() -> void:
 	player.snap_camera()
 	# Act 0: the torch is under the counter until the power goes.
 	player.torch.set_available(false)
+	# The CCTV figure lives on visibility layer 2: only the CCTV feeds draw it.
+	get_viewport().set_canvas_cull_mask_bit(1, false)
+	var cctv: CCTVView = ui.get_node("CCTV")
+	cctv.setup(level.cctv_feeds())
+	cctv.closed.connect(func(n: int):
+		if n == 1:
+			Narrator.say("see"))
 	GameState.player_caught.connect(_on_player_caught)
 	level.ending_reached.connect(_on_ending_reached)
 

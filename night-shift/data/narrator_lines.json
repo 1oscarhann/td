@@ -4,6 +4,8 @@
 	"lights_sometimes": { "text": "the lights do that sometimes", "priority": 2, "max_wait": 25 },
 	"torch_under_counter": { "text": "torch is under the counter", "priority": 3, "min_gap": 6, "max_wait": 30 },
 	"breaker_wont_help": { "text": "the breaker won't help", "priority": 1 },
+	"check_cameras": { "text": "check the cameras", "priority": 1 },
+	"see": { "text": "see", "priority": 3, "min_gap": 6, "max_wait": 8 },
 	"fuse_box_downstairs": { "text": "there's a fuse box downstairs", "priority": 2, "max_wait": 25 },
 	"its_fine": { "text": "it's fine", "priority": 1 },
 	"dont_worry_boards": { "text": "don't worry about the boards", "priority": 1 },

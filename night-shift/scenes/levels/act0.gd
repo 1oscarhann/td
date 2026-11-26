@@ -58,6 +58,10 @@ func _on_task_completed(task: ShopTask) -> void:
 			if GameState.torch != null:
 				GameState.torch.set_available(true)
 				GameState.torch.set_on(true)
+		"cctv":
+			var view = get_tree().get_first_node_in_group("cctv_view")
+			if view != null:
+				view.open()
 		"breaker":
 			AudioDirector.play_at("clunk", task.global_position, -2.0, 0.05)
 			Narrator.say("breaker_wont_help")
