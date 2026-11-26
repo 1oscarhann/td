@@ -63,6 +63,7 @@ const TRIGGERS := {
 ##   tube / vent:  hung from the ceiling above "cell" (dead strip lights, ducts)
 ##   pipe / cable: a run from "cell" to column "to_x", placed "below_ceiling" px
 ##                 under the ceiling or "above_floor" px over the floor
+##   spiders:      "count" little spiders crawling on the ceiling around "cell"
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
 	# Storeroom: dead strip lights, vents, a pipe and a cable along the back wall.
@@ -76,18 +77,24 @@ const DECOR := [
 	{"type": "pipe", "cell": Vector2i(6, 16), "to_x": 41, "below_ceiling": 3},
 	{"type": "cable", "cell": Vector2i(20, 16), "to_x": 31, "below_ceiling": 12, "sag": 6},
 	{"type": "tube", "cell": Vector2i(26, 16)},
+	# First spiders: right where you step off the stairs. Harmless; teach "look up".
+	{"type": "vent", "cell": Vector2i(35, 16)},
+	{"type": "spiders", "cell": Vector2i(35, 16), "count": 3},
 	# Tight tunnel: a vent right above your head.
 	{"type": "pipe", "cell": Vector2i(41, 17), "to_x": 59, "below_ceiling": 2},
 	{"type": "vent", "cell": Vector2i(47, 17)},
+	{"type": "spiders", "cell": Vector2i(47, 17), "count": 2},
 	# Open room: high things you only find by looking up.
 	{"type": "tube", "cell": Vector2i(63, 12)},
 	{"type": "vent", "cell": Vector2i(70, 12)},
+	{"type": "spiders", "cell": Vector2i(70, 12), "count": 3},
 	{"type": "tube", "cell": Vector2i(75, 12)},
 	{"type": "pipe", "cell": Vector2i(59, 14), "to_x": 79, "above_floor": 44},
 	{"type": "cable", "cell": Vector2i(60, 12), "to_x": 77, "below_ceiling": 26, "sag": 14},
 	# Passage, past the crouch gap, the dead end.
 	{"type": "cable", "cell": Vector2i(80, 16), "to_x": 89, "below_ceiling": 9, "sag": 4},
 	{"type": "vent", "cell": Vector2i(98, 16)},
+	{"type": "spiders", "cell": Vector2i(98, 16), "count": 2},
 	{"type": "tube", "cell": Vector2i(101, 16)},
 ]
 
@@ -112,6 +119,7 @@ const VENT_SCENE := preload("res://scenes/props/vent.tscn")
 const TUBE_SCENE := preload("res://scenes/props/tube.tscn")
 const PIPE_SCENE := preload("res://scenes/props/pipe.tscn")
 const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
+const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
 
 var player_start := Vector2.ZERO
 var thing: WedgedThing
@@ -222,6 +230,11 @@ func _place_decor(d: Dictionary) -> void:
 			cable.end_point = Vector2((int(d.to_x) - cell.x) * TILE, 0)
 			cable.sag = float(d.get("sag", 8))
 			props.add_child(cable)
+		"spiders":
+			for i in int(d.get("count", 3)):
+				var spider: Spider = SPIDER_SCENE.instantiate()
+				spider.position = Vector2(x + TILE * 0.5 + randf_range(-20.0, 20.0), ceil_y)
+				creatures.add_child(spider)
 		_:
 			push_warning("TestLevel: unknown decor type '%s'" % d.type)
 

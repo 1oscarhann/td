@@ -51,6 +51,27 @@ narrator, synthesised audio. See README.md.
 - Fixed the known Phase 1 bug: `camera_lead` 28 -> 48, so with the mouse at the
   screen edge the camera leans far enough to show the 120 px beam tip.
 
+### Milestone 1 status: complete
+Everything on the doc's milestone 1 checklist is in and working headless:
+low-res setup, walk/run/crouch, torch + shadows + toggle, visibility rule,
+is_lit with raycasts, boarded panel, tunnel, placeholder Wedged Thing,
+narrator + typewriter, positional audio. The doc's own next step is
+"play it with the lights off and get a mate to play it". That one's yours.
+
+### Milestone 2 (my definition, see Decisions to check)
+The doc defines no milestone 2, so I took the next content in the doc's own
+order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
+
+#### M2.1: little spiders
+- `scenes/creatures/spider.tscn/.gd`: Area2D on the creature layer with a
+  Light Only material. A few pixels, crawls along the ceiling.
+- Rule: lit -> runs away from the torch. If it runs out of room it disappears into a crack
+  for 4-9 s. Harmless.
+- First scatter in the game -> "they're only spiders" (new line in the JSON).
+- Placed with `DECOR` "spiders" entries: 3 above the bottom of the stairs (with a new
+  vent), 2 in the tight tunnel, 3 in the open room, 2 at the dead end.
+- Verified headless: lighting a spider -> it flees, then hides, and the line plays.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -64,6 +85,10 @@ narrator, synthesised audio. See README.md.
   wood, crisp packets and signs. Without them, boards and packets read as grey mush.
 - **Extra tile types:** rock and side wall, on top of the 4 you listed. The level
   needs something for solid rock and the side faces of walls.
+- **Milestone 2 scope is my guess.** The doc only defines milestone 1. I used
+  the doc's order: spiders, Act 0 + power cut, CCTV, Ceiling Arms.
+- **Spiders live in the tunnel**, not a separate Zone 1 cellar. The slice has
+  no cellar section, and adding one is level design you should own.
 - **Boarded panel art = two textures** (hole + one plank) instead of one image,
   because boards come off one at a time.
 - **Narrator 20 s rule bent for two lines** (`min_gap` in the JSON): "it can see
