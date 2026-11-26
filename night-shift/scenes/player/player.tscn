@@ -85,5 +85,6 @@ shape = SubResource("RectangleShape2D_interact")
 script = ExtResource("4_prompt")
 
 [node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(2, 2)
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0

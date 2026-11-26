@@ -17,6 +17,10 @@ extends CharacterBody2D
 @export var acceleration := 700.0
 @export var gravity := 900.0
 
+@export_group("Camera")
+## How far (world px) the camera leans towards the mouse.
+@export var camera_lead := 28.0
+
 @export_group("Stamina")
 ## Seconds of running from full.
 @export var stamina_max := 5.0
@@ -35,6 +39,8 @@ const STAND_HAND := Vector2(3, -18)
 const CROUCH_HAND := Vector2(3, -10)
 ## Standing still underground this long -> "keep moving".
 const IDLE_LINE_TIME := 15.0
+## World px of floor kept visible under the feet.
+const CAMERA_FLOOR_MARGIN := 18.0
 
 var facing := 1
 var crouching := false
@@ -52,6 +58,7 @@ var _stairs: Stairs = null
 var _interactable = null        # duck typed: interact_hold(), can_interact(), ...
 var _active_interactable = null # the one we're currently holding E on
 var _headroom := RectangleShape2D.new()
+var _room_mid_y := 0.0
 
 @onready var torch: Torch = $Torch
 @onready var stand_shape: CollisionShape2D = $StandShape
@@ -80,6 +87,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_measure_room()
 	if input_locked:
 		_locked_move(delta)
 		return
@@ -98,12 +106,44 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
-	# Look-ahead: nudge the camera towards where the mouse is, so aiming the torch
-	# into the dark also shows you a little more of the level there.
+	_update_camera(delta)
+
+
+## Camera framing. The camera runs at an integer 2x zoom (crisp pixels) and is
+## framed on the ROOM, not just the player: it aims at the middle between the
+## floor and ceiling you're standing in, clamped so your feet and head always
+## stay on screen. Rooms fill the view instead of leaving big rock bands.
+## It also leans a little towards the mouse so aiming into the dark shows you
+## more of that side.
+func _update_camera(delta: float) -> void:
 	var vp := get_viewport()
+	var view := vp.get_visible_rect().size / camera.zoom
 	var m := vp.get_mouse_position() / vp.get_visible_rect().size - Vector2(0.5, 0.5)
-	var target := Vector2(m.x * 48.0, m.y * 28.0 - 14.0)
-	camera.offset = camera.offset.lerp(target, clampf(delta * 3.0, 0.0, 1.0))
+	var feet := global_position.y
+	var target_y := clampf(_room_mid_y,
+			feet + CAMERA_FLOOR_MARGIN - view.y * 0.5,   # floor stays in view
+			feet - 38.0 + view.y * 0.5)                  # head stays in view
+	var target := Vector2(m.x * camera_lead, target_y - feet)
+	camera.position = camera.position.lerp(target, clampf(delta * 4.0, 0.0, 1.0))
+
+
+## Middle of the open space at the player's x (floor-to-ceiling raycasts).
+func _measure_room() -> void:
+	var space := get_world_2d().direct_space_state
+	var from := global_position + Vector2(0, -8)
+	var down := space.intersect_ray(PhysicsRayQueryParameters2D.create(
+			from, from + Vector2(0, 64), GameState.LAYER_WORLD))
+	var up := space.intersect_ray(PhysicsRayQueryParameters2D.create(
+			from, from + Vector2(0, -240), GameState.LAYER_WORLD))
+	var floor_y := global_position.y
+	var ceil_y := global_position.y - 120.0
+	if not down.is_empty():
+		var dp: Vector2 = down.position
+		floor_y = dp.y
+	if not up.is_empty():
+		var upos: Vector2 = up.position
+		ceil_y = upos.y
+	_room_mid_y = (floor_y + ceil_y) * 0.5
 
 
 ## Teleport to a checkpoint and reset transient state.
@@ -120,6 +160,16 @@ func respawn(pos: Vector2) -> void:
 	stamina = stamina_max
 	exhausted = false
 	idle_time = 0.0
+	snap_camera()
+
+
+## Jump the camera straight to its framed position (no smoothing).
+func snap_camera() -> void:
+	_measure_room()
+	var view := get_viewport().get_visible_rect().size / camera.zoom
+	var feet := global_position.y
+	var y := clampf(_room_mid_y, feet + CAMERA_FLOOR_MARGIN - view.y * 0.5, feet - 38.0 + view.y * 0.5)
+	camera.position = Vector2(0, y - feet)
 	camera.reset_smoothing()
 
 

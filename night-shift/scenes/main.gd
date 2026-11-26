@@ -23,7 +23,7 @@ func _ready() -> void:
 	player.global_position = level.player_start
 	GameState.checkpoint = level.player_start
 	level.apply_camera_limits(player.camera)
-	player.camera.reset_smoothing()
+	player.snap_camera()
 	GameState.player_caught.connect(_on_player_caught)
 	level.ending_reached.connect(_on_ending_reached)
 

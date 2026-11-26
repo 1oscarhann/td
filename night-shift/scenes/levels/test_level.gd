@@ -60,9 +60,9 @@ const TRIGGERS := {
 
 ## CanvasModulate per zone. Dim but readable: the environment is never pure black.
 const ZONE_DARKNESS := {
-	0: Color(0.28, 0.29, 0.42),   # shop after the power cut: near-black blues
-	1: Color(0.33, 0.32, 0.28),   # storage cellar: grey, dirty yellow
-	2: Color(0.27, 0.32, 0.40),   # service tunnels: cold grey-blue
+	0: Color(0.34, 0.35, 0.48),   # shop after the power cut: near-black blues
+	1: Color(0.40, 0.38, 0.33),   # storage cellar: grey, dirty yellow
+	2: Color(0.33, 0.38, 0.46),   # service tunnels: cold grey-blue
 }
 ## Ambience hum volume (dB) and World-bus reverb [room_size, wet] per zone.
 const ZONE_HUM_DB := {0: -80.0, 1: -32.0, 2: -26.0}
@@ -142,42 +142,57 @@ func _build() -> void:
 			var ch := row[x] if x < row.length() else "#"
 			var cell := Vector2i(x, y)
 			match ch:
-				"#":
-					walls.set_cell(cell, 0, Vector2i(TileSetBuilder.CONCRETE, 0))
-				"%":
-					walls.set_cell(cell, 0, Vector2i(TileSetBuilder.BRICK, 0))
+				"#", "%":
+					walls.set_cell(cell, 0, Vector2i(_solid_tile_for(x, y), 0))
 				".":
-					back_wall.set_cell(cell, 0, Vector2i(TileSetBuilder.CONCRETE_BACK, 0))
+					back_wall.set_cell(cell, 0, Vector2i(TileSetBuilder.BACK_CONCRETE, 0))
 				",":
-					back_wall.set_cell(cell, 0, Vector2i(TileSetBuilder.BRICK_BACK, 0))
+					back_wall.set_cell(cell, 0, Vector2i(TileSetBuilder.BACK_BRICK, 0))
 				_:
 					back_wall.set_cell(cell, 0, Vector2i(_background_for(row, x), 0))
 					_place_marker(ch, cell)
 	_fill_margin(width)
 
 
-## Solid rock around the map, so the camera's look-ahead offset (which Camera2D
-## doesn't clamp to its limits) never shows the void past the edge.
+## Solid rock around the map, so the camera never shows the void past the edge.
 func _fill_margin(width: int) -> void:
 	const MARGIN := 10
 	for y in range(-MARGIN, MAP.size() + MARGIN):
 		for x in range(-MARGIN, width + MARGIN):
 			if y >= 0 and y < MAP.size() and x >= 0 and x < width:
 				continue
-			var row: String = MAP[clampi(y, 0, MAP.size() - 1)]
-			var ch := row[clampi(x, 0, row.length() - 1)]
-			var tile := TileSetBuilder.BRICK if ch == "%" or ch == "," else TileSetBuilder.CONCRETE
-			walls.set_cell(Vector2i(x, y), 0, Vector2i(tile, 0))
+			walls.set_cell(Vector2i(x, y), 0, Vector2i(TileSetBuilder.ROCK, 0))
+
+
+## Which solid tile a cell gets, from its open neighbours:
+## open above = floor, open below = ceiling, open beside = side wall, else rock.
+func _solid_tile_for(x: int, y: int) -> int:
+	if _is_open(x, y - 1):
+		return TileSetBuilder.FLOOR
+	if _is_open(x, y + 1):
+		return TileSetBuilder.CEILING
+	if _is_open(x - 1, y) or _is_open(x + 1, y):
+		return TileSetBuilder.SIDE
+	return TileSetBuilder.ROCK
+
+
+func _is_open(x: int, y: int) -> bool:
+	if y < 0 or y >= MAP.size():
+		return false
+	var row: String = MAP[y]
+	if x < 0 or x >= row.length():
+		return false
+	return row[x] != "#" and row[x] != "%"
 
 
 ## Markers take the back-wall tile of the nearest open tile to their left.
 func _background_for(row: String, x: int) -> int:
 	for i in range(x - 1, -1, -1):
 		if row[i] == ",":
-			return TileSetBuilder.BRICK_BACK
+			return TileSetBuilder.BACK_BRICK
 		if row[i] == ".":
-			return TileSetBuilder.CONCRETE_BACK
-	return TileSetBuilder.CONCRETE_BACK
+			return TileSetBuilder.BACK_CONCRETE
+	return TileSetBuilder.BACK_CONCRETE
 
 
 func _place_marker(ch: String, cell: Vector2i) -> void:

@@ -23,8 +23,16 @@ signal lit_changed(target: Node, lit: bool)
 @export var cone_length := 120.0
 @export var energy := 1.2
 @export var light_color := Color(1.0, 0.9, 0.72)
-## Number of brightness steps in the beam's falloff (pixel-art banding).
-@export var falloff_bands := 5
+## Brightness steps in the bright part of the beam (0 = smooth). The far tail
+## always fades smoothly to nothing.
+@export var falloff_bands := 0
+@export_group("Floor spill")
+## Light pooling on the floor in front of the player. Environment mask only:
+## it can never reveal a creature (only the beam can).
+@export var spill_energy := 0.9
+## How far in front of the feet the pool sits, along the aim direction.
+@export var spill_reach := 20.0
+@export_group("")
 @export var start_on := true
 ## Torch held on one empty spot this long -> "what are you looking for".
 @export var hold_still_line_time := 10.0
@@ -37,6 +45,7 @@ var _lit: Dictionary = {}
 var _flicker_left := 0.0
 var _still_time := 0.0
 var _last_rot := 0.0
+var _spill: PointLight2D
 
 @onready var light: PointLight2D = $Light
 @onready var cone: Area2D = $Cone
@@ -56,12 +65,14 @@ func _ready() -> void:
 	cone.collision_mask = GameState.LAYER_CREATURES
 	cone.monitorable = false
 	cone_shape.polygon = _cone_polygon()
+	_make_spill()
 	set_on(start_on, false)
 
 
 func _physics_process(delta: float) -> void:
 	_aim()
 	_update_flicker(delta)
+	_update_spill()
 	_update_lit(delta)
 	_update_hold_still(delta)
 
@@ -148,6 +159,32 @@ func _update_flicker(delta: float) -> void:
 	else:
 		light.enabled = true
 		light.energy = energy * randf_range(0.4, 1.0)
+
+
+func _make_spill() -> void:
+	_spill = PointLight2D.new()
+	_spill.name = "Spill"
+	_spill.texture = LightTextures.ellipse(112, 36)
+	_spill.color = light_color
+	_spill.range_item_cull_mask = GameState.LIGHT_ENV
+	_spill.shadow_enabled = false
+	_spill.height = 20.0
+	_spill.top_level = true   # doesn't rotate with the beam
+	add_child(_spill)
+
+
+## The pool slides along the floor towards where you aim and gets stronger the
+## more the beam points down. Pointing up still leaks a little from the hand.
+func _update_spill() -> void:
+	var aim := get_aim_direction()
+	var feet := global_position
+	var body := get_parent() as Node2D
+	if body != null:
+		feet = body.global_position
+	_spill.global_position = feet + Vector2(aim.x * spill_reach, 0)
+	var down := clampf(aim.y, 0.0, 1.0)
+	_spill.enabled = light.enabled
+	_spill.energy = spill_energy * (0.45 + 0.55 * down) * (light.energy / energy)
 
 
 func _update_lit(delta: float) -> void:

@@ -8,7 +8,9 @@ extends RefCounted
 
 ## The torch beam: a cone pointing along +X from the texture centre.
 ## PointLight2D centres its texture on the node, so the beam starts at the hand.
-## `bands` quantises the falloff into steps: pixel-art light, not a smooth HD glow.
+## Brightness falls off smoothly to fully transparent at the far end and at the
+## sides: no hard edge anywhere. `bands` > 0 optionally quantises the bright
+## part into steps (it never applies to the fading tail).
 static func cone(length: float, angle_deg: float, bands: int) -> ImageTexture:
 	var size := int(ceilf(length)) * 2 + 2
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
@@ -19,19 +21,28 @@ static func cone(length: float, angle_deg: float, bands: int) -> ImageTexture:
 		for x in size:
 			var p := Vector2(x + 0.5, y + 0.5) - centre
 			var d := p.length()
-			if d > length or d < 1.0:
+			if d >= length or d < 1.0:
 				continue
 			var a := absf(p.angle())
-			if a > half:
+			if a >= half:
 				continue
-			var radial := pow(1.0 - d / length, 0.55)
-			# Soften the outer 35% of the cone's width.
-			var edge := clampf((half - a) / (half * 0.35), 0.0, 1.0)
+			var r := d / length
+			# Bright near the hand, then a long smooth tail that reaches exactly 0.
+			var radial := pow(1.0 - r, 0.7) * smoothstep(1.0, 0.55, r)
+			# Sides fade over the outer 45% of the cone's width.
+			var edge := smoothstep(half, half * 0.55, a)
 			var v := radial * edge
-			if bands > 0:
+			if bands > 0 and v > 0.5:
 				v = ceilf(v * bands) / bands
 			img.set_pixel(x, y, Color(v, v, v, v))
 	return ImageTexture.create_from_image(img)
+
+
+## Squashed soft ellipse: the torch spill pooling on the floor.
+static func ellipse(width: int, height: int) -> GradientTexture2D:
+	var t := radial(width)
+	t.height = height
+	return t
 
 
 ## Round, soft light: the player's dim glow, the exit sign.
