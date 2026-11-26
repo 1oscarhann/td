@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/props/stairs.gd" id="1_stairs"]
+
+[node name="Stairs" type="Node2D"]
+z_index = -5
+script = ExtResource("1_stairs")
+
+[node name="Climb" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 0
+monitoring = false
+
+[node name="Shape" type="CollisionShape2D" parent="Climb"]
+
+[node name="TopPlatform" type="StaticBody2D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="TopPlatform"]
+one_way_collision = true

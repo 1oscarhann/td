@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/props/boarded_panel.gd" id="1_panel"]
+
+[node name="BoardedPanel" type="Node2D"]
+script = ExtResource("1_panel")
+
+[node name="Blocker" type="StaticBody2D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape2D" parent="Blocker"]
+
+[node name="InteractZone" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+monitoring = false
+
+[node name="Shape" type="CollisionShape2D" parent="InteractZone"]
+
+[node name="Occluder" type="LightOccluder2D" parent="."]

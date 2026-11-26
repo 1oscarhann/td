@@ -25,3 +25,9 @@ A fast, juicy, "one more wave" tower defence game in a **single self-contained H
 
 ## Tweaking balance
 Every balance value (costs, damage, HP, HP scaling, wave composition, meta upgrades, daily modifiers) lives in the `CONFIG` object at the top of the script in `index.html`. Waves use a compact syntax: `'tank*6@1.3, &healer*3@2.4+1'` spawns 6 tanks 1.3s apart, plus 3 healers that start at the same time (`&`) after a 1s delay (`+1`).
+
+---
+
+## Also in this repo: Night Shift
+
+[`night-shift/`](night-shift/) is a Godot 4.4 vertical slice of a 2D semi-horror side-scroller: mouse-aimed torch, creatures that only exist inside the beam, and an unreliable voice at the bottom of the screen. See [`night-shift/README.md`](night-shift/README.md).

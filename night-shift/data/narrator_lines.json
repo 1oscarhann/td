@@ -1,0 +1,15 @@
+{
+	"alone_tonight": { "text": "you're alone tonight", "priority": 3 },
+	"fuse_box_downstairs": { "text": "there's a fuse box downstairs", "priority": 2, "max_wait": 25 },
+	"its_fine": { "text": "it's fine", "priority": 1 },
+	"dont_worry_boards": { "text": "don't worry about the boards", "priority": 1 },
+	"follow_the_signs": { "text": "just follow the signs", "priority": 2, "max_wait": 25 },
+	"it_can_see_you": { "text": "it can see you", "priority": 3, "min_gap": 8, "max_wait": 3 },
+	"stop_looking": { "text": "stop looking at it", "priority": 1 },
+	"it_likes_the_light": { "text": "it likes the light", "priority": 1 },
+	"stay_low": { "text": "stay low", "priority": 1 },
+	"doing_so_well": { "text": "you're doing so well", "priority": 2 },
+	"keep_moving": { "text": "keep moving", "priority": 0 },
+	"what_are_you_looking_for": { "text": "what are you looking for", "priority": 0 },
+	"further_than_that": { "text": "further than that", "priority": 3, "min_gap": 4, "max_wait": 30 }
+}

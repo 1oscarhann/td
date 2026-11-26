@@ -1,0 +1,334 @@
+class_name Player
+extends CharacterBody2D
+## The night-shift worker.
+##
+## A/D walk, Shift run (loud, drains stamina), Ctrl crouch (quiet, slow, fits under
+## low gaps), W/S stairs, hold E to interact, mouse aims the torch, click toggles it.
+## The sprite faces the direction of MOVEMENT, never the torch: walking right
+## while shining left is intended and should feel exposed.
+##
+## Origin is at the feet (bottom centre) so floor-placed things line up easily.
+
+@export_group("Movement")
+@export var walk_speed := 55.0
+@export var run_speed := 100.0
+@export var crouch_speed := 26.0
+@export var climb_speed := 40.0
+@export var acceleration := 700.0
+@export var gravity := 900.0
+
+@export_group("Stamina")
+## Seconds of running from full.
+@export var stamina_max := 5.0
+## Stamina regained per second while not running.
+@export var stamina_regen := 0.7
+## Once empty, running is locked until stamina is back above this fraction.
+@export_range(0.0, 1.0) var exhausted_until := 0.35
+
+@export_group("Noise radius (px)")
+@export var walk_noise := 70.0
+@export var run_noise := 190.0
+@export var crouch_noise := 0.0
+@export var climb_noise := 50.0
+
+const STAND_HAND := Vector2(3, -18)
+const CROUCH_HAND := Vector2(3, -10)
+## Standing still underground this long -> "keep moving".
+const IDLE_LINE_TIME := 15.0
+
+var facing := 1
+var crouching := false
+var running := false
+var climbing := false
+var interacting := false
+## Set by Main during death / ending sequences.
+var input_locked := false
+var stamina := 0.0
+var exhausted := false
+var idle_time := 0.0
+
+var _step_accum := 0.0
+var _stairs: Stairs = null
+var _interactable = null        # duck typed: interact_hold(), can_interact(), ...
+var _active_interactable = null # the one we're currently holding E on
+var _headroom := RectangleShape2D.new()
+
+@onready var torch: Torch = $Torch
+@onready var stand_shape: CollisionShape2D = $StandShape
+@onready var crouch_shape: CollisionShape2D = $CrouchShape
+@onready var climb_sensor: Area2D = $ClimbSensor
+@onready var interact_area: Area2D = $InteractArea
+@onready var prompt: InteractPrompt = $InteractPrompt
+@onready var camera: Camera2D = $Camera2D
+@onready var glow: PointLight2D = $Glow
+
+
+func _ready() -> void:
+	add_to_group("player")
+	GameState.player = self
+	stamina = stamina_max
+	# Space between the crouched head and the standing head. Must be clear to stand up.
+	_headroom.size = Vector2(8, 12)
+	# Dim glow so the player never fully vanishes. Its cull mask excludes the
+	# creature bit, so it can never reveal a creature: only the torch does that.
+	glow.texture = LightTextures.radial(96)
+	glow.range_item_cull_mask = GameState.LIGHT_ENV
+	collision_layer = GameState.LAYER_PLAYER
+	collision_mask = GameState.LAYER_WORLD | GameState.LAYER_STAIR_PLATFORM
+	climb_sensor.collision_mask = GameState.LAYER_CLIMB
+	interact_area.collision_mask = GameState.LAYER_INTERACT
+
+
+func _physics_process(delta: float) -> void:
+	if input_locked:
+		_locked_move(delta)
+		return
+	if Input.is_action_just_pressed("torch_toggle") and not interacting:
+		torch.toggle()
+	if _update_interact(delta):
+		return
+	_update_crouch()
+	_update_climb_state()
+	if climbing:
+		_climb_move(delta)
+	else:
+		_ground_move(delta)
+	_update_hand()
+	_update_idle(delta)
+
+
+func _process(delta: float) -> void:
+	# Look-ahead: nudge the camera towards where the mouse is, so aiming the torch
+	# into the dark also shows you a little more of the level there.
+	var vp := get_viewport()
+	var m := vp.get_mouse_position() / vp.get_visible_rect().size - Vector2(0.5, 0.5)
+	var target := Vector2(m.x * 48.0, m.y * 28.0 - 14.0)
+	camera.offset = camera.offset.lerp(target, clampf(delta * 3.0, 0.0, 1.0))
+
+
+## Teleport to a checkpoint and reset transient state.
+func respawn(pos: Vector2) -> void:
+	global_position = pos
+	velocity = Vector2.ZERO
+	_set_climbing(false, null)
+	if crouching:
+		_set_crouch(false)
+	interacting = false
+	_active_interactable = null
+	torch.release_aim()
+	torch.set_on(true, false)
+	stamina = stamina_max
+	exhausted = false
+	idle_time = 0.0
+	camera.reset_smoothing()
+
+
+# ---------------------------------------------------------------------- movement
+
+func _ground_move(delta: float) -> void:
+	var dir := Input.get_axis("move_left", "move_right")
+	var wants_run := Input.is_action_pressed("run") and absf(dir) > 0.1 and not crouching
+	running = wants_run and not exhausted
+	_update_stamina(delta)
+
+	var speed := walk_speed
+	if crouching:
+		speed = crouch_speed
+	elif running:
+		speed = run_speed
+	velocity.x = move_toward(velocity.x, dir * speed, acceleration * delta)
+	velocity.y += gravity * delta
+	if absf(dir) > 0.1:
+		facing = 1 if dir > 0.0 else -1
+	move_and_slide()
+
+	if is_on_floor() and absf(velocity.x) > 4.0:
+		_step_accum += absf(velocity.x) * delta
+		var stride := 10.0 if crouching else (20.0 if running else 14.0)
+		if _step_accum >= stride:
+			_step_accum -= stride
+			_footstep()
+
+
+func _locked_move(delta: float) -> void:
+	velocity.x = move_toward(velocity.x, 0.0, acceleration * delta)
+	if climbing:
+		velocity.y = 0.0
+	else:
+		velocity.y += gravity * delta
+	move_and_slide()
+
+
+func _update_stamina(delta: float) -> void:
+	if running:
+		stamina = maxf(stamina - delta, 0.0)
+		if stamina <= 0.0:
+			exhausted = true
+	else:
+		stamina = minf(stamina + stamina_regen * delta, stamina_max)
+		if exhausted and stamina >= stamina_max * exhausted_until:
+			exhausted = false
+
+
+## Every footstep is both a sound and a noise event creatures can hear.
+func _footstep() -> void:
+	var noise := walk_noise
+	var vol := -14.0
+	if crouching:
+		noise = crouch_noise
+		vol = -26.0
+	elif running:
+		noise = run_noise
+		vol = -5.0
+	AudioDirector.play_at("step", global_position, vol, 0.12)
+	GameState.make_noise(global_position, noise)
+
+
+func _update_hand() -> void:
+	var hand := CROUCH_HAND if crouching else STAND_HAND
+	torch.position = Vector2(hand.x * facing, hand.y)
+
+
+func _update_idle(delta: float) -> void:
+	if velocity.length() < 2.0:
+		idle_time += delta
+	else:
+		idle_time = 0.0
+	if idle_time > IDLE_LINE_TIME and GameState.zone >= 1:
+		Narrator.say("keep_moving")
+
+
+# ------------------------------------------------------------------------ crouch
+
+func _update_crouch() -> void:
+	var wants := Input.is_action_pressed("crouch") and not climbing
+	if wants and not crouching:
+		_set_crouch(true)
+	elif not wants and crouching and _has_headroom():
+		_set_crouch(false)
+
+
+func _set_crouch(on: bool) -> void:
+	crouching = on
+	stand_shape.disabled = on
+	crouch_shape.disabled = not on
+
+
+## Can't stand up under a low ceiling: you stay crouched until there's room.
+func _has_headroom() -> bool:
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = _headroom
+	query.transform = Transform2D(0.0, global_position + Vector2(0, -21))
+	query.collision_mask = GameState.LAYER_WORLD
+	return get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
+
+
+# ------------------------------------------------------------------------ stairs
+# Stairwells are latched with W/S. While latched there's no gravity and the
+# one-way platform at the top is ignored, so you can climb down through it.
+
+func _find_stairs() -> Stairs:
+	for area in climb_sensor.get_overlapping_areas():
+		var s := area.get_parent() as Stairs
+		if s != null:
+			return s
+	return null
+
+
+func _update_climb_state() -> void:
+	var stairs := _find_stairs()
+	if stairs == null:
+		if climbing:
+			_set_climbing(false, null)
+		return
+	var v := Input.get_axis("move_up", "move_down")
+	var feet := global_position.y
+	if not climbing:
+		if v < -0.1 and feet > stairs.top_y + 2.0:
+			_set_climbing(true, stairs)
+		elif v > 0.1 and feet < stairs.bottom_y - 2.0:
+			_set_climbing(true, stairs)
+		return
+	# Off the top: feet just above the landing, gravity drops us onto the platform.
+	if feet < stairs.top_y - 3.0:
+		_set_climbing(false, null)
+		return
+	# Walk off at the bottom.
+	if is_on_floor() and v >= 0.0 and absf(Input.get_axis("move_left", "move_right")) > 0.1:
+		_set_climbing(false, null)
+
+
+func _set_climbing(on: bool, stairs: Stairs) -> void:
+	climbing = on
+	_stairs = stairs
+	velocity = Vector2.ZERO
+	if on:
+		collision_mask = GameState.LAYER_WORLD
+		if crouching:
+			_set_crouch(false)
+	else:
+		collision_mask = GameState.LAYER_WORLD | GameState.LAYER_STAIR_PLATFORM
+
+
+func _climb_move(delta: float) -> void:
+	var v := Input.get_axis("move_up", "move_down")
+	velocity.y = v * climb_speed
+	velocity.x = (_stairs.center_x - global_position.x) * 10.0
+	move_and_slide()
+	if absf(v) > 0.1 and not is_on_floor():
+		_step_accum += climb_speed * delta
+		if _step_accum >= 9.0:
+			_step_accum -= 9.0
+			AudioDirector.play_at("step", global_position, -13.0, 0.1, 600.0, 1.3)
+			GameState.make_noise(global_position, climb_noise)
+
+
+# ---------------------------------------------------------------------- interact
+
+## Returns true while an interaction is consuming this frame's movement.
+func _update_interact(delta: float) -> bool:
+	_interactable = _find_interactable()
+	var holding := Input.is_action_pressed("interact")
+	if _interactable != null and holding and is_on_floor() and not climbing:
+		if not interacting or _active_interactable != _interactable:
+			interacting = true
+			_active_interactable = _interactable
+			if _interactable.requires_two_hands:
+				# Two hands on the board: the torch ends up pointing at the floor.
+				var p: Vector2 = _interactable.get_interact_point()
+				torch.force_aim(Vector2(signf(p.x - global_position.x) * 0.35, 1.0))
+		var point: Vector2 = _interactable.get_interact_point()
+		facing = 1 if point.x >= global_position.x else -1
+		_interactable.interact_hold(self, delta)
+		velocity.x = move_toward(velocity.x, 0.0, acceleration * delta)
+		velocity.y += gravity * delta
+		move_and_slide()
+		_update_hand()
+		_update_prompt()
+		idle_time = 0.0
+		return true
+
+	if interacting:
+		interacting = false
+		torch.release_aim()
+		if _active_interactable != null and is_instance_valid(_active_interactable):
+			_active_interactable.interact_release()
+		_active_interactable = null
+	_update_prompt()
+	return false
+
+
+func _find_interactable():
+	for area in interact_area.get_overlapping_areas():
+		var target = area.get_parent()
+		if target.has_method("interact_hold") and target.can_interact():
+			return target
+	return null
+
+
+func _update_prompt() -> void:
+	if _interactable == null:
+		prompt.set_state(false, 0.0)
+		return
+	prompt.global_position = _interactable.get_prompt_point()
+	prompt.set_state(true, _interactable.get_progress())

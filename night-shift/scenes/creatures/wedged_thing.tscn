@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/creatures/wedged_thing.gd" id="1_thing"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_lightonly"]
+light_mode = 2
+
+[node name="WedgedThing" type="Area2D"]
+light_mask = 2
+material = SubResource("CanvasItemMaterial_lightonly")
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("1_thing")
+
+[node name="Shape" type="CollisionShape2D" parent="."]
+
+[node name="Scrape" type="AudioStreamPlayer2D" parent="."]
+max_distance = 420.0
+attenuation = 1.6
