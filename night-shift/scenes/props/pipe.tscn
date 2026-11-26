@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://art/props/pipe.tres" id="1_tex"]
+
+[node name="Pipe" type="Sprite2D"]
+texture_repeat = 2
+texture = ExtResource("1_tex")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 64, 6)

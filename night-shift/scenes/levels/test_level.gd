@@ -58,6 +58,39 @@ const TRIGGERS := {
 	"5": {"line": "further_than_that", "event": "end"},
 }
 
+## Set dressing (Phase 3): things the torch finds as you sweep it around.
+## "cell" is any open cell inside the room; ceiling/floor heights come from the map.
+##   tube / vent:  hung from the ceiling above "cell" (dead strip lights, ducts)
+##   pipe / cable: a run from "cell" to column "to_x", placed "below_ceiling" px
+##                 under the ceiling or "above_floor" px over the floor
+## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
+const DECOR := [
+	# Storeroom: dead strip lights, vents, a pipe and a cable along the back wall.
+	{"type": "tube", "cell": Vector2i(7, 4)},
+	{"type": "tube", "cell": Vector2i(18, 4)},
+	{"type": "vent", "cell": Vector2i(12, 4)},
+	{"type": "vent", "cell": Vector2i(24, 4)},
+	{"type": "pipe", "cell": Vector2i(1, 4), "to_x": 29, "below_ceiling": 6},
+	{"type": "cable", "cell": Vector2i(16, 4), "to_x": 27, "below_ceiling": 16, "sag": 7},
+	# Tunnel start: pipe run past the stairwell, a sagging cable, a dead light.
+	{"type": "pipe", "cell": Vector2i(6, 16), "to_x": 41, "below_ceiling": 3},
+	{"type": "cable", "cell": Vector2i(20, 16), "to_x": 31, "below_ceiling": 12, "sag": 6},
+	{"type": "tube", "cell": Vector2i(26, 16)},
+	# Tight tunnel: a vent right above your head.
+	{"type": "pipe", "cell": Vector2i(41, 17), "to_x": 59, "below_ceiling": 2},
+	{"type": "vent", "cell": Vector2i(47, 17)},
+	# Open room: high things you only find by looking up.
+	{"type": "tube", "cell": Vector2i(63, 12)},
+	{"type": "vent", "cell": Vector2i(70, 12)},
+	{"type": "tube", "cell": Vector2i(75, 12)},
+	{"type": "pipe", "cell": Vector2i(59, 14), "to_x": 79, "above_floor": 44},
+	{"type": "cable", "cell": Vector2i(60, 12), "to_x": 77, "below_ceiling": 26, "sag": 14},
+	# Passage, past the crouch gap, the dead end.
+	{"type": "cable", "cell": Vector2i(80, 16), "to_x": 89, "below_ceiling": 9, "sag": 4},
+	{"type": "vent", "cell": Vector2i(98, 16)},
+	{"type": "tube", "cell": Vector2i(101, 16)},
+]
+
 ## CanvasModulate per zone. Dim but readable: the environment is never pure black.
 const ZONE_DARKNESS := {
 	0: Color(0.40, 0.41, 0.54),   # shop after the power cut: near-black blues
@@ -75,6 +108,10 @@ const SHELF_SCENE := preload("res://scenes/props/shelf.tscn")
 const SIGN_SCENE := preload("res://scenes/props/fuse_sign.tscn")
 const DOOR_SCENE := preload("res://scenes/props/shop_door.tscn")
 const THING_SCENE := preload("res://scenes/creatures/wedged_thing.tscn")
+const VENT_SCENE := preload("res://scenes/props/vent.tscn")
+const TUBE_SCENE := preload("res://scenes/props/tube.tscn")
+const PIPE_SCENE := preload("res://scenes/props/pipe.tscn")
+const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
 
 var player_start := Vector2.ZERO
 var thing: WedgedThing
@@ -154,6 +191,55 @@ func _build() -> void:
 					back_wall.set_cell(cell, 0, _atlas(_background_for(row, x), cell))
 					_place_marker(ch, cell)
 	_fill_margin(width)
+	for d: Dictionary in DECOR:
+		_place_decor(d)
+
+
+func _place_decor(d: Dictionary) -> void:
+	var cell: Vector2i = d.cell
+	if not _is_open(cell.x, cell.y):
+		push_warning("TestLevel: decor %s at %s is inside rock" % [d.type, cell])
+		return
+	var ceil_y := _ceiling_y(cell)
+	var floor_y := _floor_y(cell)
+	var x := float(cell.x * TILE)
+	var y := ceil_y + float(d.get("below_ceiling", 0))
+	if d.has("above_floor"):
+		y = floor_y - float(d.above_floor)
+	match d.type:
+		"tube", "vent":
+			var hung: Node2D = (TUBE_SCENE if d.type == "tube" else VENT_SCENE).instantiate()
+			hung.position = Vector2(x + TILE * 0.5, ceil_y)
+			props.add_child(hung)
+		"pipe":
+			var pipe: Sprite2D = PIPE_SCENE.instantiate()
+			pipe.position = Vector2(x, y)
+			pipe.region_rect = Rect2(0, 0, (int(d.to_x) - cell.x) * TILE, 6)
+			props.add_child(pipe)
+		"cable":
+			var cable: WallCable = CABLE_SCENE.instantiate()
+			cable.position = Vector2(x, y)
+			cable.end_point = Vector2((int(d.to_x) - cell.x) * TILE, 0)
+			cable.sag = float(d.get("sag", 8))
+			props.add_child(cable)
+		_:
+			push_warning("TestLevel: unknown decor type '%s'" % d.type)
+
+
+## World y of the ceiling (underside of the rock) above an open cell.
+func _ceiling_y(cell: Vector2i) -> float:
+	var y := cell.y
+	while _is_open(cell.x, y - 1):
+		y -= 1
+	return float(y * TILE)
+
+
+## World y of the floor (top of the rock) below an open cell.
+func _floor_y(cell: Vector2i) -> float:
+	var y := cell.y
+	while _is_open(cell.x, y + 1):
+		y += 1
+	return float((y + 1) * TILE)
 
 
 ## Solid rock around the map, so the camera never shows the void past the edge.

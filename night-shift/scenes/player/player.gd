@@ -19,7 +19,7 @@ extends CharacterBody2D
 
 @export_group("Camera")
 ## How far (world px) the camera leans towards the mouse.
-@export var camera_lead := 28.0
+@export var camera_lead := 48.0
 
 @export_group("Stamina")
 ## Seconds of running from full.

@@ -39,14 +39,25 @@ narrator, synthesised audio. See README.md.
   The sign and door are recoloured to the palette.
 - Removed the old in-code tile painter and `shelf.gd`.
 
+### Phase 3: dress the scene
+- New prop scenes: `vent.tscn`, `tube.tscn`, `pipe.tscn` (Sprite2D, repeating
+  region), and `cable.tscn` + `cable.gd` (Line2D with a parabolic sag, cable texture tiled).
+- `DECOR` list in `test_level.gd` places them. Ceiling and floor heights come from
+  the map, so entries just name a cell inside the room. The storeroom gets dead strip
+  lights, 2 vents, a pipe and a cable. The tunnel gets pipe runs, cables, dead tubes,
+  a vent right over your head in the tight tunnel, high stuff in the open room you
+  only find by looking up, and a vent and tube at the dead end.
+- Cables are plain scenery (environment layer, always visible). No creature logic.
+- Fixed the known Phase 1 bug: `camera_lead` 28 -> 48, so with the mouse at the
+  screen edge the camera leans far enough to show the 120 px beam tip.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
 - How dark it looks on a real monitor. My renders are software-rendered PNGs.
 
 ## Known bugs / rough edges
-- The 2x zoom shows ~6 tiles each side; the torch reaches 7.5, so the beam tip
-  can be off-screen when you aim flat.
+- The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
 - **Palette has 2 non-teal accents** (ochre, rust) inside the 12 colours, for
