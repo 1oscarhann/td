@@ -11,11 +11,15 @@ extends Node2D
 ##   P  player start               B  boarded panel (bottom cell of a 1x2 opening)
 ##   H  stairs (top-left, on the landing; the shaft below it is the stairwell)
 ##   W  Wedged Thing spawn         S  shelf of crisps (identical everywhere)
-##   D  door back to the shop      F  FUSE BOX sign       f  a wrong FUSE BOX sign
+##   D  shop front door + EXIT     F  FUSE BOX sign       f  a wrong FUSE BOX sign
+##   K  crisps shelf + "stack the shelf" job      R  drinks fridge + "check it" job
+##   M  mop, bucket and the spill job             C  counter, till, CCTV (+ the torch)
+##   X  breaker box (does nothing)
 ##   1-9  triggers, configured in TRIGGERS below
 ##
 ## Section by section (left to right, top to bottom):
-##   storeroom (dead, power's out) -> panel -> landing -> stairwell down ->
+##   shop (Act 0: lights on, jobs, then the power cut) -> doorway ->
+##   storeroom (strip lights long dead) -> panel -> landing -> stairwell down ->
 ##   tunnel: left dead end (the Thing sleeps there, next to a familiar shelf),
 ##   a tight 2-tile tunnel (it's slow here), an open 8-tile room (it's FAST here),
 ##   a 1-tile crouch gap (it can't fit), and a dead end where the sign points
@@ -26,82 +30,96 @@ signal ending_reached
 const TILE := 16
 
 const MAP := [
-	"############################################################################################################",
-	"############################################################################################################",
-	"#............................###############################################################################",
-	"#............................#......########################################################################",
-	"#............................#......########################################################################",
-	"#...................................########################################################################",
-	"#.D.P....S.....S.....S.....1.B..H...########################################################################",
-	"################################..##########################################################################",
-	"################################..##########################################################################",
-	"################################..##########################################################################",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%,,,,,,,,,,,,%%%",
-	"%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,,,%%%",
-	"%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,f,%%%",
-	"%%%%%%,,,,S,,,W,,,,,,,,,,,,,,,,,,,,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,,,,,,,,,4,,,,5,,,%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"######################################################################################################################################",
+	"######################################################################################################################################",
+	"#........................##............................###############################################################################",
+	"#........................##............................#......########################################################################",
+	"#......................................................#......########################################################################",
+	"#.............................................................########################################################################",
+	"#.D...P...6K...R..M..C.7....X8.....S.....S.....S.....1.B..H...########################################################################",
+	"##########################################################..##########################################################################",
+	"##########################################################..##########################################################################",
+	"##########################################################..##########################################################################",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%,,,,,,,,,,,,%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,,,%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,f,%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,S,,,W,,,,,,,,,,,,,,,,,,,,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,,,,,,,,,4,,,,5,,,%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
 ]
 
 ## Trigger markers -> LevelTrigger settings.
 const TRIGGERS := {
-	"1": {"line": "fuse_box_downstairs"},
+	"1": {"line": "fuse_box_downstairs", "after_power": true},
 	"2": {"line": "follow_the_signs", "checkpoint": true, "zone": 2, "event": "wake_thing"},
 	"3": {"line": "stay_low"},
 	"4": {"line": "doing_so_well", "checkpoint": true},
 	"5": {"line": "further_than_that", "event": "end"},
+	"6": {"line": "crisps_left"},
+	# Shop <-> storeroom doorway: zone 0 is the shop, zone 1 the back room.
+	"7": {"zone": 0, "repeat": true},
+	"8": {"zone": 1, "repeat": true},
 }
 
 ## Set dressing (Phase 3): things the torch finds as you sweep it around.
 ## "cell" is any open cell inside the room; ceiling/floor heights come from the map.
 ##   tube / vent:  hung from the ceiling above "cell" (dead strip lights, ducts)
+##   light:        a working fluorescent tube (dies in the power cut)
+##   window:       the shop window onto the forecourt
 ##   pipe / cable: a run from "cell" to column "to_x", placed "below_ceiling" px
 ##                 under the ceiling or "above_floor" px over the floor
 ##   spiders:      "count" little spiders crawling on the ceiling around "cell"
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
+	# Shop (Act 0): fluorescent tubes that work until the power cut, the window.
+	{"type": "light", "cell": Vector2i(5, 4)},
+	{"type": "light", "cell": Vector2i(12, 4)},
+	{"type": "light", "cell": Vector2i(19, 4)},
+	{"type": "window", "cell": Vector2i(6, 4)},
 	# Storeroom: dead strip lights, vents, a pipe and a cable along the back wall.
-	{"type": "tube", "cell": Vector2i(7, 4)},
-	{"type": "tube", "cell": Vector2i(18, 4)},
-	{"type": "vent", "cell": Vector2i(12, 4)},
-	{"type": "vent", "cell": Vector2i(24, 4)},
-	{"type": "pipe", "cell": Vector2i(1, 4), "to_x": 29, "below_ceiling": 6},
-	{"type": "cable", "cell": Vector2i(16, 4), "to_x": 27, "below_ceiling": 16, "sag": 7},
+	{"type": "tube", "cell": Vector2i(33, 4)},
+	{"type": "tube", "cell": Vector2i(44, 4)},
+	{"type": "vent", "cell": Vector2i(38, 4)},
+	{"type": "vent", "cell": Vector2i(50, 4)},
+	{"type": "pipe", "cell": Vector2i(27, 4), "to_x": 55, "below_ceiling": 6},
+	{"type": "cable", "cell": Vector2i(42, 4), "to_x": 53, "below_ceiling": 16, "sag": 7},
 	# Tunnel start: pipe run past the stairwell, a sagging cable, a dead light.
-	{"type": "pipe", "cell": Vector2i(6, 16), "to_x": 41, "below_ceiling": 3},
-	{"type": "cable", "cell": Vector2i(20, 16), "to_x": 31, "below_ceiling": 12, "sag": 6},
-	{"type": "tube", "cell": Vector2i(26, 16)},
+	{"type": "pipe", "cell": Vector2i(32, 16), "to_x": 67, "below_ceiling": 3},
+	{"type": "cable", "cell": Vector2i(46, 16), "to_x": 57, "below_ceiling": 12, "sag": 6},
+	{"type": "tube", "cell": Vector2i(52, 16)},
 	# First spiders: right where you step off the stairs. Harmless; teach "look up".
-	{"type": "vent", "cell": Vector2i(35, 16)},
-	{"type": "spiders", "cell": Vector2i(35, 16), "count": 3},
+	{"type": "vent", "cell": Vector2i(61, 16)},
+	{"type": "spiders", "cell": Vector2i(61, 16), "count": 3},
 	# Tight tunnel: a vent right above your head.
-	{"type": "pipe", "cell": Vector2i(41, 17), "to_x": 59, "below_ceiling": 2},
-	{"type": "vent", "cell": Vector2i(47, 17)},
-	{"type": "spiders", "cell": Vector2i(47, 17), "count": 2},
+	{"type": "pipe", "cell": Vector2i(67, 17), "to_x": 85, "below_ceiling": 2},
+	{"type": "vent", "cell": Vector2i(73, 17)},
+	{"type": "spiders", "cell": Vector2i(73, 17), "count": 2},
 	# Open room: high things you only find by looking up.
-	{"type": "tube", "cell": Vector2i(63, 12)},
-	{"type": "vent", "cell": Vector2i(70, 12)},
-	{"type": "spiders", "cell": Vector2i(70, 12), "count": 3},
-	{"type": "tube", "cell": Vector2i(75, 12)},
-	{"type": "pipe", "cell": Vector2i(59, 14), "to_x": 79, "above_floor": 44},
-	{"type": "cable", "cell": Vector2i(60, 12), "to_x": 77, "below_ceiling": 26, "sag": 14},
+	{"type": "tube", "cell": Vector2i(89, 12)},
+	{"type": "vent", "cell": Vector2i(96, 12)},
+	{"type": "spiders", "cell": Vector2i(96, 12), "count": 3},
+	{"type": "tube", "cell": Vector2i(101, 12)},
+	{"type": "pipe", "cell": Vector2i(85, 14), "to_x": 105, "above_floor": 44},
+	{"type": "cable", "cell": Vector2i(86, 12), "to_x": 103, "below_ceiling": 26, "sag": 14},
 	# Passage, past the crouch gap, the dead end.
-	{"type": "cable", "cell": Vector2i(80, 16), "to_x": 89, "below_ceiling": 9, "sag": 4},
-	{"type": "vent", "cell": Vector2i(98, 16)},
-	{"type": "spiders", "cell": Vector2i(98, 16), "count": 2},
-	{"type": "tube", "cell": Vector2i(101, 16)},
+	{"type": "cable", "cell": Vector2i(106, 16), "to_x": 115, "below_ceiling": 9, "sag": 4},
+	{"type": "vent", "cell": Vector2i(124, 16)},
+	{"type": "spiders", "cell": Vector2i(124, 16), "count": 2},
+	{"type": "tube", "cell": Vector2i(127, 16)},
 ]
+
+## Shop with the power on: flat, harsh fluorescent. The boredom is the point.
+const POWER_ON_SHOP := Color(0.86, 0.94, 0.84)
 
 ## CanvasModulate per zone. Dim but readable: the environment is never pure black.
 const ZONE_DARKNESS := {
 	0: Color(0.40, 0.41, 0.54),   # shop after the power cut: near-black blues
-	1: Color(0.40, 0.38, 0.33),   # storage cellar: grey, dirty yellow
+	1: Color(0.40, 0.40, 0.46),   # back room / storeroom: lights long dead
 	2: Color(0.33, 0.38, 0.46),   # service tunnels: cold grey-blue
 }
 ## Ambience hum volume (dB) and World-bus reverb [room_size, wet] per zone.
@@ -120,6 +138,13 @@ const TUBE_SCENE := preload("res://scenes/props/tube.tscn")
 const PIPE_SCENE := preload("res://scenes/props/pipe.tscn")
 const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
 const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
+const LIGHT_SCENE := preload("res://scenes/props/shop_light.tscn")
+const WINDOW_SCENE := preload("res://scenes/props/shop_window.tscn")
+const FRIDGE_SCENE := preload("res://scenes/props/fridge.tscn")
+const COUNTER_SCENE := preload("res://scenes/props/counter.tscn")
+const MOP_SCENE := preload("res://scenes/props/mop_bucket.tscn")
+const BREAKER_SCENE := preload("res://scenes/props/breaker.tscn")
+const TASK_SCENE := preload("res://scenes/props/shop_task.tscn")
 
 var player_start := Vector2.ZERO
 var thing: WedgedThing
@@ -127,6 +152,8 @@ var panel: BoardedPanel
 var size_tiles := Vector2i.ZERO
 
 var _drip_timer := 3.0
+var _tasks: Array = []
+var _after_power: Array = []
 var _variants := 1
 
 @onready var darkness: CanvasModulate = $Darkness
@@ -136,6 +163,7 @@ var _variants := 1
 @onready var triggers: Node2D = $Triggers
 @onready var creatures: Node2D = $Creatures
 @onready var ambience: AudioStreamPlayer = $Ambience
+@onready var act0: Act0 = $Act0
 
 
 func _ready() -> void:
@@ -144,10 +172,12 @@ func _ready() -> void:
 	back_wall.tile_set = tile_set
 	walls.tile_set = tile_set
 	_build()
+	act0.setup(_tasks, panel, _after_power)
 	ambience.stream = AudioDirector.get_stream("hum")
 	ambience.volume_db = -80.0
 	ambience.play()
 	GameState.zone_changed.connect(_apply_zone)
+	act0.power_changed.connect(func(_on): _apply_zone(GameState.zone, true))
 	_apply_zone(GameState.zone, true)
 
 
@@ -215,6 +245,14 @@ func _place_decor(d: Dictionary) -> void:
 	if d.has("above_floor"):
 		y = floor_y - float(d.above_floor)
 	match d.type:
+		"light":
+			var light: Node2D = LIGHT_SCENE.instantiate()
+			light.position = Vector2(x + TILE * 0.5, ceil_y)
+			props.add_child(light)
+		"window":
+			var window: Node2D = WINDOW_SCENE.instantiate()
+			window.position = Vector2(x + TILE * 0.5, (ceil_y + floor_y) * 0.5 - 8.0)
+			props.add_child(window)
 		"tube", "vent":
 			var hung: Node2D = (TUBE_SCENE if d.type == "tube" else VENT_SCENE).instantiate()
 			hung.position = Vector2(x + TILE * 0.5, ceil_y)
@@ -342,6 +380,31 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			sign_node.position = centre
 			sign_node.set("wrong", ch == "f")
 			props.add_child(sign_node)
+		"K":
+			var task_shelf: Node2D = SHELF_SCENE.instantiate()
+			task_shelf.position = floor_point
+			props.add_child(task_shelf)
+			_add_task("shelf", floor_point + Vector2(16, 0), ShopTask.Kind.BOX)
+		"R":
+			var fridge: Node2D = FRIDGE_SCENE.instantiate()
+			fridge.position = floor_point
+			props.add_child(fridge)
+			_add_task("fridge", floor_point, ShopTask.Kind.NONE, 1.0)
+		"M":
+			var mop: Node2D = MOP_SCENE.instantiate()
+			mop.position = floor_point + Vector2(14, 0)
+			props.add_child(mop)
+			_add_task("mop", floor_point, ShopTask.Kind.SPILL, 2.0)
+		"C":
+			var counter: Node2D = COUNTER_SCENE.instantiate()
+			counter.position = floor_point
+			props.add_child(counter)
+			_add_task("torch", floor_point, ShopTask.Kind.NONE, 0.6)
+		"X":
+			var breaker: Node2D = BREAKER_SCENE.instantiate()
+			breaker.position = centre + Vector2(0, -8)
+			props.add_child(breaker)
+			_add_task("breaker", floor_point, ShopTask.Kind.NONE, 0.5)
 		_:
 			if TRIGGERS.has(ch):
 				_place_trigger(TRIGGERS[ch], floor_point)
@@ -356,8 +419,22 @@ func _place_trigger(cfg: Dictionary, at: Vector2) -> void:
 	t.event_name = cfg.get("event", "")
 	t.sets_checkpoint = cfg.get("checkpoint", false)
 	t.zone = cfg.get("zone", -1)
+	t.one_shot = not cfg.get("repeat", false)
+	if cfg.get("after_power", false):
+		t.armed = false
+		_after_power.append(t)
 	t.triggered.connect(_on_trigger)
 	triggers.add_child(t)
+
+
+func _add_task(id: String, at: Vector2, kind: ShopTask.Kind, hold := 1.5) -> void:
+	var task: ShopTask = TASK_SCENE.instantiate()
+	task.task_id = id
+	task.kind = kind
+	task.hold_time = hold
+	task.position = at
+	props.add_child(task)
+	_tasks.append(task)
 
 
 ## Counts open (non-solid) tiles straight down from below the given cell.
@@ -394,6 +471,8 @@ func _on_board_ripped(remaining: int) -> void:
 
 func _apply_zone(zone: int, instant := false) -> void:
 	var dark: Color = ZONE_DARKNESS.get(zone, ZONE_DARKNESS[2])
+	if zone == 0 and act0.power_on:
+		dark = POWER_ON_SHOP
 	var hum: float = ZONE_HUM_DB.get(zone, -26.0)
 	var verb: Array = ZONE_REVERB.get(zone, ZONE_REVERB[2])
 	AudioDirector.set_reverb(verb[0], verb[1])

@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/props/powered_prop.gd" id="1_powered"]
+[ext_resource type="Texture2D" path="res://art/props/window_on.tres" id="2_on"]
+[ext_resource type="Texture2D" path="res://art/props/window_off.tres" id="3_off"]
+
+[node name="ShopWindow" type="Node2D"]
+script = ExtResource("1_powered")
+light_energy = 0.5
+light_color = Color(0.75, 0.85, 1, 1)
+light_size = 128
+on_texture = ExtResource("2_on")
+off_texture = ExtResource("3_off")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_on")

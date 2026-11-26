@@ -5,7 +5,7 @@ extends Node2D
 ## Death (open question in the doc): checkpoint restart for now. Cut to black,
 ## low boom, back at the last checkpoint, creatures reset.
 
-const START_LINE_DELAY := 1.5
+const START_LINE_DELAY := 0.8
 const DEATH_BLACK_TIME := 2.5
 
 @onready var level = $Level
@@ -18,12 +18,17 @@ var _dying := false
 func _ready() -> void:
 	GameState.reset_run()
 	Narrator.reset()
+	# The level read GameState.zone in its own _ready (before this reset), so
+	# re-apply: matters when the ending reloads the scene from a deeper zone.
+	level._apply_zone(GameState.zone, true)
 	GameState.player = player
 	GameState.torch = player.torch
 	player.global_position = level.player_start
 	GameState.checkpoint = level.player_start
 	level.apply_camera_limits(player.camera)
 	player.snap_camera()
+	# Act 0: the torch is under the counter until the power goes.
+	player.torch.set_available(false)
 	GameState.player_caught.connect(_on_player_caught)
 	level.ending_reached.connect(_on_ending_reached)
 

@@ -27,6 +27,8 @@ const PLANK_TEX := preload("res://art/props/plank.tres")
 @export var noise_radius := 260.0
 ## Later in the game: boards splintered outward, nails bent the wrong way.
 @export var pushed_from_inside := false
+## Disabled panels can't be pulled yet (Act 0: nothing to fix until the power dies).
+@export var enabled := true
 
 var requires_two_hands := true
 var boards_left := 0
@@ -79,7 +81,7 @@ func _process(delta: float) -> void:
 # get_progress, get_interact_point, get_prompt_point, requires_two_hands.
 
 func can_interact() -> bool:
-	return boards_left > 0
+	return enabled and boards_left > 0
 
 
 func get_progress() -> float:

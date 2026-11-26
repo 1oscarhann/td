@@ -26,6 +26,6 @@ func _draw() -> void:
 	# Push bar.
 	draw_rect(Rect2(-6, -16, 12, 1), Color8(111, 133, 130))
 	# EXIT sign.
-	draw_rect(Rect2(-9, -43, 18, 7), Color(0.85, 0.18, 0.15))
-	draw_string(ThemeDB.fallback_font, Vector2(-8, -37.5), "EXIT", HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
+	draw_rect(Rect2(-12, -46, 24, 10), Color(0.85, 0.18, 0.15))
+	draw_string(ThemeDB.fallback_font, Vector2(-12, -38), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, 24, 8,
 			Color(1, 0.92, 0.9))

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/props/powered_prop.gd" id="1_powered"]
+[ext_resource type="Texture2D" path="res://art/props/tube.tres" id="2_tex"]
+
+[node name="ShopLight" type="Node2D"]
+script = ExtResource("1_powered")
+light_energy = 1.1
+light_size = 224
+light_offset = Vector2(0, 8)
+hum_sound = "buzz"
+hum_volume_db = -26.0
+lit_modulate = Color(1.6, 1.7, 1.6, 1)
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+offset = Vector2(0, 3)

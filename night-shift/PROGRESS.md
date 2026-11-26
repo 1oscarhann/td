@@ -72,6 +72,32 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
   vent), 2 in the tight tunnel, 3 in the open room, 2 at the dead end.
 - Verified headless: lighting a spider -> it flees, then hides, and the line plays.
 
+#### M2.2: Act 0, the shop and the power cut
+- New shop room left of the storeroom, joined by a doorway. Everything else moved
+  26 columns right; `DECOR` was shifted to match.
+- Start: lights on (bright, flat, greenish ambient), no torch. `Torch.available`
+  is false until you pick it up.
+- Jobs (hold E, `ShopTask`): stack the crisps (the box by the shelf), mop the spill,
+  check the fridge. "the crisps go on the left" plays near the shelf.
+- After 2 jobs: one stutter of the lights, "the lights do that sometimes".
+- After 3 jobs (+5 s), or 150 s regardless: the power cut. Tubes flicker and die,
+  the fridge hum and fluorescent buzz stop, the forecourt window goes dark, and the
+  ambient snaps to dark blue. The battery EXIT sign stays lit.
+- Then "torch is under the counter": hold E at the counter. The breaker in the
+  storeroom clunks and does nothing ("the breaker won't help"). The boarded panel
+  and the "fuse box downstairs" trigger only arm after the cut.
+- New: `act0.gd` (director), `powered_prop.gd` (lights / hum / texture swap on
+  power), `shop_task.gd`, plus scenes: shop_light, fridge, shop_window, counter
+  (with CCTV monitor sprite), mop_bucket, breaker.
+- New art in gen_tiles.py: fridge, counter + till, CCTV monitor, mop + bucket,
+  window (on/off), breaker, crisp box. New sounds: fluorescent buzz loop, clunk.
+- The storeroom is now zone 1 (repeatable doorway triggers `7` / `8`), so its
+  long-dead lights stay dark even while the shop is lit.
+- Fixed: after the ending reloads the scene, the level showed the old zone's
+  darkness. Main now re-applies the zone after resetting.
+- Verified headless: full route from the first job to the tunnel. Renders: shop
+  lit, shop after the cut, EXIT sign.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -87,6 +113,12 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
   needs something for solid rock and the side faces of walls.
 - **Milestone 2 scope is my guess.** The doc only defines milestone 1. I used
   the doc's order: spiders, Act 0 + power cut, CCTV, Ceiling Arms.
+- **Act 0 jobs:** stack crisps, mop, fridge. The fridge job does nothing visible
+  (the doc gives no fridge payoff). The CCTV glance is M2.3.
+- **Power cut timing:** after all 3 jobs, or 150 s, whichever is first.
+- **The panel is locked until the power cut**, so you can't skip Act 0.
+- **Lines from the doc I didn't use:** "nobody comes in after two" (needs a
+  look-at-the-door trigger; skipped), "it's fine" (still on the first board).
 - **Spiders live in the tunnel**, not a separate Zone 1 cellar. The slice has
   no cellar section, and adding one is level design you should own.
 - **Boarded panel art = two textures** (hole + one plank) instead of one image,

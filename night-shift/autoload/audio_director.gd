@@ -110,6 +110,8 @@ func _build_library() -> void:
 	_streams["hiss"] = _to_wav(_synth_hiss(), true)
 	_streams["caught"] = _to_wav(_synth_caught())
 	_streams["drip"] = _to_wav(_synth_drip())
+	_streams["buzz"] = _to_wav(_synth_buzz(), true)
+	_streams["clunk"] = _to_wav(_synth_clunk())
 
 
 # --------------------------------------------------------------------- synthesis
@@ -255,6 +257,28 @@ func _synth_drip() -> PackedFloat32Array:
 		var f := 1500.0 * exp(-t * 14.0) + 550.0
 		phase += f / RATE
 		s[i] = sin(TAU * phase) * exp(-t * 22.0) * 0.5
+	return s
+
+
+## Fluorescent tube buzz: Act 0 normality. Its absence after the cut is the point.
+## 1 s loop, whole cycles of 100 Hz.
+func _synth_buzz() -> PackedFloat32Array:
+	var s := _buffer(1.0)
+	for i in s.size():
+		var t := float(i) / RATE
+		var saw := fposmod(t * 100.0, 1.0) * 2.0 - 1.0
+		s[i] = saw * 0.18 + sin(TAU * 200.0 * t) * 0.08 + _noise() * 0.02
+	return s
+
+
+## Heavy electrical clunk: the power dying, a breaker that does nothing.
+func _synth_clunk() -> PackedFloat32Array:
+	var s := _buffer(0.45)
+	var lp := 0.0
+	for i in s.size():
+		var t := float(i) / RATE
+		lp += (_noise() - lp) * 0.12
+		s[i] = (sin(TAU * 60.0 * t) * exp(-t * 14.0) + lp * exp(-t * 30.0) * 1.5) * 0.8
 	return s
 
 

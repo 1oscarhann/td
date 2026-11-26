@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://art/props/counter.tres" id="1_tex"]
+[ext_resource type="Texture2D" path="res://art/props/cctv.tres" id="2_cctv"]
+
+[node name="Counter" type="Sprite2D"]
+texture = ExtResource("1_tex")
+offset = Vector2(0, -10)
+
+[node name="CCTV" type="Sprite2D" parent="."]
+position = Vector2(-14, -19)
+texture = ExtResource("2_cctv")

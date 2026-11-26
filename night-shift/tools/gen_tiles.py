@@ -459,6 +459,140 @@ def prop_tube():
     save(img, "props/tube")
 
 
+# ---------------------------------------------------------------- Act 0: the shop
+def prop_fridge():
+    """Drinks fridge, 20x40: steel frame, glass door, rows of bottles."""
+    w, h = 20, 40
+    img = Img(w, h)
+    rng = random.Random(91)
+    for y in range(h):
+        for x in range(w):
+            if x in (0, w - 1) or y in (0, 1, h - 1, h - 2):
+                img.set(x, y, quantise(0.6 + (rng.random() - 0.5) * 0.3, [5, 6, 7], x, y))
+            else:
+                img.set(x, y, quantise(0.3 + bayer(x, y) * 0.2, [1, 2, 3], x, y))  # glass
+    for sy in (12, 22, 32):
+        img.rect(2, sy, w - 4, 1, 6)                # wire shelves
+        x = 3
+        while x < w - 3:
+            col = rng.choice([10, 11, 8, 7])
+            bh = rng.randint(5, 8)
+            img.rect(x, sy - bh, 2, bh, col)
+            img.set(x, sy - bh, 9)                  # cap
+            x += 3
+    img.rect(w - 3, 14, 1, 10, 8)                   # handle
+    img.rect(2, 3, w - 4, 2, 9)                     # lit header strip
+    save(img, "props/fridge")
+
+
+def prop_counter():
+    """Shop counter with the till, 48x20. The CCTV monitor is its own sprite."""
+    w, h = 48, 20
+    img = Img(w, h)
+    rng = random.Random(92)
+    for y in range(6, h):
+        for x in range(w):
+            v = 0.45 + (rng.random() - 0.5) * 0.15 - (0.2 if x % 12 == 0 else 0)
+            img.set(x, y, quantise(v, [2, 3, 4, 5], x, y))
+    img.rect(0, 6, w, 2, 8)                         # counter top edge
+    img.rect(0, 8, w, 1, 4)
+    img.rect(30, 0, 14, 6, 3)                       # till body
+    img.rect(31, 1, 6, 3, 9)                        # till screen
+    img.rect(38, 1, 5, 4, 2)                        # keys
+    for kx in (38, 40, 42):
+        img.set(kx, 2, 6)
+        img.set(kx, 4, 6)
+    img.rect(29, 5, 16, 1, 1)                       # cash drawer line
+    save(img, "props/counter")
+
+
+def prop_cctv():
+    """CCTV monitor, 14x11: chunky bezel, dark screen, a red standby dot."""
+    w, h = 14, 11
+    img = Img(w, h)
+    for y in range(h - 2):
+        for x in range(w):
+            edge = x in (0, w - 1) or y in (0, h - 3)
+            img.set(x, y, 5 if edge else quantise(0.3 + bayer(x, y) * 0.3, [0, 1, 2], x, y))
+    img.rect(5, h - 2, 4, 2, 4)                     # stand
+    img.set(w - 3, h - 4, 11)                       # standby light
+    for y in range(2, h - 3, 2):                    # scanlines
+        img.rect(1, y, w - 2, 1, 2)
+    save(img, "props/cctv")
+
+
+def prop_mop_bucket():
+    """Mop and bucket, 16x24. The doc wants this exact mop to turn up later."""
+    w, h = 16, 24
+    img = Img(w, h)
+    for y in range(16, h):                          # bucket
+        for x in range(1, 12):
+            img.set(x, y, quantise(0.55 - (y - 16) * 0.04 + bayer(x, y) * 0.2, [2, 10, 10], x, y))
+    img.rect(1, 16, 11, 1, 9)
+    img.rect(3, 15, 7, 1, 4)                        # wringer
+    img.rect(12, 18, 3, 1, 4)                       # handle stub
+    for y in range(0, 20):                          # mop handle
+        img.set(12 - y // 6, y, 7 if y % 5 else 6)
+    for x in (7, 8, 9, 10):                         # mop head in the bucket
+        img.set(x, 14, 8)
+        img.set(x + (x % 2), 13, 9)
+    save(img, "props/mop_bucket")
+
+
+def prop_window(lit):
+    """Shop window onto the forecourt, 48x32. Lit: canopy lamps on."""
+    w, h = 48, 32
+    img = Img(w, h)
+    for y in range(h):
+        for x in range(w):
+            if x in (0, 1, w - 2, w - 1) or y in (0, 1, h - 2, h - 1):
+                img.set(x, y, quantise(0.6 + bayer(x, y) * 0.2, [4, 5, 6], x, y))
+            elif x == w // 2:
+                img.set(x, y, 4)                    # mullion
+            else:
+                img.set(x, y, quantise(0.25 + (y / h) * 0.2 + bayer(x, y) * 0.3, [0, 1, 2], x, y))
+    img.rect(2, 7, w - 4, 2, 3 if not lit else 6)   # forecourt canopy
+    img.rect(14, 16, 5, 13, 3)                      # pump
+    img.rect(15, 18, 3, 3, 9 if lit else 2)         # pump display
+    img.rect(32, 16, 5, 13, 3)
+    img.rect(33, 18, 3, 3, 9 if lit else 2)
+    img.rect(2, 29, w - 4, 1, 2)                    # kerb
+    if lit:
+        for lx in (8, 24, 40):                      # canopy lamps
+            img.set(lx, 9, 9)
+            img.set(lx - 1, 9, 8)
+            img.set(lx + 1, 9, 8)
+    save(img, "props/window_on" if lit else "props/window_off")
+
+
+def prop_breaker():
+    """Breaker box, 12x16. Doesn't help."""
+    w, h = 12, 16
+    img = Img(w, h)
+    for y in range(h):
+        for x in range(w):
+            edge = x in (0, w - 1) or y in (0, h - 1)
+            img.set(x, y, 6 if edge else quantise(0.5 + bayer(x, y) * 0.25, [3, 4, 5], x, y))
+    for i in range(4):                              # switches
+        img.rect(2 + i * 2, 4, 1, 3, 8 if i != 2 else 11)
+    img.rect(2, 10, 8, 3, 9)                        # label
+    img.rect(3, 11, 5, 1, 4)
+    save(img, "props/breaker")
+
+
+def prop_box():
+    """Cardboard box of crisps waiting to be stacked, 12x9."""
+    w, h = 12, 9
+    img = Img(w, h)
+    for y in range(h):
+        for x in range(w):
+            img.set(x, y, quantise(0.55 - y * 0.03 + bayer(x, y) * 0.25, [2, 10, 10], x, y))
+    img.rect(0, 0, w, 1, 9)
+    img.rect(5, 0, 2, 3, 8)                         # tape
+    img.rect(2, 4, 3, 3, 11)                        # printed logo
+    save(img, "props/box")
+
+
 def main():
     # Columns = tile type, rows = variants (0 plain, 1 cracked/chipped, 2 grimy).
     # The level picks a variant per cell so the repeat isn't obvious.
@@ -475,6 +609,14 @@ def main():
     prop_panel_hole()
     prop_plank()
     prop_tube()
+    prop_fridge()
+    prop_counter()
+    prop_cctv()
+    prop_mop_bucket()
+    prop_window(True)
+    prop_window(False)
+    prop_breaker()
+    prop_box()
 
 
 if __name__ == "__main__":

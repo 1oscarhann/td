@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/props/powered_prop.gd" id="1_powered"]
+[ext_resource type="Texture2D" path="res://art/props/fridge.tres" id="2_tex"]
+
+[node name="Fridge" type="Node2D"]
+script = ExtResource("1_powered")
+light_energy = 0.55
+light_color = Color(0.8, 0.95, 1, 1)
+light_size = 96
+light_offset = Vector2(0, -24)
+hum_sound = "hum"
+hum_volume_db = -20.0
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+offset = Vector2(0, -20)

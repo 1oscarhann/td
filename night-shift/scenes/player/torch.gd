@@ -38,6 +38,8 @@ signal lit_changed(target: Node, lit: bool)
 @export var hold_still_line_time := 10.0
 
 var is_on := false
+## False until the player picks the torch up (Act 0: it's under the counter).
+var available := true
 
 var _forced_dir := Vector2.ZERO
 ## target (Node) -> {"lit": bool, "time": float, "total": float}
@@ -101,7 +103,14 @@ func toggle() -> void:
 	set_on(not is_on)
 
 
+func set_available(value: bool) -> void:
+	available = value
+	if not available:
+		set_on(false, false)
+
+
 func set_on(on: bool, with_sound := true) -> void:
+	on = on and available
 	is_on = on
 	light.enabled = on
 	light.energy = energy

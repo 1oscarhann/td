@@ -15,6 +15,9 @@ signal triggered(trigger: LevelTrigger)
 ## -1 = don't change the zone.
 @export var zone := -1
 @export var one_shot := true
+## Disarmed triggers ignore the player until arm() (e.g. lines that only make
+## sense after the power cut).
+@export var armed := true
 @export var size := Vector2(16, 64)
 
 var _fired := false
@@ -35,10 +38,17 @@ func rearm() -> void:
 	_fired = false
 
 
+func arm() -> void:
+	armed = true
+	# Already standing in it? Fire now rather than waiting for a re-entry.
+	for body in get_overlapping_bodies():
+		_on_body_entered(body)
+
+
 func _on_body_entered(body: Node2D) -> void:
 	if not body.is_in_group("player"):
 		return
-	if _fired and one_shot:
+	if not armed or (_fired and one_shot):
 		return
 	_fired = true
 	if sets_checkpoint:
