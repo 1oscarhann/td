@@ -60,7 +60,7 @@ const TRIGGERS := {
 
 ## CanvasModulate per zone. Dim but readable: the environment is never pure black.
 const ZONE_DARKNESS := {
-	0: Color(0.34, 0.35, 0.48),   # shop after the power cut: near-black blues
+	0: Color(0.40, 0.41, 0.54),   # shop after the power cut: near-black blues
 	1: Color(0.40, 0.38, 0.33),   # storage cellar: grey, dirty yellow
 	2: Color(0.33, 0.38, 0.46),   # service tunnels: cold grey-blue
 }
@@ -82,6 +82,7 @@ var panel: BoardedPanel
 var size_tiles := Vector2i.ZERO
 
 var _drip_timer := 3.0
+var _variants := 1
 
 @onready var darkness: CanvasModulate = $Darkness
 @onready var back_wall: TileMapLayer = $BackWall
@@ -94,6 +95,7 @@ var _drip_timer := 3.0
 
 func _ready() -> void:
 	var tile_set := TileSetBuilder.build()
+	_variants = TileSetBuilder.variant_count(tile_set)
 	back_wall.tile_set = tile_set
 	walls.tile_set = tile_set
 	_build()
@@ -143,13 +145,13 @@ func _build() -> void:
 			var cell := Vector2i(x, y)
 			match ch:
 				"#", "%":
-					walls.set_cell(cell, 0, Vector2i(_solid_tile_for(x, y), 0))
+					walls.set_cell(cell, 0, _atlas(_solid_tile_for(x, y), cell))
 				".":
-					back_wall.set_cell(cell, 0, Vector2i(TileSetBuilder.BACK_CONCRETE, 0))
+					back_wall.set_cell(cell, 0, _atlas(TileSetBuilder.BACK_CONCRETE, cell))
 				",":
-					back_wall.set_cell(cell, 0, Vector2i(TileSetBuilder.BACK_BRICK, 0))
+					back_wall.set_cell(cell, 0, _atlas(TileSetBuilder.BACK_BRICK, cell))
 				_:
-					back_wall.set_cell(cell, 0, Vector2i(_background_for(row, x), 0))
+					back_wall.set_cell(cell, 0, _atlas(_background_for(row, x), cell))
 					_place_marker(ch, cell)
 	_fill_margin(width)
 
@@ -161,7 +163,19 @@ func _fill_margin(width: int) -> void:
 		for x in range(-MARGIN, width + MARGIN):
 			if y >= 0 and y < MAP.size() and x >= 0 and x < width:
 				continue
-			walls.set_cell(Vector2i(x, y), 0, Vector2i(TileSetBuilder.ROCK, 0))
+			walls.set_cell(Vector2i(x, y), 0, _atlas(TileSetBuilder.ROCK, Vector2i(x, y)))
+
+
+## Atlas coords for a tile type at a cell: a stable pseudo-random variant row
+## (mostly plain, sometimes cracked or grimy) so the repeat isn't obvious.
+func _atlas(tile_type: int, cell: Vector2i) -> Vector2i:
+	var h := absi(cell.x * 73856093 ^ cell.y * 19349663) % 10
+	var variant := 0
+	if h >= 8:
+		variant = 2
+	elif h >= 6:
+		variant = 1
+	return Vector2i(tile_type, mini(variant, _variants - 1))
 
 
 ## Which solid tile a cell gets, from its open neighbours:

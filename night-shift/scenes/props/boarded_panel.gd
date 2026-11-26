@@ -16,6 +16,9 @@ extends Node2D
 signal board_ripped(remaining: int)
 signal opened
 
+const HOLE_TEX := preload("res://art/props/panel_hole.tres")
+const PLANK_TEX := preload("res://art/props/plank.tres")
+
 @export var board_count := 3
 ## Seconds of holding E per board.
 @export var pull_time := 1.3
@@ -129,15 +132,12 @@ func _rip_board() -> void:
 
 ## The plank you pulled falls to the floor in front of the panel and stays there.
 func _drop_board(board: Dictionary) -> void:
-	var plank := Polygon2D.new()
-	var half := opening_size.x * 0.5 + 4.0
-	plank.polygon = PackedVector2Array([
-		Vector2(-half, -2), Vector2(half, -2), Vector2(half, 2), Vector2(-half, 2)])
-	plank.color = Color(0.45, 0.33, 0.22)
+	var plank := Sprite2D.new()
+	plank.texture = PLANK_TEX
 	get_parent().add_child(plank)
 	plank.global_position = global_position + Vector2(opening_size.x * 0.5, float(board.y))
 	plank.rotation = float(board.angle)
-	var landing := global_position + Vector2(-10.0 - 7.0 * boards_left, -2.0)
+	var landing := global_position + Vector2(-10.0 - 7.0 * boards_left, -3.0)
 	var tw := plank.create_tween().set_parallel()
 	tw.tween_property(plank, "global_position", landing, 0.35) \
 			.set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -147,27 +147,20 @@ func _drop_board(board: Dictionary) -> void:
 func _draw() -> void:
 	var w := opening_size.x
 	var h := opening_size.y
-	# The hole behind the boards: darker than the wall around it.
-	draw_rect(Rect2(0, -h, w, h), Color(0.03, 0.03, 0.04))
-	# Through the gaps: the first few steps going down.
-	for i in 3:
-		draw_rect(Rect2(3 + i * 3, -9 + i * 3, 4, 1), Color(0.16, 0.16, 0.17))
+	# The hole behind the boards (frame + the first steps going down).
+	draw_texture_rect(HOLE_TEX, Rect2(0, -h, w, h), false)
 
-	var wood := Color(0.50, 0.37, 0.25)
-	var nail := Color(0.75, 0.75, 0.72)
+	var plank_size := Vector2(PLANK_TEX.get_width(), PLANK_TEX.get_height())
 	for i in _boards.size():
 		var b: Dictionary = _boards[i]
 		var angle := float(b.angle)
 		var pos := Vector2(w * 0.5, float(b.y))
+		if pushed_from_inside:
+			angle = -angle * 1.5   # bent outward, the wrong way
 		if i == 0 and _pulling:
 			# The board you're pulling strains and wobbles outwards.
 			angle += sin(_t * 38.0) * 0.06 * (0.3 + progress)
 			pos.x += sin(_t * 23.0) * progress
-		var board_len := w + 10.0
 		draw_set_transform(pos, angle)
-		draw_rect(Rect2(-board_len * 0.5, -2.5, board_len, 5), wood)
-		draw_rect(Rect2(-board_len * 0.5, -2.5, board_len, 1), wood.lightened(0.15))
-		var nail_dir := -1.0 if pushed_from_inside else 1.0
-		draw_rect(Rect2(-board_len * 0.5 + 2, -1 + nail_dir * 0.5, 1, 1), nail)
-		draw_rect(Rect2(board_len * 0.5 - 3, -1 + nail_dir * 0.5, 1, 1), nail)
+		draw_texture(PLANK_TEX, -plank_size * 0.5)
 	draw_set_transform(Vector2.ZERO)

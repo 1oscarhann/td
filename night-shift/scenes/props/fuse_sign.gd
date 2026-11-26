@@ -18,9 +18,10 @@ func _ready() -> void:
 func _draw() -> void:
 	var font := ThemeDB.fallback_font
 	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x + 5.0
-	var paper := Color(0.70, 0.62, 0.45) if wrong else Color(0.88, 0.88, 0.84)
+	# Palette colours (tools/gen_tiles.py): pale paper, or old ochre for wrong signs.
+	var paper := Color8(107, 90, 58) if wrong else Color8(180, 194, 184)
 	draw_rect(Rect2(-w * 0.5, -6, w, 12), paper)
 	# Tape at the top.
-	draw_rect(Rect2(-4, -7, 8, 2), Color(0.85, 0.85, 0.75, 0.7))
-	var ink := Color(0.25, 0.12, 0.10) if wrong else Color(0.08, 0.08, 0.08)
+	draw_rect(Rect2(-4, -7, 8, 2), Color8(142, 161, 155, 190))
+	var ink := Color8(19, 28, 32) if wrong else Color8(11, 16, 19)
 	draw_string(font, Vector2(-w * 0.5 + 2.5, 3), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)

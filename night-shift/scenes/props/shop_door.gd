@@ -20,11 +20,11 @@ func _ready() -> void:
 
 func _draw() -> void:
 	# Door + frame.
-	draw_rect(Rect2(-9, -32, 18, 32), Color(0.20, 0.21, 0.24))
-	draw_rect(Rect2(-8, -31, 16, 31), Color(0.33, 0.35, 0.40))
-	draw_rect(Rect2(4, -17, 2, 2), Color(0.70, 0.70, 0.66))
+	draw_rect(Rect2(-9, -32, 18, 32), Color8(29, 40, 45))
+	draw_rect(Rect2(-8, -31, 16, 31), Color8(51, 69, 74))
+	draw_rect(Rect2(4, -17, 2, 2), Color8(142, 161, 155))
 	# Push bar.
-	draw_rect(Rect2(-6, -16, 12, 1), Color(0.55, 0.55, 0.58))
+	draw_rect(Rect2(-6, -16, 12, 1), Color8(111, 133, 130))
 	# EXIT sign.
 	draw_rect(Rect2(-9, -43, 18, 7), Color(0.85, 0.18, 0.15))
 	draw_string(ThemeDB.fallback_font, Vector2(-8, -37.5), "EXIT", HORIZONTAL_ALIGNMENT_LEFT, -1, 6,
