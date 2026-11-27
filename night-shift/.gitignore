@@ -6,3 +6,7 @@ export_presets.cfg
 
 # Python bytecode from tools/
 __pycache__/
+
+# Throwaway test / recording scripts (kept outside the repo)
+_smoketest/
+_smoketest.uid
