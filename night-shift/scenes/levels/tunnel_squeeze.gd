@@ -23,7 +23,7 @@ func _ready() -> void:
 	_thrum = AudioStreamPlayer2D.new()
 	_thrum.stream = AudioDirector.get_stream("hum")
 	_thrum.pitch_scale = 0.45            # low, wet, heartbeat-like
-	_thrum.volume_db = -18.0
+	_thrum.volume_db = -8.0
 	_thrum.max_distance = 600.0
 	_thrum.bus = AudioDirector.WORLD_BUS
 	add_child(_thrum)
@@ -48,7 +48,7 @@ func _process(delta: float) -> void:
 	else:
 		squeeze = maxf(0.0, squeeze - delta / 2.0)
 	_thrum.pitch_scale = 0.45 + squeeze * 0.25
-	_thrum.volume_db = -18.0 + squeeze * 10.0
+	_thrum.volume_db = -8.0 + squeeze * 8.0
 	# The camera slowly zooms in as space tightens.
 	p.camera.zoom = Vector2.ONE * (1.0 + squeeze * 0.35)
 	if squeeze >= 1.0 and inside and not _caught:

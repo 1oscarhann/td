@@ -10,7 +10,7 @@ light_energy = 0.55
 light_color = Color(0.8, 0.95, 1, 1)
 light_size = 96
 light_offset = Vector2(0, -24)
-hum_sound = "hum"
+hum_sound = "fridge_hum"
 hum_volume_db = -20.0
 
 [node name="Grime" type="Sprite2D" parent="."]

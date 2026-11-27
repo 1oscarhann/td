@@ -7,8 +7,10 @@ It has one storeroom, one boarded panel, one stairwell, one tunnel and one creat
 **Run it:** open `night-shift/project.godot` in Godot 4.4+, press F5. Play with
 the lights off and headphones on.
 
-There are no art or audio assets. Everything is coloured rectangles, `_draw()`
-calls and sounds synthesised at startup, so it runs straight from a clone.
+Art is generated pixel art in `art/` (made by `python3 tools/gen_tiles.py`) plus
+creatures drawn in code. Audio is real recordings in `audio/engine/` and
+`audio/creature/`. Any sound name without a file falls back to one synthesised at
+startup (the UI click, the fridge hum, the sub-bass drone, and so on).
 
 ## Controls
 
@@ -68,7 +70,7 @@ a 1-tile **crouch gap**, and a dead end where the FUSE BOX sign points into the 
 tools/         gen_tiles.py + art/ (procedural pixel art -> art/)
 art/           generated PNGs, normal maps, CanvasTextures
 autoload/      GameState (noise, light queries, checkpoint, zone)
-               AudioDirector (synth sound library, play_at, reverb bus)
+               AudioDirector (sound variants, play_at / play_distant, World + Distant buses, drone)
                Narrator (say(), cooldown, queue, no repeats)
 data/          narrator_lines.json
 scripts/       light_textures.gd (cone + radial light textures)

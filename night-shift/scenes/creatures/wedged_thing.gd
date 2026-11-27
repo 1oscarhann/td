@@ -89,6 +89,11 @@ var _glint_on := false
 var _glint_check := 0.0
 var _twitch := 0.0          # current head-snap offset (px), decays
 var _twitch_timer := 2.0
+var _breath: AudioStreamPlayer2D
+var _gurgle_timer := 6.0
+var _notice_cooldown := 0.0
+## The breathing fades in this close (px), only while it's NOT in the beam.
+const BREATH_RANGE := 200.0
 
 @onready var scrape: AudioStreamPlayer2D = $Scrape
 
@@ -108,7 +113,16 @@ func _ready() -> void:
 	scrape.stream = AudioDirector.get_stream("scrape")
 	scrape.bus = AudioDirector.WORLD_BUS
 	scrape.volume_db = -60.0
-	scrape.play()
+	scrape.play(randf() * 8.0)
+	# Second loop: wet, slow breathing. You hear it before you see it.
+	_breath = AudioStreamPlayer2D.new()
+	_breath.stream = AudioDirector.get_stream("thing_breath")
+	_breath.bus = AudioDirector.WORLD_BUS
+	_breath.max_distance = BREATH_RANGE + 60.0
+	_breath.attenuation = 1.2
+	_breath.volume_db = -60.0
+	add_child(_breath)
+	_breath.play(randf() * 25.0)
 	# The glint is drawn UNSHADED (not Light Only): it shows even out of the beam.
 	_glint = Node2D.new()
 	var glint_mat := CanvasItemMaterial.new()
@@ -212,6 +226,7 @@ func _physics_process(delta: float) -> void:
 				_wake_left -= delta
 				if _wake_left <= 0.0:
 					_enter(State.STALK)
+					_notice()
 		State.STALK:
 			target_x = player_pos.x
 		State.HUNT:
@@ -264,6 +279,15 @@ func _on_noise(origin: Vector2, radius: float) -> void:
 	_hunt_left = hunt_memory
 	if state == State.STALK:
 		_enter(State.HUNT)
+		_notice()
+
+
+## It has heard / found you: the sting. (Phase 2 gives this its own state.)
+func _notice() -> void:
+	if _notice_cooldown > 0.0:
+		return
+	_notice_cooldown = 10.0
+	AudioDirector.play_at("notice", _center(), 0.0, 0.04, 700.0)
 
 
 ## The eye glint: when the torch points at the eye from up to `glint_range`
@@ -422,6 +446,22 @@ func _update_audio(delta: float) -> void:
 		target_db = linear_to_db(loud) - 4.0
 		scrape.pitch_scale = 0.8 + _current_speed() / 160.0
 	scrape.volume_db = lerpf(scrape.volume_db, target_db, clampf(delta * 6.0, 0.0, 1.0))
+
+	# Breathing: close and NOT lit. Fades in over ~2 s, out over ~1 s.
+	_notice_cooldown = maxf(0.0, _notice_cooldown - delta)
+	var breath_db := -60.0
+	if GameState.player != null and not GameState.is_lit(self) \
+			and _center().distance_to(GameState.player.global_position) < BREATH_RANGE:
+		breath_db = -3.0
+	var fade := 30.0 if breath_db > _breath.volume_db else 60.0
+	_breath.volume_db = move_toward(_breath.volume_db, breath_db, fade * delta)
+
+	# A wet gurgle from the body every 4-10 s while it moves. Quiet.
+	if _moving:
+		_gurgle_timer -= delta
+		if _gurgle_timer <= 0.0:
+			_gurgle_timer = randf_range(4.0, 10.0)
+			AudioDirector.play_at("gurgle", _center(), -12.0, 0.08, 380.0)
 
 
 func _check_events(player_pos: Vector2) -> void:

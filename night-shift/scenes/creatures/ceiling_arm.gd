@@ -51,7 +51,7 @@ func _ready() -> void:
 	_tip_shape.radius = 6.0
 	$Tip.shape = _tip_shape
 	_t = randf() * 10.0
-	scratch.stream = AudioDirector.get_stream("scrape")
+	scratch.stream = AudioDirector.get_stream("scrape_soft")
 	scratch.bus = AudioDirector.WORLD_BUS
 	_update_points()
 
@@ -117,9 +117,11 @@ func _physics_process(delta: float) -> void:
 		State.HIDDEN:
 			if near and _cooldown <= 0.0:
 				_enter(State.SCRATCH)
-				scratch.pitch_scale = 1.9
-				scratch.volume_db = -14.0
-				scratch.play()
+				# Something scratching around inside the duct (a long loop:
+				# start somewhere random in it so it never sounds the same).
+				scratch.pitch_scale = randf_range(0.95, 1.1)
+				scratch.volume_db = -4.0
+				scratch.play(randf() * 20.0)
 				Narrator.say("dont_stand_under_it")
 		State.SCRATCH:
 			if _state_time >= scratch_time:

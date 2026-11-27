@@ -221,7 +221,10 @@ const ZONE_DARKNESS := {
 	4: Color(0.62, 0.46, 0.42),   # the deep: muted browns, sick reds
 }
 ## Ambience hum volume (dB) and World-bus reverb [room_size, wet] per zone.
-const ZONE_HUM_DB := {0: -80.0, 1: -32.0, 2: -26.0, 3: -30.0, 4: -20.0}
+## Tunnel bed (audio/engine/hum.ogg) level per zone. Quiet: it's a bed, not a feature.
+const ZONE_HUM_DB := {0: -80.0, 1: -16.0, 2: -11.0, 3: -13.0, 4: -8.0}
+## Far-away creature calls (Distant bus). Phase 3 ties their rate to tension.
+const DISTANT_SOUNDS := ["moan_distant", "wail_distant", "growl", "call"]
 const ZONE_REVERB := {0: [0.25, 0.08], 1: [0.45, 0.15], 2: [0.75, 0.28], 3: [0.95, 0.4], 4: [0.6, 0.32]}
 
 const PANEL_SCENE := preload("res://scenes/props/boarded_panel.tscn")
@@ -261,6 +264,7 @@ var panel: BoardedPanel
 var size_tiles := Vector2i.ZERO
 
 var _drip_timer := 3.0
+var _distant_timer := 40.0
 ## "Silence is a tool. Drop the ambience completely before key moments."
 ## When the Thing is this close, the hum and drips go: all that's left is it.
 const SILENCE_RADIUS := 240.0
@@ -319,13 +323,28 @@ func _process(delta: float) -> void:
 	if _drip_timer <= 0.0:
 		_drip_timer = randf_range(2.5, 7.0)
 		var p: Vector2 = GameState.player.global_position
-		AudioDirector.play_at("drip", p + Vector2(randf_range(-220, 220), randf_range(-40, 0)), -15.0, 0.15)
+		AudioDirector.play_at("drip", p + Vector2(randf_range(-220, 220), randf_range(-40, 0)), -12.0, 0.15)
+	# Something far away down here, now and then. Never near, never explained.
+	if GameState.zone >= 2:
+		_distant_timer -= delta
+		if _distant_timer <= 0.0:
+			_distant_timer = randf_range(35.0, 80.0)
+			AudioDirector.play_distant(DISTANT_SOUNDS[randi() % DISTANT_SOUNDS.size()], GameState.player.global_position, -8.0)
 
 
 func _update_silence(delta: float) -> void:
 	var close := thing != null and thing.state != WedgedThing.State.DORMANT \
 			and thing.global_position.distance_to(GameState.player.global_position) < SILENCE_RADIUS
 	_silenced = close
+	# Stand-in tension until Phase 3: a little underground, rising as the Thing
+	# gets close (whether or not you can see it).
+	var t := 0.0
+	if GameState.zone >= 1:
+		t = 0.12
+		if thing != null and thing.state != WedgedThing.State.DORMANT:
+			var dist := thing.global_position.distance_to(GameState.player.global_position)
+			t = maxf(t, clampf(1.0 - dist / 600.0, 0.0, 1.0))
+	AudioDirector.tension = t
 	var normal: float = ZONE_HUM_DB.get(GameState.zone, -26.0)
 	var target := -80.0 if close else normal
 	# Drop out fast, creep back slowly.

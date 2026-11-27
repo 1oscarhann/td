@@ -1,7 +1,45 @@
 # Night Shift: progress log
 
-## Test this first
+## Test this first: "make it scary" Phase 1 (real audio)
 
+Headphones ON. That's not optional: the drone sits at 45-52 Hz and laptop
+speakers won't play it at all.
+
+1. **Shop (Act 0):** there should be no tunnel hum in the shop. The fridge still has
+   its own synth hum, and the tubes still buzz.
+2. **Down the stairs:** the tunnel bed (`hum.ogg`) fades in quietly. Drips come from
+   around you, 8 different ones, never the same one twice in a row. Does the bed
+   feel like a bed, or does it drown things out?
+3. **Footsteps:** quieter than before. Running should still be clearly louder
+   than walking, and crouching almost silent.
+4. **The Wedged Thing (tunnel past the stairs):** stand still in the dark and let
+   it come.
+   - The drag loop (`creature_drag.ogg`) should be clearly positional: left or right.
+   - Inside ~200 px the **breathing** fades in. Shine the torch on it and the
+     breathing fades out. Torch off and it comes back.
+   - A quiet **gurgle** every 4-10 s while it moves.
+   - When it wakes or hears you: the **notice sting** (`wail_notice_sting.ogg`).
+   - When it gets close, the hum and drips drop out. The **drone** rises the closer
+     it is.
+5. **Ceiling Arm:** the scratching in the duct before it drops is
+   `creature_scrape_soft.ogg` now.
+6. **Distant sounds:** from zone 2 on, roughly every 35-80 s, a far-away moan,
+   wail, growl or call, muffled and with a long tail, off to the left or right.
+   Do they sound FAR, or just quiet?
+7. **Caught:** the caught sting is `caught.ogg`.
+8. **Climax (zone 4, "we're nearly there"):** the drone cuts to silence for 3 s
+   just before the Thing appears behind you.
+
+**Tell me:** anything too loud or too quiet. The level knobs are listed in "Mix knobs" below.
+
+**Mix knobs** (one line each):
+- tunnel bed: `ZONE_HUM_DB` in `scenes/levels/test_level.gd`
+- footsteps: `_footstep()` in `scenes/player/player.gd`
+- drone min/max: `DRONE_MIN_DB` / `DRONE_MAX_DB` in `autoload/audio_director.gd`
+- breathing: `breath_db` in `wedged_thing.gd::_update_audio`
+- distant calls: `play_distant(..., -8.0)` in `test_level.gd`
+
+## Older checklist (everything before the "make it scary" phases)
 Open `night-shift/project.godot` in Godot 4.4+, F5, headphones on.
 
 1. **Look:** 640x360, finer art, the 44 px worker. Is zoom 1 too wide? (see
@@ -383,6 +421,70 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 the return to the start. Plus the older regressions (route, death, Cable, leg tip)
 and renders of every new area.
 
+### "Make it scary" Phase 1: real audio
+- **AudioDirector:**
+  - Every sound name is a LIST of variants. Each play picks one at random,
+    never the same one twice running.
+  - Names with no files keep the old synth sound as a fallback.
+- **Recordings** (`audio/engine/`, `audio/creature/`):
+
+  | Sound name | File(s) | Used for |
+  |---|---|---|
+  | `hum` (loops) | `hum.ogg` | tunnel bed |
+  | `drip` | `drip_1..8` | random drips |
+  | `tap` | `tap_1..6` | leg / finger / cable taps |
+  | `caught` | `caught.ogg` | caught sting |
+  | `scrape` (loops) | `creature_drag.ogg` | Thing body |
+  | `thing_breath` (loops) | `creature_breath_loop.ogg` | Thing breathing |
+  | `scrape_soft` (loops) | `creature_scrape_soft.ogg` | Arm in the duct |
+  | `notice` | `wail_notice_sting.ogg` | notice sting |
+  | `gurgle` | `creature_gurgle_1..3` | Thing body while moving |
+  | `moan_distant`, `wail_distant`, `growl` (1..3), `call` | matching files | distant one-shots |
+
+  The four loops are flagged `loop=true` in their `.import` files, and set again
+  in code as a safety net.
+- **Buses:**
+  - "World": as before.
+  - New "Distant": 700 Hz lowpass + a big wet reverb. `play_distant()` puts the
+    sound 260-420 px off to one side, so it's directional but far.
+- **The Thing:**
+  - Breath loop: fades in under 200 px when not lit, out when lit or far.
+  - Gurgle: every 4-10 s while moving.
+  - Notice sting: when it wakes, or switches from stalking to hunting on a
+    noise (10 s cooldown). Phase 2 gives "noticed" its own state.
+- **Drone:**
+  - Synthesised 45 + 52 Hz beating sines, with a quiet 90 Hz octave.
+  - Level follows `AudioDirector.tension`, from -42 dB at 0 to -10 dB at 1.
+    It cuts out fast and swells back slowly.
+  - `hush_drone(s)` silences it, for now only before the zone 4 climax.
+  - **Tension is a stand-in until Phase 3:** 0.12 underground, rising as the
+    Thing gets within 600 px.
+- **Distant one-shots:** every 35-80 s from zone 2 (Phase 3 ties this to tension).
+- **Mix changes:**
+  - footsteps 5-7 dB quieter
+  - drips slightly louder (the recordings are quieter than the synth was)
+  - tunnel bed levels re-set for the real file
+  - squeeze thrum louder (same reason as the drips)
+  - fridge keeps a synth hum (`fridge_hum`), so the tunnel hum isn't coming out of a fridge
+- **Verified:**
+  - All 13 names load their variants (OGG, loops on), and the synth fallbacks
+    still exist.
+  - 400 drip plays: 0 immediate repeats.
+  - The drone swells and hushes at the expected rates.
+  - Recorded 16 s of the tunnel with Godot's movie writer and measured it.
+    The drone, breathing and drag come in as the Thing approaches, the bed drops
+    out under 240 px, and peaks stay around -10 dBFS (no clipping).
+  - Full regression suite unchanged: route, death, Cable, leg tip, arm, and the
+    whole descent to the ending.
+- **Known:**
+  - `creature_breath_loop.ogg` and `creature_scrape_soft.ogg` fade to silence at
+    the end but start loud, so each time they loop the sound kicks back in
+    suddenly (the hum and drag loop cleanly). Fix in the files with a short
+    fade-in, or tell me to crossfade in code.
+  - The unused files are copied in for later phases: `creature_breath_fast`,
+    `creature_taps_1..3`, `creature_wheeze`, `wail_deep_slow`,
+    `wail_through_wall`.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -392,6 +494,11 @@ and renders of every new area.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **"tap" = tap_1..6 for every tap** (Thing legs, Arm fingers, Cable tip), as
+  asked. `creature_taps_1..3` aren't used yet. They might suit the Thing's
+  "testing the floor" taps in Phase 4.
+- **The notice sting already plays** before Phase 2 exists: on waking and on
+  stalk->hunt. Phase 2 moves it into the NOTICED state.
 - **Ending C** (A + B), the doc's "strongest". Kept self-contained in
   `scenes/ending/` so A-only is easy to cut back to.
 - **3 return trips** (open question 2/3/4). The man's 4 "return" stages fit into

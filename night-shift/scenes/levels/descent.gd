@@ -111,6 +111,7 @@ func on_event(event_name: String) -> void:
 	var thing: WedgedThing = level.thing
 	match event_name:
 		"climax":
+			AudioDirector.hush_drone(3.0)
 			# The final chase: it comes from behind, in a space that's closing.
 			thing.relocate(GameState.player.global_position + Vector2(-260, 0), true, 0.5)
 			thing.hunt_speed *= 1.25

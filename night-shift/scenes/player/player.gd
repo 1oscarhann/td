@@ -249,13 +249,15 @@ func _update_stamina(delta: float) -> void:
 ## Every footstep is both a sound and a noise event creatures can hear.
 func _footstep() -> void:
 	var noise := walk_noise
-	var vol := -14.0
+	# Quiet in the mix (creatures should be what you hear), but running is
+	# clearly louder than walking.
+	var vol := -21.0
 	if crouching:
 		noise = crouch_noise
-		vol = -26.0
+		vol = -31.0
 	elif running:
 		noise = run_noise
-		vol = -5.0
+		vol = -11.0
 	AudioDirector.play_at("step", global_position, vol, 0.12)
 	GameState.make_noise(global_position, noise)
 

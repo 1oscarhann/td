@@ -1,19 +1,62 @@
 extends Node
 ## AudioDirector (autoload).
 ##
-## Placeholder sound library + helpers for positional audio.
-## Every sound in the slice is synthesised at startup into an AudioStreamWAV, so
-## the project has zero audio assets. Swap any entry for a real recording later by
-## replacing it in `_streams` (e.g. `_streams["step"] = preload("res://audio/step.ogg")`).
+## Sound library + helpers for positional audio.
 ##
-## All world sounds play on the "World" bus, which carries a reverb whose size is
-## changed per zone (tight in the storeroom, big and echoey in the tunnels).
+## A sound NAME maps to a list of variants. Real recordings live in res://audio/
+## (see FILES); every play picks one variant at random, never the same one twice
+## in a row. Names with no files fall back to a sound synthesised at startup.
+##
+## Buses:
+##  - "World": every positional world sound. Reverb size changes per zone.
+##  - "Distant": far-away creature calls. Lowpass ~700 Hz + a big wet reverb, so
+##    they sound like they're coming through a lot of tunnel.
+##  - The sub-bass drone plays straight to Master. Its level follows `tension`
+##    (0..1, set by the level) and it can be cut to silence before big moments.
 
 const RATE := 22050
 const WORLD_BUS := &"World"
+const DISTANT_BUS := &"Distant"
 
-var _streams: Dictionary = {}
+const ENGINE := "res://audio/engine/"
+const CREATURE := "res://audio/creature/"
+## name -> recordings. Missing files are skipped (synth fallback if none load).
+const FILES := {
+	"hum": [ENGINE + "hum.ogg"],
+	"drip": [ENGINE + "drip_1.ogg", ENGINE + "drip_2.ogg", ENGINE + "drip_3.ogg", ENGINE + "drip_4.ogg",
+			ENGINE + "drip_5.ogg", ENGINE + "drip_6.ogg", ENGINE + "drip_7.ogg", ENGINE + "drip_8.ogg"],
+	"tap": [ENGINE + "tap_1.ogg", ENGINE + "tap_2.ogg", ENGINE + "tap_3.ogg",
+			ENGINE + "tap_4.ogg", ENGINE + "tap_5.ogg", ENGINE + "tap_6.ogg"],
+	"caught": [ENGINE + "caught.ogg"],
+	"scrape": [CREATURE + "creature_drag.ogg"],                # Wedged Thing body loop
+	"thing_breath": [CREATURE + "creature_breath_loop.ogg"],  # Wedged Thing, close + unlit
+	"scrape_soft": [CREATURE + "creature_scrape_soft.ogg"],   # Ceiling Arm in the duct
+	"notice": [CREATURE + "wail_notice_sting.ogg"],
+	"gurgle": [CREATURE + "creature_gurgle_1.ogg", CREATURE + "creature_gurgle_2.ogg",
+			CREATURE + "creature_gurgle_3.ogg"],
+	"moan_distant": [CREATURE + "creature_moan_distant.ogg"],
+	"wail_distant": [CREATURE + "wail_distant.ogg"],
+	"growl": [CREATURE + "creature_growl_1.ogg", CREATURE + "creature_growl_2.ogg",
+			CREATURE + "creature_growl_3.ogg"],
+	"call": [CREATURE + "creature_call.ogg"],
+}
+## Recordings that loop (also flagged loop=true in their .import files).
+const LOOPS := ["hum", "scrape", "thing_breath", "scrape_soft"]
+## Always routed through the Distant bus.
+const DISTANT := ["moan_distant", "wail_distant", "growl", "call"]
+
+## Drone level at tension 0 and 1 (dB). Silence is -80.
+const DRONE_MIN_DB := -42.0
+const DRONE_MAX_DB := -10.0
+
+## 0..1. The level sets it every frame (Phase 3 drives it properly).
+var tension := 0.0
+
+var _streams: Dictionary = {}     # name -> Array[AudioStream]
+var _last: Dictionary = {}        # name -> index played last (no immediate repeats)
 var _rng := RandomNumberGenerator.new()
+var _drone: AudioStreamPlayer
+var _drone_hush := 0.0            # seconds the drone stays silent
 
 
 func _ready() -> void:
@@ -21,15 +64,57 @@ func _ready() -> void:
 	_rng.seed = 1337
 	_setup_buses()
 	_build_library()
+	_load_files()
+	_drone = AudioStreamPlayer.new()
+	_drone.stream = get_stream("drone")
+	_drone.volume_db = -80.0
+	add_child(_drone)
+	_drone.play()
+
+
+func _process(delta: float) -> void:
+	_drone_hush = maxf(0.0, _drone_hush - delta)
+	var target := -80.0
+	if _drone_hush <= 0.0 and tension > 0.01:
+		target = lerpf(DRONE_MIN_DB, DRONE_MAX_DB, clampf(tension, 0.0, 1.0))
+	# Cuts out fast, swells back slowly.
+	var rate := 60.0 if target < _drone.volume_db else 6.0
+	_drone.volume_db = move_toward(_drone.volume_db, target, rate * delta)
 
 
 # --------------------------------------------------------------------------- API
 
+## One variant of `sound`, chosen at random (never the same one twice running).
 func get_stream(sound: String) -> AudioStream:
 	if not _streams.has(sound):
 		push_warning("AudioDirector: unknown sound '%s'" % sound)
 		return null
-	return _streams[sound]
+	var list: Array = _streams[sound]
+	if list.size() == 1:
+		return list[0]
+	var i := _rng.randi() % list.size()
+	if i == int(_last.get(sound, -1)):
+		i = (i + 1 + _rng.randi() % (list.size() - 1)) % list.size()
+	_last[sound] = i
+	return list[i]
+
+
+func variant_count(sound: String) -> int:
+	return (_streams[sound] as Array).size() if _streams.has(sound) else 0
+
+
+## The drone drops to silence for `seconds` (right before a big moment), then
+## swells back on its own.
+func hush_drone(seconds: float) -> void:
+	_drone_hush = maxf(_drone_hush, seconds)
+
+
+## A far-away creature sound: off to one side of `listener`, through the
+## Distant bus (muffled + big reverb). Returns the player, or null.
+func play_distant(sound: String, listener: Vector2, volume_db := -6.0) -> AudioStreamPlayer2D:
+	var side := -1.0 if _rng.randf() < 0.5 else 1.0
+	var pos := listener + Vector2(side * _rng.randf_range(260.0, 420.0), _rng.randf_range(-30.0, 30.0))
+	return play_at(sound, pos, volume_db, 0.06, 1600.0)
 
 
 ## Fire-and-forget positional sound. Players learn to locate threats by ear, so
@@ -46,6 +131,9 @@ func play_at(sound: String, pos: Vector2, volume_db := 0.0, pitch_jitter := 0.08
 	p.max_distance = max_distance
 	p.attenuation = 1.6
 	p.bus = WORLD_BUS
+	if sound in DISTANT:
+		p.bus = DISTANT_BUS
+		p.attenuation = 0.6     # far away already: don't fade it to nothing
 	var parent: Node = get_tree().current_scene
 	if parent == null:
 		parent = get_tree().root
@@ -98,7 +186,46 @@ func _setup_buses() -> void:
 	reverb.wet = 0.1
 	AudioServer.add_bus_effect(idx, reverb)
 
+	# Distant: muffled through rock, lots of tail.
+	var d := AudioServer.bus_count
+	AudioServer.add_bus(d)
+	AudioServer.set_bus_name(d, DISTANT_BUS)
+	AudioServer.set_bus_send(d, &"Master")
+	var lp := AudioEffectLowPassFilter.new()
+	lp.cutoff_hz = 700.0
+	lp.resonance = 0.4
+	AudioServer.add_bus_effect(d, lp)
+	var far := AudioEffectReverb.new()
+	far.room_size = 0.95
+	far.damping = 0.75
+	far.spread = 1.0
+	far.dry = 0.35
+	far.wet = 0.75
+	AudioServer.add_bus_effect(d, far)
 
+
+## Recordings replace the synth fallback for every name that has files.
+func _load_files() -> void:
+	for sound: String in FILES:
+		var list: Array = []
+		for path: String in FILES[sound]:
+			if not ResourceLoader.exists(path):
+				continue
+			var stream := load(path) as AudioStream
+			if stream == null:
+				continue
+			if sound in LOOPS and "loop" in stream:
+				stream.loop = true      # in case the .import flag was lost
+			list.append(stream)
+		if list.is_empty():
+			if not _streams.has(sound):
+				push_warning("AudioDirector: no files and no synth for '%s'" % sound)
+			continue
+		_streams[sound] = list
+
+
+## Synthesised sounds: the fallback for any name without recordings, plus the
+## ones that are synth on purpose (UI click, fridge hum, drone...).
 func _build_library() -> void:
 	_streams["click"] = _to_wav(_synth_click())
 	_streams["step"] = _to_wav(_synth_step())
@@ -113,6 +240,11 @@ func _build_library() -> void:
 	_streams["buzz"] = _to_wav(_synth_buzz(), true)
 	_streams["clunk"] = _to_wav(_synth_clunk())
 	_streams["crackle"] = _to_wav(_synth_crackle(), true)
+	_streams["fridge_hum"] = _to_wav(_synth_hum(), true)
+	_streams["drone"] = _to_wav(_synth_drone(), true)
+	# Everything is a list of variants.
+	for k in _streams:
+		_streams[k] = [_streams[k]]
 
 
 # --------------------------------------------------------------------- synthesis
@@ -221,6 +353,21 @@ func _synth_hum() -> PackedFloat32Array:
 		var t := float(i) / RATE
 		s[i] = sin(TAU * 50.0 * t) * 0.28 + sin(TAU * 100.0 * t) * 0.12 \
 				+ sin(TAU * 150.0 * t) * 0.05 + _noise() * 0.015
+	return s
+
+
+## Sub-bass drone, 4 s seamless loop: two close low sines beating against each
+## other (45 + 52 Hz, whole cycles in 4 s), a quiet octave so small speakers get
+## a hint of it, and a slow swell. Felt more than heard.
+func _synth_drone() -> PackedFloat32Array:
+	var s := _buffer(4.0)
+	var lp := 0.0
+	for i in s.size():
+		var t := float(i) / RATE
+		lp += (_noise() - lp) * 0.01
+		var swell := 0.75 + 0.25 * sin(TAU * 0.25 * t)
+		s[i] = (sin(TAU * 45.0 * t) * 0.45 + sin(TAU * 52.0 * t) * 0.35
+				+ sin(TAU * 90.0 * t) * 0.08 + lp * 0.6) * swell
 	return s
 
 

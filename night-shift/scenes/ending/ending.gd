@@ -45,6 +45,7 @@ var ui
 
 
 func _ready() -> void:
+	AudioDirector.tension = 0.35
 	GameState.reset_run()
 	GameState.set_zone(4)
 	var dark := CanvasModulate.new()
