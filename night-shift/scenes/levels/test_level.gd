@@ -32,29 +32,29 @@ signal ending_reached
 const TILE := 16
 
 const MAP := [
-	"######################################################################################################################################",
-	"######################################################################################################################################",
-	"#::::::::::::::::::::::::##............................###############################################################################",
-	"#::::::::::::::::::::::::##............................#......########################################################################",
-	"#::::::::::::::::::::::::##............................#......########################################################################",
-	"#::::::::::::::::::::::::..............................#......########################################################################",
-	"#::::::::::::::::::::::::.....................................########################################################################",
-	"#::::::::::::::::::::::::.....................................########################################################################",
-	"#:D:::P:::6K:::R::M9:C:7:...X8.....S.....S.....S.....1.B..H...########################################################################",
-	"##########################################################..#########################....................#############################",
-	"##########################################################..#########################....................#############################",
-	"##########################################################..#########################....................#############################",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%,,,,,,,,,,,,%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,,,%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,f,%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,S,,,W,,,,,,,,,,,,,,,,,,,,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,,,,,,,,,4,,,,5,,,%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"####################################################################################################################################################################################################################################################################################################################################################################################",
+	"####################################################################################################################################################################################################################################################################################################################################################################################",
+	"#::::::::::::::::::::::::##............................#############################################################################################################################################################################################################################################################################################################################",
+	"#::::::::::::::::::::::::##............................#......######################################################################################################################################################;;##############################################################################################################################################################",
+	"#::::::::::::::::::::::::##............................#......######################################################################################################################################################;;############################################################################;;################################################################################",
+	"#::::::::::::::::::::::::..............................#......######################################################################################################################################################;;############################################################################;;################################################################################",
+	"#::::::::::::::::::::::::.....................................######################################################################################################################################################;;############################################################################;;################################################################################",
+	"#::::::::::::::::::::::::.....................................######################################################################################################################################################;;############################################################################;;################################################################################",
+	"#:D:::P:::6K:::R::M9:C:7:...X8.....S.....S.....S.....1.B..H...######################################################################################################################################################;;############################################################################;;################################################################################",
+	"##########################################################..#########################....................######################,,###########,,######################################################################;;##########################;;################################################;;########;;######################################################################",
+	"##########################################################..#########################....................######################,,###########,,################################################################;;;;;;;;;;;;;;;;;;;;;;;;;#########;;################################################;;########;;######################################################################",
+	"##########################################################..#########################....................######################,,###########,,#####################################;;;;;;;;;;;;;;;;;;;;#######;;;;;;;;;;;;;;;;;;;;;;;;;#########;;################################################;;########;;######################################################################",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;%%%%%%%%%%%%%%%%%%%%%;;;;;;;;;;;;;;%%%%%%%%%%%%%;;%%%%%%%%;;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;%%%%%%%%%%%%%%%%%%%%%;;;;;;;;;;;;;;%%%%%%%%%%;;;;;;%%%%%%%;;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%%;;;;;;%%%%%%%;;;;;;;;;~~~~~~~~;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%,,,,,,,,,,,,%%%%%%%%%,,,,,,;;;;;;;%%%%%%%%%%%%%%%%%%%%%%%%%%;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,,,%%%%%%%%%,,,,,,;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,f,%%%%%%%%%,,,,,;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%%%%%%%,,,,,,,,,,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,S,,,W,,,,,,,,,,,,,,,,,,,,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,,,,,,,,,4,,,,5,,,%%%%%%%%%,,,,,,,,,,;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%%%;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;%%%%%%%;;;;;;;;;;;;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
 ]
 
 ## Trigger markers -> LevelTrigger settings.
@@ -63,7 +63,7 @@ const TRIGGERS := {
 	"2": {"line": "follow_the_signs", "checkpoint": true, "zone": 2, "event": "wake_thing"},
 	"3": {"line": "stay_low"},
 	"4": {"line": "doing_so_well", "checkpoint": true},
-	"5": {"line": "further_than_that", "event": "end"},
+	"5": {"line": "further_than_that"},
 	"6": {"line": "crisps_left"},
 	# Shop <-> storeroom doorway: zone 0 is the shop, zone 1 the back room.
 	"7": {"zone": 0, "repeat": true},
@@ -149,6 +149,58 @@ const DECOR := [
 	# First encounter = safe if you move on; it only gets you if you dawdle.
 	{"type": "cable", "cell": Vector2i(85, 18), "to_x": 89, "above_floor": 30, "sag": 5, "creature": true},
 	{"type": "cable", "cell": Vector2i(93, 18), "to_x": 99, "above_floor": 30, "sag": 5},
+	# Zone 2 landmarks: the red door (it turns up again, deeper) and a valve wheel.
+	{"type": "sprite", "name": "red_door", "cell": Vector2i(45, 19)},
+	{"type": "sprite", "name": "valve_wheel", "cell": Vector2i(118, 19), "above_floor": 34},
+	{"type": "line", "cell": Vector2i(38, 8), "id": "look_up_sometimes"},
+	# Zone 2 ends in an up-stair: return trip 1.
+	{"type": "upstairs", "cell": Vector2i(127, 19), "trip": 1},
+
+	# ---------------- ZONE 3a: old tunnels (reached after return trip 1) ----------------
+	{"type": "arrival", "cell": Vector2i(140, 19), "trip": 1, "zone": 3,
+		"thing": Vector2i(196, 19), "thing_active": true},
+	{"type": "water", "cell": Vector2i(146, 19), "to_x": 150},
+	{"type": "line", "cell": Vector2i(156, 19), "id": "go_to_the_light"},
+	{"type": "line", "cell": Vector2i(164, 19), "id": "it_can_see_you_lie"},
+	{"type": "lure", "cell": Vector2i(171, 18), "mode": "vanish", "cord": 26},
+	{"type": "water", "cell": Vector2i(181, 19), "to_x": 190},
+	{"type": "vent", "cell": Vector2i(184, 13)},
+	{"type": "spiders", "cell": Vector2i(184, 13), "count": 3},
+	{"type": "arm", "cell": Vector2i(188, 19), "floor": true},
+	{"type": "cable", "cell": Vector2i(180, 16), "to_x": 196, "below_ceiling": 20, "sag": 12},
+	{"type": "panel", "cell": Vector2i(201, 19), "pushed": true},
+	{"type": "line", "cell": Vector2i(208, 19), "id": "not_that_one"},
+	{"type": "lure", "cell": Vector2i(214, 12), "mode": "real", "cord": 80},
+	{"type": "upstairs", "cell": Vector2i(212, 19), "trip": 2},
+	{"type": "lure", "cell": Vector2i(226, 12), "mode": "choice", "cord": 80},
+
+	# ---------------- ZONE 3b (after return trip 2) ----------------
+	{"type": "arrival", "cell": Vector2i(240, 19), "trip": 2, "zone": 3,
+		"thing": Vector2i(270, 19), "thing_active": true},
+	{"type": "monitor", "cell": Vector2i(247, 19)},
+	{"type": "sprite", "name": "red_door", "cell": Vector2i(256, 19)},
+	{"type": "sprite", "name": "valve_wheel", "cell": Vector2i(260, 19), "above_floor": 30},
+	{"type": "hang", "name": "pump_nozzle", "cell": Vector2i(266, 16)},
+	{"type": "sprite", "name": "till_drawer", "cell": Vector2i(271, 19)},
+	{"type": "water", "cell": Vector2i(264, 19), "to_x": 276},
+	{"type": "worklight", "cell": Vector2i(268, 14), "id": "z3b_light"},
+	{"type": "switch", "cell": Vector2i(274, 19), "id": "timed_door", "kills": "z3b_light"},
+	{"type": "door", "cell": Vector2i(281, 19), "id": "timed_door", "open_seconds": 7.0},
+	{"type": "cable", "cell": Vector2i(264, 19), "to_x": 270, "above_floor": 34, "sag": 6, "creature": true},
+	{"type": "upstairs", "cell": Vector2i(290, 19), "trip": 3},
+
+	# ---------------- ZONE 4: the deep (after return trip 3) ----------------
+	{"type": "arrival", "cell": Vector2i(300, 19), "trip": 3, "zone": 4,
+		"thing": Vector2i(296, 19), "thing_active": false},
+	{"type": "lure", "cell": Vector2i(318, 15), "mode": "bite", "cord": 40},
+	{"type": "trigger", "cell": Vector2i(327, 19), "event": "climax", "line": "were_nearly_there"},
+	{"type": "squeeze", "cell": Vector2i(330, 19), "to_x": 366},
+	{"type": "line", "cell": Vector2i(338, 19), "id": "closer_than_last_time"},
+	{"type": "trigger", "cell": Vector2i(352, 19), "event": "last_stretch"},
+	{"type": "sign", "cell": Vector2i(362, 17), "text": "fuse box <"},
+	{"type": "trigger", "cell": Vector2i(361, 19), "event": "never_was", "line": "there_isnt"},
+	{"type": "trigger", "cell": Vector2i(367, 19), "event": "ending"},
+
 	# The real one: in the passage before the crouch gap, on the chase route.
 	{"type": "vent", "cell": Vector2i(110, 18)},
 	{"type": "arm", "cell": Vector2i(110, 18)},
@@ -165,10 +217,12 @@ const ZONE_DARKNESS := {
 	0: Color(0.30, 0.32, 0.46),   # shop after the power cut: near-black blues
 	1: Color(0.40, 0.38, 0.35),   # back room / storeroom: lights long dead, warm grey
 	2: Color(0.36, 0.41, 0.52),   # service tunnels: cold grey-blue
+	3: Color(0.44, 0.52, 0.48),   # old tunnels: dark green-grey, black water
+	4: Color(0.62, 0.46, 0.42),   # the deep: muted browns, sick reds
 }
 ## Ambience hum volume (dB) and World-bus reverb [room_size, wet] per zone.
-const ZONE_HUM_DB := {0: -80.0, 1: -32.0, 2: -26.0}
-const ZONE_REVERB := {0: [0.25, 0.08], 1: [0.45, 0.15], 2: [0.75, 0.28]}
+const ZONE_HUM_DB := {0: -80.0, 1: -32.0, 2: -26.0, 3: -30.0, 4: -20.0}
+const ZONE_REVERB := {0: [0.25, 0.08], 1: [0.45, 0.15], 2: [0.75, 0.28], 3: [0.95, 0.4], 4: [0.6, 0.32]}
 
 const PANEL_SCENE := preload("res://scenes/props/boarded_panel.tscn")
 const STAIRS_SCENE := preload("res://scenes/props/stairs.tscn")
@@ -186,6 +240,11 @@ const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
 const ARM_SCENE := preload("res://scenes/creatures/ceiling_arm.tscn")
 const LEG_SCENE := preload("res://scenes/creatures/leg_tip.tscn")
 const SWITCH_SCENE := preload("res://scenes/props/lever_switch.tscn")
+const LURE_SCENE := preload("res://scenes/creatures/lure.tscn")
+const MONITOR_SCRIPT := preload("res://scenes/props/tunnel_monitor.gd")
+const SQUEEZE_SCRIPT := preload("res://scenes/levels/tunnel_squeeze.gd")
+const FLESH_TILES := [TileSetBuilder.WALL_FLESH, TileSetBuilder.FLOOR_FLESH, TileSetBuilder.CEIL_FLESH,
+		TileSetBuilder.SIDE_FLESH, 27, 28]
 const DOOR2_SCENE := preload("res://scenes/props/heavy_door.tscn")
 const LIGHT_SCENE := preload("res://scenes/props/shop_light.tscn")
 const WINDOW_SCENE := preload("res://scenes/props/shop_window.tscn")
@@ -212,6 +271,10 @@ var _door_pos := Vector2.ZERO
 var _counter_pos := Vector2.ZERO
 var _window_pos := Vector2.ZERO
 var _doors: Dictionary = {}   # door id -> HeavyDoor
+var _worklights: Dictionary = {}   # light id -> PoweredProp
+var _shop_bits: Dictionary = {}    # things the return trips change upstairs
+var _figure: CCTVFigure
+var _main_stairs: Stairs
 var _variants := 1
 
 @onready var darkness: CanvasModulate = $Darkness
@@ -222,6 +285,9 @@ var _variants := 1
 @onready var creatures: Node2D = $Creatures
 @onready var ambience: AudioStreamPlayer = $Ambience
 @onready var act0: Act0 = $Act0
+@onready var descent: Descent = $Descent
+@onready var flesh_back: TileMapLayer = $FleshBack
+@onready var flesh_walls: TileMapLayer = $FleshWalls
 
 
 func _ready() -> void:
@@ -229,8 +295,11 @@ func _ready() -> void:
 	_variants = TileSetBuilder.variant_count(tile_set)
 	back_wall.tile_set = tile_set
 	walls.tile_set = tile_set
+	flesh_back.tile_set = tile_set
+	flesh_walls.tile_set = tile_set
 	_build()
 	act0.setup(_tasks, panel, _after_power)
+	act0.door_x = _door_pos.x
 	ambience.stream = AudioDirector.get_stream("hum")
 	ambience.volume_db = -80.0
 	ambience.play()
@@ -262,6 +331,37 @@ func _update_silence(delta: float) -> void:
 	# Drop out fast, creep back slowly.
 	var rate := 40.0 if close else 6.0
 	ambience.volume_db = move_toward(ambience.volume_db, target, rate * delta)
+
+
+## Where the CCTV man stands at each stage of the design doc's escalation.
+func _setup_figure() -> void:
+	_figure.stages = {
+		"corner": [_door_pos + Vector2(-14, 0), "side"],          # far corner, half out of frame
+		"crisps": [_shop_bits["crisps"] + Vector2(-12, 0), "side"],   # by the crisps, facing the shelf
+		"counter": [_counter_pos + Vector2(17, 0), "side"],       # by the counter, where you stand
+		"panel": [panel.global_position + Vector2(-12, 0), "side"],  # next to the open panel, facing it
+		"facing": [_door_pos + Vector2(70, 0), "front"],          # facing the camera
+	}
+
+
+## Return trips: the shop is slightly different each time you come back up.
+func apply_shop_changes(trip: int) -> void:
+	if trip >= 1:
+		_shop_bits["door"].set("ajar", true)              # "you left the door open"
+		for t: ShopTask in _tasks:
+			if t.task_id == "shelf":
+				t.done = false                            # the crisps are back in the box
+				t.enabled = false
+				t.queue_redraw()
+	if trip >= 2:
+		_shop_bits["mop"].visible = false                 # the mop's downstairs now
+		for t: ShopTask in _tasks:
+			if t.task_id == "mop":
+				t.done = false                            # and the spill is back
+				t.enabled = false
+				t.queue_redraw()
+	if trip >= 3:
+		_shop_bits["fridge"].set_power(true)              # humming and lit, with no power
 
 
 ## The four CCTV feeds (see CCTVView.setup). Shop floor framing puts the
@@ -305,15 +405,28 @@ func _build() -> void:
 			var cell := Vector2i(x, y)
 			match ch:
 				"#", "%":
-					walls.set_cell(cell, 0, _atlas(_solid_tile_for(x, y), cell))
-				".", ",", ":":
-					back_wall.set_cell(cell, 0, _atlas(_back_edge(_wall_for_char(ch), cell), cell))
+					_put(true, cell, _solid_tile_for(x, y))
+				".", ",", ":", ";", "~":
+					_put(false, cell, _back_edge(_wall_for_char(ch), cell))
 				_:
-					back_wall.set_cell(cell, 0, _atlas(_back_edge(_background_for(row, x), cell), cell))
+					_put(false, cell, _back_edge(_background_for(row, x), cell))
 					_place_marker(ch, cell)
 	_fill_margin(width)
+	descent.setup(self, _main_stairs)
 	for d: Dictionary in DECOR:
 		_place_decor(d)
+	_setup_figure()
+
+
+## Flesh tiles go on their own layers, which carry the breathing shader.
+func _put(solid: bool, cell: Vector2i, tile: int) -> void:
+	var flesh := tile in FLESH_TILES
+	var layer: TileMapLayer
+	if solid:
+		layer = flesh_walls if flesh else walls
+	else:
+		layer = flesh_back if flesh else back_wall
+	layer.set_cell(cell, 0, _atlas(tile, cell))
 
 
 func _place_decor(d: Dictionary) -> void:
@@ -365,7 +478,18 @@ func _place_decor(d: Dictionary) -> void:
 				creatures.add_child(spider)
 		"arm":
 			var arm: CeilingArm = ARM_SCENE.instantiate()
-			arm.position = Vector2(x + TILE * 0.5, ceil_y + 4.0)   # just under the vent grille
+			if d.get("floor", false):
+				# Up through a floor grate: walk over it in the dark and it has you.
+				arm.from_floor = true
+				arm.position = Vector2(x + TILE * 0.5, floor_y - 1.0)
+				var gr := Sprite2D.new()
+				gr.texture = load("res://art/props/grate.tres")
+				gr.position = Vector2(x + TILE * 0.5, floor_y + 2.0)
+				gr.z_as_relative = false
+				gr.z_index = 1
+				props.add_child(gr)
+			else:
+				arm.position = Vector2(x + TILE * 0.5, ceil_y + 4.0)   # just under the vent grille
 			creatures.add_child(arm)
 		"leg":
 			var leg: LegTip = LEG_SCENE.instantiate()
@@ -377,6 +501,76 @@ func _place_decor(d: Dictionary) -> void:
 			spr.offset = Vector2(0, -spr.texture.get_height() * 0.5)
 			spr.position = Vector2(x + TILE * 0.5, floor_y - float(d.get("above_floor", 0)))
 			props.add_child(spr)
+		"upstairs", "arrival":
+			# A shaft going up from this cell to the rock above it.
+			var top := ceil_y
+			var st: Stairs = STAIRS_SCENE.instantiate()
+			st.position = Vector2(x, top)
+			st.width = TILE * 2
+			st.height = floor_y - top
+			if d.type == "upstairs":
+				st.exit_up = true
+				st.trip = int(d.trip)
+				descent.register_upstairs(st)
+			props.add_child(st)
+			if d.type == "arrival":
+				descent.resume_points[int(d.trip)] = {
+					"pos": Vector2(x + TILE, floor_y), "zone": int(d.zone),
+					"thing_pos": Vector2(d.thing.x * TILE + TILE * 0.5, floor_y),
+					"thing_active": bool(d.thing_active)}
+		"panel":
+			var bp: BoardedPanel = PANEL_SCENE.instantiate()
+			bp.position = Vector2(x, floor_y)
+			bp.pushed_from_inside = d.get("pushed", false)
+			props.add_child(bp)
+		"lure":
+			var lure: Lure = LURE_SCENE.instantiate()
+			lure.mode = d.mode
+			lure.cord = float(d.get("cord", 40))
+			lure.position = Vector2(x + TILE * 0.5, ceil_y)
+			creatures.add_child(lure)
+		"monitor":
+			var mon: Node2D = MONITOR_SCRIPT.new()
+			mon.shop_view_pos = Vector2(_door_pos.x + 140.0, _door_pos.y - 52.0)
+			mon.position = Vector2(x + TILE * 0.5, floor_y)
+			props.add_child(mon)
+		"hang":
+			var hang := Sprite2D.new()
+			hang.texture = load("res://art/props/%s.tres" % d.name)
+			hang.offset = Vector2(0, hang.texture.get_height() * 0.5)
+			hang.position = Vector2(x + TILE * 0.5, ceil_y)
+			props.add_child(hang)
+		"water":
+			var wat := Sprite2D.new()
+			wat.texture = load("res://art/props/water.tres")
+			wat.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
+			wat.region_enabled = true
+			wat.region_rect = Rect2(0, 0, (int(d.to_x) - cell.x) * TILE, 3)
+			wat.centered = false
+			wat.position = Vector2(x, floor_y - 2.0)
+			wat.z_as_relative = false
+			wat.z_index = 1   # over the floor tiles
+			props.add_child(wat)
+		"worklight":
+			var wl: Node2D = LIGHT_SCENE.instantiate()
+			wl.position = Vector2(x + TILE * 0.5, ceil_y)
+			props.add_child(wl)
+			_worklights[d.id] = wl
+		"trigger":
+			_place_trigger({"line": d.get("line", ""), "event": d.get("event", "")},
+					Vector2(x + TILE * 0.5, floor_y))
+		"sign":
+			var sg: Node2D = SIGN_SCENE.instantiate()
+			sg.set("text", d.text)
+			sg.set("wrong", true)
+			sg.position = Vector2(x + TILE * 0.5, cell.y * TILE + TILE * 0.5)
+			props.add_child(sg)
+		"squeeze":
+			var sq: Node2D = SQUEEZE_SCRIPT.new()
+			sq.position = Vector2(x, floor_y)
+			sq.set("length", (int(d.to_x) - cell.x) * TILE)
+			sq.set("room", floor_y - ceil_y)
+			props.add_child(sq)
 		"mop":
 			var mop: Node2D = MOP_SCENE.instantiate()
 			mop.position = Vector2(x + TILE * 0.5, floor_y)
@@ -387,6 +581,7 @@ func _place_decor(d: Dictionary) -> void:
 			var lever: LeverSwitch = SWITCH_SCENE.instantiate()
 			lever.position = Vector2(x + TILE * 0.5, floor_y)
 			lever.switch_id = d.id
+			lever.kills_light = d.get("kills", "")
 			lever.flipped.connect(_on_switch_flipped)
 			props.add_child(lever)
 		"door":
@@ -394,6 +589,7 @@ func _place_decor(d: Dictionary) -> void:
 			door.position = Vector2(x + TILE * 0.5, floor_y)
 			door.door_id = d.id
 			door.height = floor_y - ceil_y
+			door.open_seconds = float(d.get("open_seconds", 0.0))
 			props.add_child(door)
 			_doors[d.id] = door
 		_:
@@ -439,26 +635,16 @@ func _atlas(tile_type: int, cell: Vector2i) -> Vector2i:
 
 
 ## Which solid tile a cell gets, from its open neighbours and the material of
-## the room they belong to: open above = that room's floor (lino in the shop,
-## concrete in the storeroom, wet concrete in the tunnels), open below = its
-## ceiling, open beside = a side wall, else rock.
+## the room they belong to (TileSetBuilder.MATERIALS): open above = that room's
+## floor, open below = its ceiling, open beside = a side wall, else rock.
 func _solid_tile_for(x: int, y: int) -> int:
 	if _is_open(x, y - 1):
-		var mat := _material_at(x, y - 1)
-		if mat == TileSetBuilder.WALL_SHOP:
-			return TileSetBuilder.FLOOR_SHOP
-		if mat == TileSetBuilder.WALL_BRICK:
-			return TileSetBuilder.FLOOR_TUNNEL
-		return TileSetBuilder.FLOOR_CONCRETE
+		return TileSetBuilder.MATERIALS[_material_at(x, y - 1)][0]
 	if _is_open(x, y + 1):
-		if _material_at(x, y + 1) == TileSetBuilder.WALL_BRICK:
-			return TileSetBuilder.CEIL_BRICK
-		return TileSetBuilder.CEIL_CONCRETE
+		return TileSetBuilder.MATERIALS[_material_at(x, y + 1)][1]
 	for dx in [-1, 1]:
 		if _is_open(x + dx, y):
-			if _material_at(x + dx, y) == TileSetBuilder.WALL_BRICK:
-				return TileSetBuilder.SIDE_BRICK
-			return TileSetBuilder.SIDE_CONCRETE
+			return TileSetBuilder.MATERIALS[_material_at(x + dx, y)][2]
 	return TileSetBuilder.ROCK
 
 
@@ -466,18 +652,27 @@ func _solid_tile_for(x: int, y: int) -> int:
 ## dirt collects in corners and edges, never across the middle of a wall.
 func _back_edge(wall_type: int, cell: Vector2i) -> int:
 	if not _is_open(cell.x, cell.y + 1):
-		return wall_type + TileSetBuilder.WALL_LOW_OFFSET
+		return TileSetBuilder.MATERIALS[wall_type][3]
 	if not _is_open(cell.x, cell.y - 1):
-		return wall_type + TileSetBuilder.WALL_HIGH_OFFSET
+		return TileSetBuilder.MATERIALS[wall_type][4]
 	return wall_type
 
 
-## ":" shop (ceramic tiles), "," tunnel (brick), "." storeroom (concrete).
+const OPEN_CHARS := ".,:;~"
+
+
+## ":" shop tiles, "." storeroom concrete, "," tunnel brick, ";" zone 3 stone,
+## "~" zone 4 flesh.
 func _wall_for_char(ch: String) -> int:
-	if ch == ":":
-		return TileSetBuilder.WALL_SHOP
-	if ch == ",":
-		return TileSetBuilder.WALL_BRICK
+	match ch:
+		":":
+			return TileSetBuilder.WALL_SHOP
+		",":
+			return TileSetBuilder.WALL_BRICK
+		";":
+			return TileSetBuilder.WALL_STONE
+		"~":
+			return TileSetBuilder.WALL_FLESH
 	return TileSetBuilder.WALL_CONCRETE
 
 
@@ -485,7 +680,7 @@ func _wall_for_char(ch: String) -> int:
 func _material_at(x: int, y: int) -> int:
 	var row: String = MAP[y]
 	var ch := row[x]
-	if ch == "." or ch == "," or ch == ":":
+	if OPEN_CHARS.contains(ch):
 		return _wall_for_char(ch)
 	return _background_for(row, x)
 
@@ -502,7 +697,7 @@ func _is_open(x: int, y: int) -> bool:
 ## Markers take the back-wall tile of the nearest open tile to their left.
 func _background_for(row: String, x: int) -> int:
 	for i in range(x - 1, -1, -1):
-		if row[i] == "." or row[i] == "," or row[i] == ":":
+		if OPEN_CHARS.contains(row[i]):
 			return _wall_for_char(row[i])
 	return TileSetBuilder.WALL_CONCRETE
 
@@ -524,6 +719,7 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			stairs.width = TILE * 2
 			stairs.height = _open_rows_below(cell) * TILE
 			props.add_child(stairs)
+			_main_stairs = stairs
 		"W":
 			thing = THING_SCENE.instantiate()
 			thing.position = floor_point
@@ -537,9 +733,9 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			door.position = floor_point
 			props.add_child(door)
 			_door_pos = floor_point
-			var figure := FIGURE_SCRIPT.new() as CCTVFigure
-			figure.stage_points = [floor_point + Vector2(-14, 0)]   # far corner, half out of frame
-			props.add_child(figure)
+			_shop_bits["door"] = door
+			_figure = FIGURE_SCRIPT.new() as CCTVFigure
+			props.add_child(_figure)
 		"F", "f":
 			var sign_node: Node2D = SIGN_SCENE.instantiate()
 			sign_node.position = centre
@@ -550,15 +746,18 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			task_shelf.position = floor_point
 			props.add_child(task_shelf)
 			_add_task("shelf", floor_point + Vector2(16, 0), ShopTask.Kind.BOX)
+			_shop_bits["crisps"] = floor_point
 		"R":
 			var fridge: Node2D = FRIDGE_SCENE.instantiate()
 			fridge.position = floor_point
 			props.add_child(fridge)
+			_shop_bits["fridge"] = fridge
 			_add_task("fridge", floor_point, ShopTask.Kind.NONE, 1.0)
 		"M":
 			var mop: Node2D = MOP_SCENE.instantiate()
 			mop.position = floor_point + Vector2(14, 0)
 			props.add_child(mop)
+			_shop_bits["mop"] = mop
 			_add_task("mop", floor_point, ShopTask.Kind.SPILL, 2.0)
 		"C":
 			var counter: Node2D = COUNTER_SCENE.instantiate()
@@ -624,6 +823,9 @@ func _open_rows_below(cell: Vector2i) -> int:
 # ---------------------------------------------------------------------- events
 
 func _on_trigger(t: LevelTrigger) -> void:
+	if t.event_name in ["climax", "last_stretch", "never_was", "ending"]:
+		descent.on_event(t.event_name)
+		return
 	match t.event_name:
 		"wake_thing":
 			if thing != null:
@@ -635,6 +837,11 @@ func _on_trigger(t: LevelTrigger) -> void:
 func _on_switch_flipped(switch_id: String) -> void:
 	if _doors.has(switch_id):
 		_doors[switch_id].open()
+	# Lights out: some switches kill a nearby working light.
+	for lever in props.get_children():
+		if lever is LeverSwitch and lever.switch_id == switch_id and lever.kills_light != "":
+			if _worklights.has(lever.kills_light):
+				_worklights[lever.kills_light].set_power(false)
 
 
 func _on_board_ripped(remaining: int) -> void:
@@ -648,7 +855,9 @@ func _apply_zone(zone: int, instant := false) -> void:
 	var dark: Color = ZONE_DARKNESS.get(zone, ZONE_DARKNESS[2])
 	if zone == 0 and act0.power_on:
 		dark = POWER_ON_SHOP
-	# (Ambience volume follows the zone in _update_silence.)
+	# (Ambience volume follows the zone in _update_silence.) Zone 4: the hum
+	# drops into a low drone (the only "music": design doc).
+	ambience.pitch_scale = 0.55 if zone >= 4 else 1.0
 	var verb: Array = ZONE_REVERB.get(zone, ZONE_REVERB[2])
 	AudioDirector.set_reverb(verb[0], verb[1])
 	if instant:

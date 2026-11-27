@@ -81,6 +81,10 @@ func cooldown_left() -> float:
 
 ## Called by BottomText when it enters the tree.
 func register_display(display) -> void:
+	# A new screen (scene change) mid-line: the old display is gone, so the
+	# line it was showing will never report done. Don't stay busy forever.
+	_busy = false
+	_current = ""
 	_display = display
 	if not display.line_done.is_connected(_on_line_done):
 		display.line_done.connect(_on_line_done)

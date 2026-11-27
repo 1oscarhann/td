@@ -10,8 +10,18 @@ extends Node2D
 ## Future: "the stairs back up get longer every time" -> just grow `height` and
 ## offset the lower level on each return trip. Never mention it.
 
+signal exited_up(stairs: Stairs)
+signal reached_bottom(stairs: Stairs)
+
 @export var width := 32.0
 @export var height := 176.0
+## Up-stairs deeper down: climbing to the top takes you back to the shop.
+@export var exit_up := false
+## Return-trip index this up-stair belongs to (1, 2, 3).
+@export var trip := 0
+## "The stairs back up get longer every time." While > 0, going down past the
+## middle quietly puts you back a flight. Never mentioned.
+var extra_loops := 0
 ## How far the climb area pokes above the landing, so you can latch from the top.
 const TOP_REACH := 6.0
 

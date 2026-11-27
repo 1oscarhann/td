@@ -38,6 +38,8 @@ var _area: Area2D
 var _area_shape := CircleShape2D.new()
 var _crackle: AudioStreamPlayer2D
 var _spark: PointLight2D
+var _sparks: CPUParticles2D
+var _tip_draw: Node2D
 
 
 func _ready() -> void:
@@ -68,6 +70,28 @@ func _ready() -> void:
 	_spark.energy = 0.0
 	_spark.range_item_cull_mask = GameState.LIGHT_ENV
 	add_child(_spark)
+	# Spark particles when it moves (design doc).
+	_sparks = CPUParticles2D.new()
+	_sparks.emitting = false
+	_sparks.amount = 10
+	_sparks.lifetime = 0.35
+	_sparks.explosiveness = 0.6
+	_sparks.direction = Vector2(0, -1)
+	_sparks.spread = 70.0
+	_sparks.gravity = Vector2(0, 420)
+	_sparks.initial_velocity_min = 30.0
+	_sparks.initial_velocity_max = 70.0
+	_sparks.scale_amount_min = 1.0
+	_sparks.scale_amount_max = 1.0
+	_sparks.color = Color(1.0, 0.92, 0.6)
+	var spark_mat := CanvasItemMaterial.new()
+	spark_mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_sparks.material = spark_mat
+	add_child(_sparks)
+	# The frayed copper end, drawn as part of the cable (environment layer).
+	_tip_draw = Node2D.new()
+	_tip_draw.draw.connect(_draw_tip)
+	add_child(_tip_draw)
 
 
 func reset() -> void:
@@ -154,6 +178,11 @@ func _physics_process(delta: float) -> void:
 	var moving := state == State.SLITHER or state == State.GRAB or state == State.RETREAT
 	_spark.position = _tip
 	_spark.energy = randf_range(0.2, 0.9) if moving and randf() < 0.25 else 0.0
+	_sparks.position = _tip
+	if moving and randf() < 0.04:
+		_sparks.restart()
+		_sparks.emitting = true
+	_tip_draw.queue_redraw()
 
 
 func _check_grab(player) -> void:
@@ -198,3 +227,22 @@ func _find_floor_local() -> float:
 		return 40.0
 	var hp: Vector2 = hit.position
 	return hp.y - global_position.y - 1.0
+
+
+## While it hunts, the free end frays open into a nest of bare copper strands
+## that open and close, as if it's sniffing for you. Hanging, it's just a cable.
+func _draw_tip() -> void:
+	if state == State.HANGING:
+		return
+	var copper := Color(0.62, 0.40, 0.22)
+	var bright := Color(0.86, 0.62, 0.36)
+	var open := 0.5 + 0.5 * sin(_t * (14.0 if state == State.GRAB else 7.0))
+	var base := 0.0
+	if points.size() >= 2:
+		base = (points[points.size() - 1] - points[points.size() - 2]).angle()
+	for i in 5:
+		var a := base + (i - 2) * (0.35 + open * 0.3) + sin(_t * 11.0 + i) * 0.15
+		var mid := _tip + Vector2.from_angle(a) * 3.0
+		var end := mid + Vector2.from_angle(a + sin(_t * 8.0 + i * 2.0) * 0.6) * (2.0 + open * 2.0)
+		_tip_draw.draw_line(_tip, mid, copper, 1.0)
+		_tip_draw.draw_line(mid, end, bright if i % 2 == 0 else copper, 1.0)

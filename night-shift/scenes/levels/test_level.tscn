@@ -1,7 +1,12 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/levels/test_level.gd" id="1_level"]
 [ext_resource type="Script" path="res://scenes/levels/act0.gd" id="2_act0"]
+[ext_resource type="Script" path="res://scenes/levels/descent.gd" id="3_descent"]
+[ext_resource type="Shader" path="res://scenes/levels/breathing.gdshader" id="4_breath"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_breath"]
+shader = ExtResource("4_breath")
 
 [node name="TestLevel" type="Node2D"]
 script = ExtResource("1_level")
@@ -13,6 +18,13 @@ color = Color(0.30, 0.32, 0.46, 1)
 z_index = -10
 
 [node name="Walls" type="TileMapLayer" parent="."]
+
+[node name="FleshBack" type="TileMapLayer" parent="."]
+z_index = -10
+material = SubResource("ShaderMaterial_breath")
+
+[node name="FleshWalls" type="TileMapLayer" parent="."]
+material = SubResource("ShaderMaterial_breath")
 
 [node name="Props" type="Node2D" parent="."]
 z_index = -5
@@ -26,3 +38,6 @@ z_index = 2
 
 [node name="Act0" type="Node" parent="."]
 script = ExtResource("2_act0")
+
+[node name="Descent" type="Node" parent="."]
+script = ExtResource("3_descent")

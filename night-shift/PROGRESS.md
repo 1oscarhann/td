@@ -291,6 +291,98 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - Verified: renders of every area; headless full route, death/respawn, Cable
   grab/escape, leg-tip payoff.
 
+### The full design doc: creatures redesigned, zones 3-4, return trips, ending
+**Creatures (scary redesigns, behaviour rules unchanged):**
+- **Wedged Thing**, rebuilt from your concept art: original design, not traced, as
+  the doc asks.
+  - Body: charcoal skin with bone catching the light, a gaunt breathing ribcage, a stringy gut.
+  - Limbs: a skirt of six curved sickle legs from the pelvis, two blade-arms with
+    scythes hooked into the ceiling, two shoulder spurs.
+  - Head: a long neck-stalk to an elongated skull with ONE warm eye whose pupil
+    follows you, and a mouth-slit that opens with teeth when it's enraged.
+  - Movement: the head snaps sideways now and then, and turns slowly towards the
+    light while frozen.
+- **Ceiling Arms:**
+  - Knuckled, too many joints.
+  - A long hand whose four nailed fingers tap and feel when fully out.
+  - **Floor-grate version** (doc: "holes above and below") that reaches up
+    for your shins.
+- **Cables:** spark particles (doc), and the tip frays into copper strands that
+  open and close, sniffing for you.
+- **Lure (new):**
+  - The look: a flickering tube on a stalk that grows from an eyeless thing
+    gripping the ceiling, its head one vertical mouth of needle teeth. Its light
+    is environment-only (it never reveals itself); only your torch shows the body.
+  - Tell: the cord sways.
+  - All 3 appearances: vanish (zone 3a corridor), choice (next to an honest
+    light), bite (zone 4).
+
+**Zones 3 and 4 (new art + level):**
+- New tiles:
+  - zone 3: wet rubble stone with black seep and lichen, flooded floor
+  - zone 4: lumpy veined flesh
+- The changes are gradual (organic blobs, not a line), as the doc wants.
+- Zone 4 tiles sit on separate layers with a **breathing vertex shader**.
+- New props: floor grate, open till drawer, pump nozzle hanging from a stone
+  ceiling, the red door (zone 2, then again in 3b where it shouldn't be), valve
+  wheel, standing water.
+- A **CCTV monitor in a tunnel** showing the live shop with no one in it at all
+  (its camera culls the man's layer).
+- Grading and audio: zone 3 dark green-grey with a big echo, zone 4 muted
+  browns/sick red with a low drone. Chromatic aberration switches on in zone 3.
+- Footsteps get a TileSet "surface" custom data layer (lino / concrete / wet / water / flesh).
+
+**Return trips (Descent director):**
+- Zone 2 ends in an up-stair, and so do the middle and end of zone 3. Climbing one
+  takes you to the top of the storeroom stairs.
+- Each trip the shop is slightly different:
+  1. door ajar ("you left the door open"), crisps back in the box
+  2. the mop is gone (it's downstairs) and the spill is back
+  3. the fridge hums and glows with no power
+- The CCTV man follows the doc's escalation: corner -> by the crisps -> by the
+  counter where you stand -> the storeroom feed next to the open panel, facing it
+  -> facing the camera.
+- The main stairs get longer every trip (they loop you back a flight, quietly).
+  At the bottom they open onto the NEXT section, not where you were. "how many
+  stairs were there".
+
+**Zone 4 and the ending (C, "full send"):**
+- "it's warm down here", Lure 3 bites.
+- The Tunnel: stand still and a mass of flesh sags from the ceiling, the camera
+  creeps in, the thrum rises; if it comes all the way down it crushes you.
+- The climax: the Thing comes from behind ("we're nearly there", "it's closer
+  than last time").
+- The last stretch:
+  - it simply stops chasing you
+  - you get slower, and your torch hand goes grey with too many fingers
+- The last sign points back at you ("there isn't a fuse box" ... "there never was").
+- The dead end: "you're alone tonight", the first line as the last. Black.
+- Ending scene:
+  - You ARE the Wedged Thing, your eye a torch cone.
+  - A new worker in the same uniform runs from you, shining his torch back:
+    "it can see you". Standing still, the tunnel squeezes you on.
+  - Catch him: black, then the Act 0 CCTV feed. A new worker at the till, a
+    leg poking out of the storeroom vent. "night shift". Back to the start.
+
+**Other doc items:**
+- Timed door + lights-out lever (zone 3b), boards pushed from the inside (zone 3a).
+- "look up sometimes", "mind the step", "nobody comes in after two",
+  "it can see you" on the first eye glint, the zone 3 lies ("you're alone" with
+  the Thing right there, "it can see you" with nothing there), "don't go back".
+- Bottom-text jitter in later zones.
+
+**Fixed along the way:**
+- A duplicate variable in the timed door.
+- A stale stairs latch after teleports, which slammed you sideways. Climbing now
+  also caps sideways speed.
+- A narrator stuck "busy" after a scene change, which would have silenced the
+  ending's line.
+
+**Verified:** a scripted run of the whole descent: 3 trips, stairs taking 11.5 s /
+16.3 s / 21.1 s down, every arrival, zone 4, the last stretch, the ending scene and
+the return to the start. Plus the older regressions (route, death, Cable, leg tip)
+and renders of every new area.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -300,6 +392,20 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Ending C** (A + B), the doc's "strongest". Kept self-contained in
+  `scenes/ending/` so A-only is easy to cut back to.
+- **3 return trips** (open question 2/3/4). The man's 4 "return" stages fit into
+  3 trips: the third trip shows the storeroom stage on the first check and
+  "facing the camera" on the next.
+- **Sections connect through the stairs, not corridors.** Zones 3a, 3b and 4
+  are separate pieces of map reached by return trips. It's the doc's "endless is a
+  feeling" (the stairs never lead back where you came from).
+- **Lure 2 "choice":** the honest light hangs over the up-stair (the way on), the
+  Lure over a dead-end alcove. "not that one" plays on entry and could mean either.
+- **Lure 3 bites = death** (checkpoint). It doesn't come back after that.
+- **Resolution stays 640x360 / 44 px player.** The doc says 384x216 or 480x270
+  and a 24-32 px player, but you asked for 640x360 and 44 px later. Say if the doc
+  should win.
 - **Cable escape = hold the beam on it for 1 s** (doc open question: mash E /
   light it / no escape). It fits pillar 1. Being held next to the Thing is the real
   danger; a Cable alone can't kill you.

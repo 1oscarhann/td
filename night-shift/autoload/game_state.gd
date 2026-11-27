@@ -39,6 +39,10 @@ var torch = null
 
 var checkpoint := Vector2.ZERO
 var zone := 0
+## Return trips made up to the shop (drives the CCTV man and the shop changes).
+var trips := 0
+## Zone 4's last stretch: the player is changing (slower, the hand looks wrong).
+var changed := false
 var debug := false
 
 ## Default bindings, used only if an action is missing from the project Input Map
@@ -62,6 +66,8 @@ func _ready() -> void:
 ## Resets per-run state. Called by Main when a run (re)starts.
 func reset_run() -> void:
 	zone = 0
+	trips = 0
+	changed = false
 	checkpoint = Vector2.ZERO
 	player = null
 	torch = null

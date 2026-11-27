@@ -46,6 +46,10 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 
+func f_x(i: int, f: float) -> float:
+	return (i - 1.5) * 1.2 * f
+
+
 ## The torch arm: sleeve to the elbow, forearm to the hand, then the torch,
 ## pointing wherever the beam points.
 func _draw() -> void:
@@ -58,8 +62,16 @@ func _draw() -> void:
 	var elbow := (shoulder + hand) * 0.5 + Vector2(-2.0 * f, 3.0)
 	draw_line(shoulder, elbow, SLEEVE, 3.0)
 	draw_line(shoulder + Vector2(0, 1), elbow + Vector2(0, 1), SLEEVE_DARK, 1.0)
-	draw_line(elbow, hand, SKIN, 2.0)
-	draw_rect(Rect2(hand.round() - Vector2(1, 1), Vector2(3, 3)), SKIN)
+	var skin := SKIN
+	if GameState.changed:
+		skin = Color8(150, 150, 146)   # grey, like something else's skin
+	draw_line(elbow, hand, skin, 2.0)
+	draw_rect(Rect2(hand.round() - Vector2(1, 1), Vector2(3, 3)), skin)
+	if GameState.changed:
+		# Too many, too long fingers curling round the torch.
+		for i in 4:
+			var fp := hand + Vector2(f_x(i, f), 0)
+			draw_line(fp, fp + Vector2(0.0, 3.0 + i % 2).rotated(sin(_t * 3.0 + i) * 0.4), skin, 1.0)
 	# Torch: dark tube along the aim, light rim, pale lens at the front.
 	draw_line(hand - aim * 3.0, hand + aim * 5.0, TORCH_BODY, 3.0)
 	draw_line(hand + aim * 4.0, hand + aim * 5.0, TORCH_RIM, 3.0)

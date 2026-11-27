@@ -174,6 +174,11 @@ func respawn(pos: Vector2) -> void:
 	snap_camera()
 
 
+## Let go of any stairs (used before teleports).
+func stop_climbing() -> void:
+	_set_climbing(false, null)
+
+
 ## Jump the camera straight to its framed position (no smoothing).
 func snap_camera() -> void:
 	_measure_room()
@@ -198,6 +203,8 @@ func _ground_move(delta: float) -> void:
 		speed = crouch_speed
 	elif running:
 		speed = run_speed
+	if GameState.changed:
+		speed *= 0.72   # near the end: slower, stiffer. Never explained.
 	velocity.x = move_toward(velocity.x, dir * speed, acceleration * delta)
 	velocity.y += gravity * delta
 	if absf(dir) > 0.1:
@@ -312,11 +319,18 @@ func _update_climb_state() -> void:
 		return
 	var v := Input.get_axis("move_up", "move_down")
 	var feet := global_position.y
+	if climbing and stairs != _stairs:
+		_stairs = stairs   # teleported between stairwells: hold on to the one you're in
 	if not climbing:
 		if v < -0.1 and feet > stairs.top_y + 2.0:
 			_set_climbing(true, stairs)
 		elif v > 0.1 and feet < stairs.bottom_y - 2.0:
 			_set_climbing(true, stairs)
+		return
+	# Up-stairs deeper down end in a hatch: reaching the top takes you up.
+	if stairs.exit_up and feet < stairs.top_y + STAND_HEIGHT + 4.0:
+		_set_climbing(false, null)
+		stairs.exited_up.emit(stairs)
 		return
 	# Off the top: feet just above the landing, gravity drops us onto the platform.
 	if feet < stairs.top_y - 3.0:
@@ -341,8 +355,16 @@ func _set_climbing(on: bool, stairs: Stairs) -> void:
 
 func _climb_move(delta: float) -> void:
 	var v := Input.get_axis("move_up", "move_down")
+	# The stairs that get longer: past the middle, quietly back up a flight.
+	if v > 0.1 and _stairs.extra_loops > 0 and global_position.y > _stairs.top_y + _stairs.height * 0.55:
+		_stairs.extra_loops -= 1
+		global_position.y -= 48.0
+		camera.reset_smoothing()
+	if v > 0.1 and global_position.y >= _stairs.bottom_y - 1.0:
+		_stairs.reached_bottom.emit(_stairs)
 	velocity.y = v * climb_speed
-	velocity.x = (_stairs.center_x - global_position.x) * 10.0
+	# Centre on the stairs, but never yank sideways faster than walking.
+	velocity.x = clampf((_stairs.center_x - global_position.x) * 10.0, -walk_speed, walk_speed)
 	move_and_slide()
 	if absf(v) > 0.1 and not is_on_floor():
 		_step_accum += climb_speed * delta

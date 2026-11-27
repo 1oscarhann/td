@@ -39,11 +39,29 @@ const CEIL_CONCRETE := 7
 const CEIL_BRICK := 8
 const SIDE_CONCRETE := 9
 const SIDE_BRICK := 10
-## Back-wall edge versions: grime where it collects (+3 per step: SHOP, CONCRETE, BRICK).
-const WALL_LOW_OFFSET := 10    # WALL_SHOP (1) + 10 = 11 ... WALL_BRICK (3) + 10 = 13
-const WALL_HIGH_OFFSET := 13   # 14 .. 16
+# Zone 3 stone, zone 4 flesh.
+const WALL_STONE := 17
+const FLOOR_STONE := 18
+const CEIL_STONE := 19
+const SIDE_STONE := 20
+const WALL_FLESH := 23
+const FLOOR_FLESH := 24
+const CEIL_FLESH := 25
+const SIDE_FLESH := 26
+## Per back-wall material: [floor, ceiling, side, wall LOW edge, wall HIGH edge].
+const MATERIALS := {
+	WALL_SHOP: [FLOOR_SHOP, CEIL_CONCRETE, SIDE_CONCRETE, 11, 14],
+	WALL_CONCRETE: [FLOOR_CONCRETE, CEIL_CONCRETE, SIDE_CONCRETE, 12, 15],
+	WALL_BRICK: [FLOOR_TUNNEL, CEIL_BRICK, SIDE_BRICK, 13, 16],
+	WALL_STONE: [FLOOR_STONE, CEIL_STONE, SIDE_STONE, 21, 22],
+	WALL_FLESH: [FLOOR_FLESH, CEIL_FLESH, SIDE_FLESH, 27, 28],
+}
 const SOLID_TILES := [ROCK, FLOOR_SHOP, FLOOR_CONCRETE, FLOOR_TUNNEL, CEIL_CONCRETE,
-		CEIL_BRICK, SIDE_CONCRETE, SIDE_BRICK]
+		CEIL_BRICK, SIDE_CONCRETE, SIDE_BRICK, FLOOR_STONE, CEIL_STONE, SIDE_STONE,
+		FLOOR_FLESH, CEIL_FLESH, SIDE_FLESH]
+## Footstep surface per floor tile (TileSet custom data "surface").
+const SURFACES := {FLOOR_SHOP: "lino", FLOOR_CONCRETE: "concrete", FLOOR_TUNNEL: "wet",
+		FLOOR_STONE: "water", FLOOR_FLESH: "flesh"}
 
 
 static func build() -> TileSet:
@@ -54,6 +72,9 @@ static func build() -> TileSet:
 	ts.set_physics_layer_collision_mask(0, 0)
 	ts.add_occlusion_layer()
 	ts.set_occlusion_layer_light_mask(0, GameState.LIGHT_ENV)
+	ts.add_custom_data_layer()
+	ts.set_custom_data_layer_name(0, "surface")
+	ts.set_custom_data_layer_type(0, TYPE_STRING)
 
 	var tex: Texture2D = load(ATLAS_PATH)
 	var src := TileSetAtlasSource.new()
@@ -76,6 +97,7 @@ static func build() -> TileSet:
 			occ.polygon = square
 			occ.cull_mode = OCCLUDER_CULL
 			_set_occluder(td, occ)
+			td.set_custom_data("surface", SURFACES.get(solid, "concrete"))
 	return ts
 
 

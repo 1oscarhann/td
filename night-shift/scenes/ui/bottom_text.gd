@@ -22,12 +22,14 @@ signal line_done
 @export var linger_time := 9.0
 
 var _hiss: AudioStreamPlayer
+var _home_x := 0.0
 var _run := 0
 
 
 func _ready() -> void:
 	text = ""
 	modulate.a = 0.0
+	_home_x = position.x
 	_hiss = AudioStreamPlayer.new()
 	_hiss.stream = AudioDirector.get_stream("hiss")
 	_hiss.volume_db = -30.0
@@ -68,10 +70,14 @@ func show_line(line: String, glitch := 0.0) -> void:
 				text = line.substr(0, idx) + char(randi_range(97, 122)) + line.substr(idx + 1)
 				await get_tree().process_frame
 				text = line
+		if glitch > 0.0:
+			# Slight jitter in later zones. Subtle.
+			position.x = _home_x + (randi() % 3 - 1 if randf() < glitch * 0.3 else 0)
 		await get_tree().create_timer(0.1).timeout
 		if run != _run:
 			return
 		held += 0.1
+	position.x = _home_x
 
 	# Fade, never vanish.
 	var tw := create_tween()

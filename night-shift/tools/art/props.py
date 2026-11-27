@@ -355,10 +355,82 @@ def junction_box():
     save(cv, "props/junction")
 
 
+def grate():
+    """Floor grate, 16x4: bars over a black drop (Ceiling Arms come up through these)."""
+    cv = Canvas(16, 4)
+    for y in range(4):
+        for x in range(16):
+            bar = x % 3 == 0 or y == 0
+            cv.px(x, y, P.METAL.at(0.6 if y == 0 else 0.4, x, y) if bar else (3, 3, 4), 0.9 if bar else 0.0)
+    save(cv, "props/grate")
+
+
+def till_drawer():
+    """An open till drawer, 16x8: coins and notes. Things from upstairs, down here."""
+    cv = Canvas(16, 8)
+    bevel_box(cv, 0, 2, 16, 6, P.METAL, seed=30, base=0.35)
+    for i, x in enumerate(range(2, 14, 3)):
+        cv.rect(x, 3, 2, 3, P.METAL[0], 0.2)
+        cv.px(x, 3, (150, 140, 90) if i % 2 else (120, 140, 120), 0.8)   # coins / a note
+    cv.rect(0, 0, 16, 2, P.METAL[3], 0.9)
+    save(cv, "props/till_drawer")
+
+
+def pump_nozzle():
+    """A petrol pump nozzle on its hose, hanging from a stone ceiling, 10x26."""
+    cv = Canvas(10, 26)
+    for y in range(18):
+        cv.px(4 + (1 if 6 < y < 12 else 0), y, (20, 20, 22), 0.6)    # hose
+        cv.px(5 + (1 if 6 < y < 12 else 0), y, (36, 36, 40), 0.7)
+    bevel_box(cv, 2, 17, 6, 5, P.HAZARD, seed=31, base=0.5)            # handle
+    cv.rect(6, 21, 3, 1, P.METAL[3], 0.9)                              # trigger
+    cv.rect(3, 22, 2, 4, P.METAL[4], 0.9)                              # spout
+    cv.px(3, 25, P.METAL[2], 0.6)
+    save(cv, "props/pump_nozzle")
+
+
+def red_door():
+    """The red door (landmark), 24x52. It turns up again deeper, where it shouldn't."""
+    cv = Canvas(24, 52)
+    bevel_box(cv, 0, 0, 24, 52, P.METAL, seed=32, base=0.45)
+    bevel_box(cv, 3, 3, 18, 48, P.RED, seed=33, base=0.45, noise=0.25, edge=0.2, height=0.7)
+    for y in (12, 34):
+        cv.rect(5, y, 14, 1, P.RED[0], 0.4)
+    cv.rect(17, 27, 2, 3, P.METAL[5], 0.95)
+    cv.rect(6, 20, 6, 1, P.PAPER[0], 0.6)                              # stencilled number
+    save(cv, "props/red_door")
+
+
+def valve_wheel():
+    """Big valve wheel on a pipe stub (landmark), 20x20."""
+    cv = Canvas(20, 20)
+    import math as _m
+    for a in range(0, 360, 4):
+        r = _m.radians(a)
+        for rr in (8.5, 9.0):
+            cv.px(int(10 + _m.cos(r) * rr), int(10 + _m.sin(r) * rr), P.RED[1] if a < 200 else P.RED[0], 0.9)
+    for a in (0, 60, 120, 180, 240, 300):
+        r = _m.radians(a)
+        cv.line(10, 10, int(10 + _m.cos(r) * 8), int(10 + _m.sin(r) * 8), P.RED[0], 0.7)
+    cv.rect(8, 8, 4, 4, P.METAL[3], 1.0)
+    save(cv, "props/valve_wheel")
+
+
+def water():
+    """Standing water strip, 16x3, tiles left-right: black with a few glints."""
+    cv = Canvas(16, 3)
+    for x in range(16):
+        cv.px(x, 0, P.WATER[3] if x in (3, 4, 11) else P.WATER[2], 0.95)
+        cv.px(x, 1, P.WATER[1], 0.9)
+        cv.px(x, 2, P.WATER[0], 0.9)
+    save(cv, "props/water", wrap=16)
+
+
 def build_all():
     for fn in (shelf, stock_boxes, fridge, counter, cctv, coffee_machine, mop_bucket,
                door, breaker, box, vent, pipe, cable, panel_hole, plank, tube, grime,
-               heavy_door, junction_box):
+               heavy_door, junction_box, grate, till_drawer, pump_nozzle, red_door,
+               valve_wheel, water):
         fn()
     window(True)
     window(False)

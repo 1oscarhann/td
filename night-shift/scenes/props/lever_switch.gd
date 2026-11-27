@@ -16,6 +16,8 @@ const ON_TEX := preload("res://art/props/lever_on.tres")
 @export var switch_id := ""
 @export var pull_time := 1.6
 @export var noise_radius := 320.0
+## Lights out (design doc): flipping it kills the working light with this id.
+@export var kills_light := ""
 
 var requires_two_hands := true
 var is_on := false

@@ -6,6 +6,8 @@
   9 SIDE_CONCRETE 10 SIDE_BRICK
  11-13 WALL_*_LOW  (wall cells on the floor: damp, tide lines, salt)
  14-16 WALL_*_HIGH (wall cells under the ceiling: soot, nicotine)
+ 17 WALL_STONE 18 FLOOR_STONE 19 CEIL_STONE 20 SIDE_STONE 21/22 STONE LOW/HIGH  (zone 3)
+ 23 WALL_FLESH 24 FLOOR_FLESH 25 CEIL_FLESH 26 SIDE_FLESH 27/28 FLESH LOW/HIGH  (zone 4)
 Rows = variants: 0 plain, 1 damage (crack / chip / missing tile), 2 stain.
 Every tile is a height field as well as a colour, so the torch rakes across
 real relief (raised brick faces, recessed mortar and grout, tie holes)."""
@@ -234,6 +236,117 @@ def rock(cv, ox, oy, var):
         cv.px(ox + sx, oy + sy + 2, P.ROCK[0], 0.2)
 
 
+# ------------------------------------------------------------- zone 3: stone
+def wall_stone(cv, ox, oy, var, edge=None):
+    """Wet rubble stone: irregular blocks, slick highlights, black seepage."""
+    rng = random.Random(1000 + var)
+    n = fbm(1010 + var)
+    blocks = {}
+    for y in range(T):
+        for x in range(T):
+            # Irregular courses: block edges wobble with noise.
+            row = (y + int(n(x, 0) * 3)) // 5
+            col = (x + row * 3 + int(n(0, y) * 4)) // 7
+            seam = (y + int(n(x, 0) * 3)) % 5 == 4 or (x + row * 3 + int(n(0, y) * 4)) % 7 == 6
+            if seam:
+                cv.px(ox + x, oy + y, P.STONE[0], 0.05)
+                continue
+            key = (row, col)
+            if key not in blocks:
+                blocks[key] = rng.uniform(-0.12, 0.12)
+            v = 0.5 + blocks[key] + (n(x * 2, y * 2) - 0.5) * 0.25
+            if (y + int(n(x, 0) * 3)) % 5 == 0:
+                v += 0.15                                      # wet top edge glints
+            if edge == "low":
+                v -= clamp((y - 6) / 10.0) * 0.5               # soaked at the foot
+            if edge == "high":
+                v -= clamp((5 - y) / 5.0) * 0.35
+            cv.px(ox + x, oy + y, P.STONE.at(v, x, y), 0.85)
+    if var == 1:                                               # black seep running down
+        for y in range(T):
+            cv.px(ox + 9, oy + y, P.WATER[1], 0.1)
+    if var == 2:                                               # pale lichen flecks
+        for _ in range(4):
+            cv.px(ox + rng.randrange(T), oy + rng.randrange(T), P.STONE[4], 0.8)
+
+
+def floor_stone(cv, ox, oy, var):
+    """Flooded stone floor: black water on top, slabs underneath."""
+    n = fbm(1110 + var)
+    for y in range(T):
+        for x in range(T):
+            if y <= 1:
+                v = 0.3 + (0.7 if n(x * 3, 0) > 0.6 and y == 0 else 0.0)
+                cv.px(ox + x, oy + y, P.WATER.at(v, x, y), 0.95)
+            else:
+                v = 0.35 - y * 0.015 + (n(x, y) - 0.5) * 0.25
+                cv.px(ox + x, oy + y, P.STONE.at(v, x, y), 0.6)
+
+
+def ceil_stone(cv, ox, oy, var):
+    wall_stone(cv, ox, oy, var, edge="high")
+    for x in range(T):
+        cv.px(ox + x, oy + T - 1, P.STONE[0], 0.1)
+        if (x * 7 + var) % 11 == 0:
+            cv.px(ox + x, oy + T - 1, P.WATER[3], 0.6)        # a drip about to fall
+
+
+def side_stone(cv, ox, oy, var):
+    wall_stone(cv, ox, oy, var)
+    for y in range(T):
+        for x in range(T):
+            cv.darken(ox + x, oy + y, 0.75)
+
+
+# -------------------------------------------------------------- zone 4: flesh
+def wall_flesh(cv, ox, oy, var, edge=None):
+    """Stone giving way to something organic: lumpy, wet, veined."""
+    rng = random.Random(1200 + var)
+    n = fbm(1210 + var)
+    n2 = fbm(1220 + var, 16)
+    for y in range(T):
+        for x in range(T):
+            lump = n(x * 1.5, y * 1.5)
+            v = 0.35 + lump * 0.4 + (n2(x * 3, y * 3) - 0.5) * 0.12
+            h = 0.4 + lump * 0.6
+            if lump > 0.72:
+                v += 0.18                                      # wet sheen on the swellings
+            if edge == "low":
+                v -= clamp((y - 8) / 8.0) * 0.4
+            if edge == "high":
+                v -= clamp((5 - y) / 5.0) * 0.3
+            cv.px(ox + x, oy + y, P.FLESH.at(v, x, y), h)
+    # Veins: dark-red branching lines.
+    x, y = rng.randrange(T), 0
+    for _ in range(T + 4):
+        cv.px(ox + x % T, oy + y % T, P.SICK_RED[0], 0.3)
+        y += 1
+        x += rng.choice((-1, 0, 1))
+    if var == 2:
+        cv.px(ox + 6, oy + 7, P.SICK_RED[2], 0.9)             # a raw spot
+        cv.px(ox + 7, oy + 7, P.SICK_RED[1], 0.8)
+
+
+def floor_flesh(cv, ox, oy, var):
+    wall_flesh(cv, ox, oy, var)
+    for x in range(T):
+        cv.px(ox + x, oy, P.FLESH[4], 0.95)                   # wet ridge you walk on
+        cv.px(ox + x, oy + 1, P.FLESH[3], 0.9)
+
+
+def ceil_flesh(cv, ox, oy, var):
+    wall_flesh(cv, ox, oy, var, edge="high")
+    for x in range(T):
+        cv.px(ox + x, oy + T - 1, P.FLESH[0], 0.2)
+
+
+def side_flesh(cv, ox, oy, var):
+    wall_flesh(cv, ox, oy, var)
+    for y in range(T):
+        for x in range(T):
+            cv.darken(ox + x, oy + y, 0.75)
+
+
 COLUMNS = [
     rock,
     wall_shop, wall_concrete, wall_brick,
@@ -246,6 +359,13 @@ COLUMNS = [
     lambda c, x, y, v: wall_shop(c, x, y, v, "high"),
     lambda c, x, y, v: wall_concrete(c, x, y, v, "high"),
     lambda c, x, y, v: wall_brick(c, x, y, v, "high"),
+    # 17-22: zone 3 stone. 23-28: zone 4 flesh.
+    wall_stone, floor_stone, ceil_stone, side_stone,
+    lambda c, x, y, v: wall_stone(c, x, y, v, "low"),
+    lambda c, x, y, v: wall_stone(c, x, y, v, "high"),
+    wall_flesh, floor_flesh, ceil_flesh, side_flesh,
+    lambda c, x, y, v: wall_flesh(c, x, y, v, "low"),
+    lambda c, x, y, v: wall_flesh(c, x, y, v, "high"),
 ]
 
 

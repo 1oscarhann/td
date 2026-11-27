@@ -29,6 +29,7 @@ var _cut_started := false
 var _tasks: Dictionary = {}       # task_id -> ShopTask
 var _panel: BoardedPanel
 var _after_power: Array = []      # LevelTriggers armed by the cut
+var door_x := 0.0
 
 
 func setup(tasks: Array, panel: BoardedPanel, after_power_triggers: Array) -> void:
@@ -45,6 +46,10 @@ func setup(tasks: Array, panel: BoardedPanel, after_power_triggers: Array) -> vo
 
 
 func _process(delta: float) -> void:
+	# "nobody comes in after two": standing by the front door for a while.
+	var p = GameState.player
+	if p != null and door_x != 0.0 and absf(p.global_position.x - door_x) < 50.0 and p.idle_time > 4.0:
+		Narrator.say("nobody_after_two")
 	if _cut_started:
 		return
 	_shift_time += delta

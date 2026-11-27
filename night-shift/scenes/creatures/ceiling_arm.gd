@@ -23,6 +23,11 @@ enum State { HIDDEN, SCRATCH, REACH, RETRACT }
 ## Gives up and pulls back after hanging this long.
 @export var linger_time := 4.0
 @export var segments := 8
+## Reaches UP out of a floor grate instead of down from a vent (design doc:
+## "vents and holes above and below"). Walk over it in the dark and it has you.
+@export var from_floor := false
+## Floor arms only come up to the shins.
+@export var floor_reach := 30.0
 
 var state := State.HIDDEN
 var length := 0.0         # current reach in px
@@ -54,6 +59,10 @@ func _ready() -> void:
 ## Leave room to stand: the hand stops a few px above the floor. Retried each
 ## physics tick until the tile collision exists.
 func _measure() -> void:
+	if from_floor:
+		max_length = floor_reach
+		_measured = true
+		return
 	var space := get_world_2d().direct_space_state
 	var hit := space.intersect_ray(PhysicsRayQueryParameters2D.create(
 			global_position + Vector2(0, 2), global_position + Vector2(0, 200), GameState.LAYER_WORLD))
@@ -98,8 +107,11 @@ func _physics_process(delta: float) -> void:
 	if GameState.player == null:
 		return
 	var player_pos: Vector2 = GameState.player.global_position
-	var near := absf(player_pos.x - global_position.x) < notice_range \
-			and player_pos.y > global_position.y and player_pos.y - global_position.y < max_length + 40.0
+	var near := absf(player_pos.x - global_position.x) < notice_range
+	if from_floor:
+		near = near and absf(player_pos.y - global_position.y) < 40.0
+	else:
+		near = near and player_pos.y > global_position.y and player_pos.y - global_position.y < max_length + 40.0
 
 	match state:
 		State.HIDDEN:
@@ -147,7 +159,8 @@ func _update_points() -> void:
 	if length <= 0.5:
 		return
 	var seg := length / segments
-	var angle := PI * 0.5
+	var down := -1.0 if from_floor else 1.0
+	var angle := PI * 0.5 * down
 	var steer := 0.0
 	if GameState.player != null:
 		var dx: float = GameState.player.global_position.x - global_position.x
@@ -155,7 +168,10 @@ func _update_points() -> void:
 	var p := Vector2.ZERO
 	for i in segments:
 		angle += sin(_t * 1.7 + i * 1.3) * 0.22 + steer
-		angle = clampf(angle, PI * 0.15, PI * 0.85)   # never curls back up
+		if from_floor:
+			angle = clampf(angle, -PI * 0.85, -PI * 0.15)   # never curls back down
+		else:
+			angle = clampf(angle, PI * 0.15, PI * 0.85)     # never curls back up
 		p += Vector2.from_angle(angle) * seg
 		_points.append(p)
 
@@ -163,29 +179,42 @@ func _update_points() -> void:
 func _draw() -> void:
 	if _points.size() < 2:
 		return
-	var skin := Color(0.84, 0.82, 0.78)
-	var shade := Color(0.55, 0.52, 0.50)
-	var hi := Color(0.95, 0.93, 0.89)
+	var skin := Color(0.74, 0.72, 0.69)
+	var shade := Color(0.42, 0.40, 0.39)
+	var dark := Color(0.16, 0.15, 0.15)
+	var nail := Color(0.86, 0.82, 0.70)
 	var n := _points.size()
-	# Tapered arm: 3 px at the vent, 1 px at the wrist, a knuckle at every joint.
+	# Too many joints: a thin grey-pale arm, each joint a swollen knuckle.
 	for i in range(1, n):
-		var w := lerpf(3.0, 1.0, float(i - 1) / maxf(1.0, float(n - 2)))
+		var w := lerpf(3.0, 1.5, float(i - 1) / maxf(1.0, float(n - 2)))
 		var a := _points[i - 1]
 		var b := _points[i]
 		draw_line(a, b, skin, w)
-		if w >= 2.0:
-			var side := (b - a).orthogonal().normalized()
-			draw_line(a + side * (w * 0.5), b + side * (w * 0.5), shade, 1.0)
+		var side := (b - a).orthogonal().normalized()
+		draw_line(a + side * (w * 0.5), b + side * (w * 0.5), shade, 1.0)
 		if i < n - 1:
 			var k := b.round()
-			draw_rect(Rect2(k - Vector2(1, 1), Vector2(2, 2)), shade)
-			draw_rect(Rect2(k - Vector2(1, 1), Vector2(1, 1)), hi)
-	# A long hand: three fingers, two joints each, curling as they feel around.
-	var tip := _points[n - 1]
-	for f in 3:
-		var a1 := PI * 0.5 + (f - 1) * 0.55 + sin(_t * 7.0 + f * 1.7) * 0.25
-		var mid := tip + Vector2.from_angle(a1) * 4.0
-		var curl := a1 + 0.7 * (1.0 if f > 0 else -1.0) + sin(_t * 9.0 + f) * 0.3
-		draw_line(tip, mid, skin, 1.0)
-		draw_line(mid, mid + Vector2.from_angle(curl) * 4.0, skin, 1.0)
-		draw_rect(Rect2(mid.round(), Vector2(1, 1)), shade)
+			draw_rect(Rect2(k - Vector2(1, 1), Vector2(3, 3)), shade)
+			draw_rect(Rect2(k - Vector2(1, 1), Vector2(2, 1)), skin)
+	# The hand: a bony wrist, a narrow palm, four long fingers that feel about
+	# and tap, each with a long yellowed nail.
+	var wrist := _points[n - 1]
+	var along := (wrist - _points[n - 2]).normalized()
+	var palm := wrist + along * 4.0
+	draw_line(wrist, palm, skin, 3.0)
+	draw_line(wrist, palm, shade, 1.0)
+	var searching := state == State.REACH and length >= max_length - 0.5
+	for f in 4:
+		var spread := (f - 1.5) * 0.42
+		var tap := 0.0
+		if searching:
+			# Fingers lift and tap one after another, feeling for you.
+			tap = maxf(0.0, sin(_t * 6.0 - f * 1.1)) * 0.6
+		var a1 := along.angle() + spread - tap * signf(spread + 0.01)
+		var mid := palm + Vector2.from_angle(a1) * 5.0
+		var curl := a1 + (0.6 + tap) * (1.0 if spread >= 0.0 else -1.0)
+		var tip := mid + Vector2.from_angle(curl) * 5.0
+		draw_line(palm, mid, skin, 1.0)
+		draw_line(mid, tip, skin, 1.0)
+		draw_rect(Rect2(mid.round(), Vector2(1, 1)), dark)          # finger joint
+		draw_rect(Rect2(tip.round(), Vector2(1, 1)), nail)           # nail

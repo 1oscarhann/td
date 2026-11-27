@@ -9,6 +9,9 @@ const TEX := preload("res://art/props/heavy_door.tres")
 @export var door_id := ""
 @export var height := 64.0
 @export var open_time := 1.6
+## Timed doors (design doc): once powered, stay open this long, then grind shut.
+## 0 = stays open.
+@export var open_seconds := 0.0
 
 var is_open := false
 var _lift := 0.0
@@ -47,7 +50,23 @@ func open() -> void:
 	await get_tree().create_timer(open_time * 0.4).timeout
 	_shape.set_deferred("disabled", true)
 	_occluder.visible = false
+	var occ_poly := _occluder.occluder
 	_occluder.occluder = null
+	if open_seconds > 0.0:
+		await get_tree().create_timer(open_seconds).timeout
+		# Don't shut on someone standing in the doorway: wait until it's clear.
+		while GameState.player != null and absf(GameState.player.global_position.x - global_position.x) < 12.0:
+			await get_tree().create_timer(0.2).timeout
+		AudioDirector.play_at("creak", global_position + Vector2(0, -height * 0.5), 0.0, 0.0, 700.0, 0.3)
+		var shut := create_tween()
+		shut.tween_property(self, "_lift", 0.0, 0.5).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		shut.parallel().tween_method(func(_v): queue_redraw(), 0.0, 1.0, 0.5)
+		await shut.finished
+		AudioDirector.play_at("clunk", global_position, 2.0, 0.0, 800.0)
+		_shape.set_deferred("disabled", false)
+		_occluder.occluder = occ_poly
+		_occluder.visible = true
+		is_open = false
 
 
 func _draw() -> void:

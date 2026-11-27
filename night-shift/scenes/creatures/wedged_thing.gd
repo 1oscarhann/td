@@ -87,6 +87,8 @@ var _shape := RectangleShape2D.new()
 var _glint: Node2D
 var _glint_on := false
 var _glint_check := 0.0
+var _twitch := 0.0          # current head-snap offset (px), decays
+var _twitch_timer := 2.0
 
 @onready var scrape: AudioStreamPlayer2D = $Scrape
 
@@ -125,6 +127,23 @@ func activate() -> void:
 	_active = true
 	if state == State.DORMANT and _wake_left <= 0.0:
 		_enter(State.STALK)
+
+
+## Move it to another section of the basement (return trips). It starts
+## dormant and wakes after `delay` seconds if `active`.
+func relocate(pos: Vector2, active: bool, delay := 3.0) -> void:
+	_spawn = pos
+	_active = active
+	reset()
+	if active:
+		_wake_left = delay
+
+
+## The last stretch: it simply stops following you. No explanation.
+func stop_chasing() -> void:
+	_active = false
+	_wake_left = 0.0
+	_enter(State.DORMANT)
 
 
 ## Back to the spawn point after the player is caught.
@@ -220,6 +239,7 @@ func _physics_process(delta: float) -> void:
 			_check_torch_sight()
 
 	_update_glint(delta)
+	_update_twitch(delta)
 	_move(delta)
 	_update_legs(delta)
 	_update_shape()
@@ -255,10 +275,22 @@ func _update_glint(delta: float) -> void:
 	if _glint_check <= 0.0:
 		_glint_check = 0.08
 		_glint_on = _torch_points_at_eye(glint_range, 0.0)
+		if _glint_on and not _seen_once and state != State.DORMANT:
+			_seen_once = true
+			Narrator.say("it_can_see_you")   # first time the eye glints
 	_glint.visible = _glint_on
 	if _glint_on:
 		_glint.position = _body_points().eye
 		_glint.queue_redraw()
+
+
+## Now and then the head snaps sideways and back. Wrong movement beats blood.
+func _update_twitch(delta: float) -> void:
+	_twitch = move_toward(_twitch, 0.0, 30.0 * delta)
+	_twitch_timer -= delta
+	if _twitch_timer <= 0.0 and state != State.DORMANT:
+		_twitch = randf_range(3.0, 5.0) * (1.0 if randf() < 0.5 else -1.0)
+		_twitch_timer = randf_range(0.6, 1.5) if state == State.ENRAGED else randf_range(1.5, 4.0)
 
 
 func _torch_points_at_eye(max_range: float, slack: float) -> bool:
@@ -423,13 +455,14 @@ func _center() -> Vector2:
 
 func _init_legs() -> void:
 	_legs.clear()
-	# Many long legs (design doc): four braced on the floor, four on the ceiling.
-	var floor_rest := [-24.0, -9.0, 7.0, 22.0]
-	var ceil_rest := [-20.0, -5.0, 11.0, 26.0]
-	for r: float in floor_rest:
-		_legs.append(_make_leg(FLOOR, r, 0.38))
-	for r: float in ceil_rest:
-		_legs.append(_make_leg(CEILING, r, 0.62))
+	# A skirt of six long sickle legs from the pelvis, braced on the floor...
+	for r: float in [-30.0, -19.0, -8.0, 8.0, 19.0, 30.0]:
+		_legs.append(_make_leg(FLOOR, r, 0.30))
+	# ...two long blade-arms hooked into the ceiling, and two shoulder spurs.
+	for r: float in [-16.0, 16.0]:
+		_legs.append(_make_leg(CEILING, r, 0.60))
+	for r: float in [-28.0, 28.0]:
+		_legs.append(_make_leg(CEILING, r, 0.56))
 
 
 func _make_leg(surface: int, rest: float, hip: float) -> Dictionary:
@@ -470,7 +503,8 @@ func _update_legs(delta: float) -> void:
 			var foot: Vector2 = leg.foot
 			foot.y = surface_y   # stay braced as the tunnel height changes
 			leg.foot = foot
-			if state != State.FROZEN and stepping[surface] == 0 \
+			var max_stepping := 2 if surface == FLOOR else 1
+			if state != State.FROZEN and stepping[surface] < max_stepping \
 					and foot.distance_to(desired) > STEP_DISTANCE:
 				leg.from = foot
 				leg.to = desired + Vector2(dir * 5.0, 0)
@@ -489,93 +523,157 @@ func _knee(hip: Vector2, foot: Vector2, seg: float, body_x: float) -> Vector2:
 
 
 ## Key body points in local space, shared by drawing and light probes.
+## Silhouette from the concept art: pelvis low with the leg skirt, a gaunt
+## ribcage, broad bony shoulders, and a long neck-stalk with ONE eye at its end.
+## In a low tunnel the stalk folds forward along the ceiling.
 func _body_points() -> Dictionary:
 	var sway := 0.0 if state == State.FROZEN else sin(_t * 1.3) * 1.5
-	var torso_top := -gap * 0.78
-	var neck := Vector2(sway, torso_top)
-	var head_len := clampf(gap * 0.22, 7.0, 20.0)
-	var tip := neck + Vector2(dir * head_len * 0.8, -head_len * 0.6)
-	tip.y = maxf(tip.y, -(floor_y - ceil_y) + 2.0)   # never through the ceiling
-	return {"sway": sway, "torso_top": torso_top, "torso_bottom": -gap * 0.25,
-			"neck": neck, "tip": tip, "eye": neck.lerp(tip, 0.75)}
+	var room := floor_y - ceil_y
+	var pelvis := Vector2(sway * 0.5, -gap * 0.30)
+	var shoulders := Vector2(sway, -gap * 0.58)
+	var stalk := clampf(gap * 0.32, 10.0, 34.0)
+	var up := minf(stalk, room + shoulders.y - 4.0)         # room left above the shoulders
+	var lean := sqrt(maxf(0.0, stalk * stalk - up * up))
+	var head := shoulders + Vector2(dir * (lean + 2.0), -up)
+	head += Vector2(dir, 0).orthogonal() * _twitch           # sudden head snaps
+	if state == State.FROZEN and GameState.torch != null:
+		# Frozen in the light, the head turns slowly to face it.
+		var to_torch: Vector2 = GameState.torch.global_position - global_position - head
+		head += to_torch.normalized() * minf(_state_time * 2.0, 3.0)
+	var breath := sin(_t * (5.0 if state == State.ENRAGED else 2.2)) * 0.5 + 0.5
+	return {"sway": sway, "pelvis": pelvis, "shoulders": shoulders, "head": head,
+			"eye": head, "breath": breath, "torso_top": shoulders.y, "torso_bottom": pelvis.y,
+			"neck": shoulders, "tip": head}
 
 
 # ------------------------------------------------------------------------ drawing
-# Placeholder-free procedural look: tapered bone-white legs with knobbed knees,
-# a pinched ribcage of a body, an elongated skull with one eye. Everything is
-# drawn under the Light Only material, so only what the beam touches exists.
+# Charcoal skin with pale bone where the light catches it: ribs, knuckles, the
+# edges of the blades. Drawn under the Light Only material, so the beam only
+# ever shows you parts of it. Original design inspired by the concept art.
 
-const SKIN := Color(0.80, 0.77, 0.72)
-const SKIN_HI := Color(0.94, 0.91, 0.86)
-const SKIN_SHADE := Color(0.52, 0.49, 0.47)
-const SKIN_DARK := Color(0.27, 0.25, 0.25)
-const EYE := Color(1.0, 0.93, 0.66)
+const DARK := Color(0.06, 0.06, 0.07)
+const SKIN := Color(0.15, 0.15, 0.16)
+const MID := Color(0.26, 0.25, 0.25)
+const BONE := Color(0.50, 0.48, 0.45)
+const EYE_WHITE := Color(0.93, 0.87, 0.70)   # warm, torch-like: seed for ending A
+const PUPIL := Color(0.02, 0.02, 0.02)
 
 
-## A limb that tapers from w0 to w1 px, with a darker underside.
-func _bone(a: Vector2, b: Vector2, w0: float, w1: float, col: Color) -> void:
-	var steps := 3
-	var side := (b - a).orthogonal().normalized()
-	for i in steps:
-		var p0 := a.lerp(b, float(i) / steps)
-		var p1 := a.lerp(b, float(i + 1) / steps)
-		var w := lerpf(w0, w1, (i + 0.5) / steps)
-		draw_line(p0, p1, col, w)
+## A curved limb: quadratic bezier a -> (bend) -> b, tapering w0 -> w1, with a
+## thin lit rim. This is what gives the legs the concept art's sickle curve.
+func _curve(a: Vector2, ctrl: Vector2, b: Vector2, w0: float, w1: float, col: Color, rim := MID) -> void:
+	var n := 7
+	var prev := a
+	for i in range(1, n + 1):
+		var t := float(i) / n
+		var p := a.lerp(ctrl, t).lerp(ctrl.lerp(b, t), t)
+		var w := lerpf(w0, w1, t)
+		draw_line(prev, p, col, w)
 		if w >= 2.0:
-			draw_line(p0 + side * (w * 0.5), p1 + side * (w * 0.5), SKIN_SHADE, 1.0)
+			var side := (p - prev).orthogonal().normalized()
+			draw_line(prev - side * (w * 0.5), p - side * (w * 0.5), rim, 1.0)
+		prev = p
+
+
+func _seg(a: Vector2, b: Vector2, w0: float, w1: float, col: Color, edge := MID) -> void:
+	_curve(a, a.lerp(b, 0.5), b, w0, w1, col, edge)
 
 
 func _draw() -> void:
 	var b := _body_points()
 	var sway: float = b.sway
-	var seg := gap * 0.3 + 8.0
-	var leg_col := SKIN.darkened(0.12)
+	var pelvis: Vector2 = b.pelvis
+	var shoulders: Vector2 = b.shoulders
+	var head: Vector2 = b.head
+	var breath: float = b.breath
+	var twitchy := state == State.FROZEN and randf() < 0.3
+	var squeeze := clampf(gap / 120.0, 0.35, 1.0)   # tight tunnels compress the limbs
 
-	# Legs behind the body: thigh 3 px, shin to a needle tip, knobbed knee.
+	# 1) Limbs. Floor: a skirt of sickle legs bowing out from the pelvis.
+	#    Ceiling: blade-arms and spurs, elbows hanging, scythes hooked in.
 	for leg in _legs:
-		var hip := Vector2(sway + (2.0 if float(leg.rest) > 0.0 else -2.0), -gap * float(leg.hip))
+		var floor_leg: bool = int(leg.surface) == FLOOR
 		var foot: Vector2 = leg.foot - global_position
-		var knee := _knee(hip, foot, seg, sway)
-		if state == State.FROZEN and randf() < 0.3:
-			knee += Vector2(randf_range(-1.5, 1.5), randf_range(-1.5, 1.5))   # still twitching
-		_bone(hip, knee, 3.0, 2.0, leg_col)
-		_bone(knee, foot, 2.0, 1.0, leg_col)
-		var k := knee.round()
-		draw_rect(Rect2(k - Vector2(1, 1), Vector2(3, 3)), SKIN_SHADE)
-		draw_rect(Rect2(k - Vector2(1, 1), Vector2(1, 1)), SKIN_HI)
-		draw_rect(Rect2(foot.round(), Vector2(1, 1)), SKIN_DARK)   # tip on concrete
+		var side := 1.0 if foot.x > sway else -1.0
+		var jitter := Vector2(randf_range(-2, 2), randf_range(-2, 2)) if twitchy else Vector2.ZERO
+		if floor_leg:
+			var root := pelvis + Vector2(side * 3.0, 1.0)
+			var reach := absf(foot.x - root.x)
+			var knee := root + Vector2(side * clampf(reach * 0.55, 6.0, 34.0), -clampf(gap * 0.10, 3.0, 14.0) * squeeze) + jitter
+			_curve(root, root + Vector2(side * 3.0, -2.0), knee, 4.0, 3.0, SKIN)
+			# Long shin bowing outward, ending in a hooked point.
+			var ctrl := knee.lerp(foot, 0.5) + Vector2(side * 6.0 * squeeze, -4.0)
+			_curve(knee, ctrl, foot, 3.0, 1.0, SKIN)
+			draw_line(foot, foot + Vector2(-side * 2.0, -1.0), BONE, 1.0)          # the hook
+			var k := knee.round()
+			draw_rect(Rect2(k - Vector2(1, 1), Vector2(3, 3)), MID)
+			draw_rect(Rect2(k - Vector2(1, 1), Vector2(1, 1)), BONE)
+		else:
+			var is_arm := absf(float(leg.rest)) < 20.0
+			var root := shoulders + Vector2(side * (8.0 if is_arm else 5.0), 0)
+			var elbow := root + Vector2(side * clampf(absf(foot.x - root.x) * 0.5 + 6.0, 6.0, 30.0), 5.0 * squeeze) + jitter
+			_curve(root, root + Vector2(side * 2.0, 2.0), elbow, 3.0 if is_arm else 2.0, 2.0, SKIN)
+			# Forearm into a long scythe, its point hooked into the ceiling.
+			var ctrl := elbow.lerp(foot, 0.5) + Vector2(side * 7.0 * squeeze, 3.0)
+			_curve(elbow, ctrl, foot, 2.0, 1.0, SKIN, BONE if is_arm else MID)
+			if is_arm:
+				draw_line(foot, foot + Vector2(side * 4.0, 3.0), BONE, 1.0)       # blade edge back down
+			draw_rect(Rect2(elbow.round() - Vector2(1, 1), Vector2(2, 2)), BONE.darkened(0.3))
 
-	# Body: a pinched ribcage, wider at the chest, narrow at the waist.
-	var top: float = b.torso_top
-	var bottom: float = b.torso_bottom
-	var h := bottom - top
-	var y := top
-	while y < bottom:
-		var k := (y - top) / maxf(h, 1.0)
-		var half := 2.0 + 2.5 * sin(PI * clampf(k * 1.4, 0.0, 1.0))   # ribcage swell, then waist
-		var x0 := sway - half
-		draw_rect(Rect2(x0, y, half * 2.0, 1), SKIN)
-		draw_rect(Rect2(x0, y, 1, 1), SKIN_HI)                       # lit edge
-		draw_rect(Rect2(sway + half - 1.0, y, 1, 1), SKIN_SHADE)     # shadow edge
-		if int(y - top) % 3 == 2 and k < 0.75:
-			draw_rect(Rect2(x0 + 1.0, y, half * 2.0 - 2.0, 1), SKIN_SHADE)   # rib
+	# 2) Pelvis and a stringy gut between the hips and the ribs.
+	draw_rect(Rect2(pelvis.round() - Vector2(5, 1), Vector2(10, 3)), SKIN)
+	draw_rect(Rect2(pelvis.round() - Vector2(5, 1), Vector2(10, 1)), MID)
+	var gut_top := shoulders.y + (pelvis.y - shoulders.y) * 0.55
+	for i in 4:
+		var gx := sway * 0.75 + (i - 1.5) * 1.6
+		var p0 := Vector2(gx, gut_top)
+		var p1 := Vector2(gx + sin(_t * 1.7 + i) * 1.0, pelvis.y)
+		draw_line(p0, p1, MID if i % 2 else SKIN, 1.0)
+	draw_line(Vector2(sway, gut_top), pelvis, DARK, 1.0)
+
+	# 3) Ribcage: wide at the shoulders, breathing, ribs picked out in bone.
+	var y := shoulders.y
+	while y < gut_top:
+		var k := (y - shoulders.y) / maxf(gut_top - shoulders.y, 1.0)
+		var half := lerpf(9.0 * maxf(squeeze, 0.6), 3.5, k) + breath * (1.0 - k) * 1.5
+		var cx := sway * (1.0 - k * 0.25)
+		draw_rect(Rect2(cx - half, y, half * 2.0, 1), SKIN)
+		if int(y - shoulders.y) % 3 == 1 and k < 0.85:
+			# A rib: bone arcing from the sternum out and down, shorter lower down.
+			var rib := (half - 1.5) * (1.0 - k * 0.4)
+			draw_rect(Rect2(cx - rib - 0.5, y, rib, 1), BONE.darkened(0.35 + k * 0.35))
+			draw_rect(Rect2(cx + 1.0, y, rib, 1), BONE.darkened(0.45 + k * 0.35))
+			draw_rect(Rect2(cx - half, y + 1.0, 1, 1), DARK)   # gap between ribs at the flank
 		y += 1.0
-	draw_line(Vector2(sway, top + 1.0), Vector2(sway, bottom), SKIN_SHADE, 1.0)  # spine
+	draw_line(Vector2(sway, shoulders.y), Vector2(sway, gut_top), DARK, 1.0)   # sternum groove
+	draw_rect(Rect2(shoulders.round() - Vector2(10, 1), Vector2(20, 2)), MID)   # collar bones
+	draw_rect(Rect2(shoulders.round() - Vector2(10, 1), Vector2(3, 1)), BONE)
+	draw_rect(Rect2(shoulders.round() + Vector2(7, -1), Vector2(3, 1)), BONE)
 
-	# Neck and an elongated skull leaning the way it travels.
-	var neck: Vector2 = b.neck
-	var tip: Vector2 = b.tip
-	draw_line(Vector2(sway, top), neck, SKIN_SHADE, 2.0)
-	for i in 5:
-		var t := float(i) / 4.0
-		var p := neck.lerp(tip, t)
-		var w := lerpf(4.0, 1.5, t)
-		draw_rect(Rect2(p.round() - Vector2(w * 0.5, w * 0.5), Vector2(w, w)), SKIN if i < 4 else SKIN_SHADE)
-	draw_line(neck + Vector2(0, 2), tip + Vector2(0, 1), SKIN_SHADE, 1.0)          # jaw line
+	# 4) The neck-stalk and an elongated skull, the eye at its very end.
+	var hd := (head - shoulders).normalized()
+	var skull_base := head - hd * 9.0
+	_seg(shoulders + Vector2(0, -1), skull_base, 3.0, 2.0, SKIN)
+	for i in 6:
+		var t := float(i) / 5.0
+		var p := skull_base.lerp(head, t)
+		var w := 3.0 + sin(t * PI) * 2.5
+		draw_line(p - hd.orthogonal() * (w * 0.5), p + hd.orthogonal() * (w * 0.5), SKIN, 1.5)
+	draw_line(skull_base, head, MID, 1.0)
+	# Vertical mouth-slit under the eye; it opens when it's angry.
+	var mouth := head - hd * 5.0
+	var slit := 3.0 if state == State.ENRAGED else 1.5
+	draw_line(mouth - hd * slit, mouth + hd * 1.0, DARK, 1.0 if state != State.ENRAGED else 2.0)
+	if state == State.ENRAGED:
+		var perp := hd.orthogonal()
+		for i in 3:
+			draw_rect(Rect2((mouth - hd * i + perp).round(), Vector2(1, 1)), BONE)   # teeth
 
-	# The eye: a dark socket around one warm, torch-coloured point. NOT a red
-	# monster eye: seed for ending A ("the eye was a torch").
-	var eye: Vector2 = b.eye.round()
-	draw_rect(Rect2(eye - Vector2(2, 1), Vector2(4, 3)), SKIN_DARK)
-	draw_rect(Rect2(eye - Vector2(1, 0), Vector2(2, 1)), EYE)
-	draw_rect(Rect2(eye, Vector2(1, 1)), Color(1, 1, 1))
+	# 5) The eye: pale, warm, with a pupil that follows you.
+	var e := head.round()
+	draw_rect(Rect2(e - Vector2(2, 2), Vector2(5, 5)), DARK)                     # socket
+	draw_rect(Rect2(e - Vector2(1, 1), Vector2(3, 3)), EYE_WHITE)
+	var look := Vector2.ZERO
+	if GameState.player != null:
+		look = (GameState.player.global_position + Vector2(0, -30) - global_position - head).normalized()
+	draw_rect(Rect2((e + look).round(), Vector2(1, 1)), PUPIL)
