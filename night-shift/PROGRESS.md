@@ -225,6 +225,12 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - Verified headless: lever -> slither -> grab -> lit 1 s -> released -> back
   on the wall. The full route still reaches the ending.
 
+#### M2.7: things from upstairs
+- The shop's mop and bucket appear in the tunnel's dead end beside the identical
+  crisps shelf (where the Thing sleeps). The mop is also still upstairs. Never explained.
+- "that wasn't there before" via a new `DECOR` "line" trigger. `DECOR` also gained "mop".
+- Verified headless: two mops in the level, and the line plays.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.

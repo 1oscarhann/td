@@ -81,6 +81,8 @@ const TRIGGERS := {
 ##   arm:          a Ceiling Arm living in the vent above "cell" (place a vent too)
 ##   switch:       a heavy lever on the wall at "cell" that powers door "id"
 ##   door:         a heavy door filling floor-to-ceiling at "cell", opened by "id"
+##   mop:          the shop's mop and bucket (things from upstairs, down here)
+##   line:         a one-shot narrator trigger for line "id" at "cell"
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
 	# Shop (Act 0): fluorescent tubes that work until the power cut, the window.
@@ -99,6 +101,11 @@ const DECOR := [
 	{"type": "pipe", "cell": Vector2i(32, 18), "to_x": 67, "below_ceiling": 3},
 	{"type": "cable", "cell": Vector2i(46, 18), "to_x": 57, "below_ceiling": 12, "sag": 6},
 	{"type": "tube", "cell": Vector2i(52, 18)},
+	# Things from upstairs, down here: the shop's mop and bucket beside the same
+	# crisps shelf, in the dead end where the Thing sleeps. The mop is ALSO still
+	# upstairs. Never explained.
+	{"type": "mop", "cell": Vector2i(34, 19)},
+	{"type": "line", "cell": Vector2i(44, 19), "id": "wasnt_there_before"},
 	# First Ceiling Arm: over ground you never need to cross (left of the stairs).
 	# You see it reach down where you would have walked; light it, it pulls back.
 	{"type": "vent", "cell": Vector2i(48, 18)},
@@ -330,6 +337,12 @@ func _place_decor(d: Dictionary) -> void:
 			var arm: CeilingArm = ARM_SCENE.instantiate()
 			arm.position = Vector2(x + TILE * 0.5, ceil_y + 4.0)   # just under the vent grille
 			creatures.add_child(arm)
+		"mop":
+			var mop: Node2D = MOP_SCENE.instantiate()
+			mop.position = Vector2(x + TILE * 0.5, floor_y)
+			props.add_child(mop)
+		"line":
+			_place_trigger({"line": d.id}, Vector2(x + TILE * 0.5, floor_y))
 		"switch":
 			var lever: LeverSwitch = SWITCH_SCENE.instantiate()
 			lever.position = Vector2(x + TILE * 0.5, floor_y)
