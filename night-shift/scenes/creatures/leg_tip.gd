@@ -39,6 +39,7 @@ func _physics_process(delta: float) -> void:
 			if _lit_time > 0.6:
 				state = State.REVEAL
 				Narrator.say("only_spiders_lie")
+				GameState.mark_encounter("leg", "leg", 1e9)
 		State.REVEAL:
 			length = move_toward(length, reveal_length, 26.0 * delta)
 			if length >= reveal_length:

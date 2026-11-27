@@ -5,6 +5,7 @@ extends Node
 ##  - the noise system (noise_made), which creatures listen to
 ##  - light queries (is_lit / get_lit_time), forwarded to the player's torch
 ##  - checkpoint and zone tracking
+##  - the pacing log: real creature encounters vs false alarms (scary phase 3)
 ## Keep it dumb: it stores and forwards, it never decides gameplay.
 
 ## Something made a sound. `radius` is how far (px) it carries.
@@ -16,6 +17,8 @@ signal switch_flipped(origin: Vector2)
 signal player_caught(by: Node)
 ## The player crossed into a new depth zone (0 = shop, 1..4 = basement zones).
 signal zone_changed(zone: int)
+## A REAL creature encounter happened (Pacing resets its quiet timer on this).
+signal encounter(kind: String)
 
 # --- Physics layers (bit values). Keep in sync with [layer_names] in project.godot.
 const LAYER_WORLD := 1           # layer 1: tiles, panel blockers
@@ -45,6 +48,16 @@ var trips := 0
 var changed := false
 var debug := false
 
+## Pacing log for this run: [{t, kind}] of real encounters, and a count of false
+## alarms (sounds and flickers that lead to nothing).
+var encounters: Array = []
+var false_alarms := 0
+## Dread 0..1, computed by the level's Pacing node (drone, grain, vignette...).
+var tension := 0.0
+var _encounter_last: Dictionary = {}   # key -> time, so one creature counts once per scare
+## Game time (s) since the app started. Pacing and the encounter log use it.
+var clock := 0.0
+
 ## Default bindings, used only if an action is missing from the project Input Map
 ## (e.g. someone wiped it). project.godot is the real source of truth.
 const DEFAULT_KEYS := {
@@ -63,6 +76,10 @@ func _ready() -> void:
 	_ensure_input_actions()
 
 
+func _process(delta: float) -> void:
+	clock += delta
+
+
 ## Resets per-run state. Called by Main when a run (re)starts.
 func reset_run() -> void:
 	zone = 0
@@ -71,6 +88,28 @@ func reset_run() -> void:
 	checkpoint = Vector2.ZERO
 	player = null
 	torch = null
+	encounters.clear()
+	false_alarms = 0
+	tension = 0.0
+	_encounter_last.clear()
+
+
+## A creature just did something real (reached, grabbed, noticed you, showed
+## itself). `key` identifies the creature so a single scare counts once:
+## the same key within `debounce` seconds is ignored.
+func mark_encounter(kind: String, key := "", debounce := 20.0) -> void:
+	var now := clock
+	var k := key if key != "" else kind
+	if _encounter_last.has(k) and now - float(_encounter_last[k]) < debounce:
+		_encounter_last[k] = now
+		return
+	_encounter_last[k] = now
+	encounters.append({"t": now, "kind": kind})
+	encounter.emit(kind)
+
+
+func mark_false_alarm() -> void:
+	false_alarms += 1
 
 
 ## Emit a noise. Running, boards and switches all go through here.

@@ -47,6 +47,8 @@ func _process(delta: float) -> void:
 		squeeze = clampf(squeeze + (delta / close_time if still else -delta / 2.0), 0.0, 1.0)
 	else:
 		squeeze = maxf(0.0, squeeze - delta / 2.0)
+	if squeeze > 0.25:
+		GameState.mark_encounter("tunnel", "tunnel", 30.0)
 	_thrum.pitch_scale = 0.45 + squeeze * 0.25
 	_thrum.volume_db = -8.0 + squeeze * 8.0
 	# The camera slowly zooms in as space tightens.

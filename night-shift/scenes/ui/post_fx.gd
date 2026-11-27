@@ -13,6 +13,11 @@ const ZONE_FX := {
 
 @onready var rect: ColorRect = $Screen
 
+## The zone's base values (tweened), and the tension on top (scary phase 3).
+var _grain := 0.07
+var _vignette := 0.6
+var _tension := 0.0
+
 
 func _ready() -> void:
 	add_to_group("post_fx")
@@ -24,7 +29,18 @@ func apply_zone(zone: int) -> void:
 	var fx: Array = ZONE_FX.get(zone, ZONE_FX[2])
 	var mat := rect.material as ShaderMaterial
 	var tw := create_tween().set_parallel()
-	tw.tween_method(func(v): mat.set_shader_parameter("grain", v), float(mat.get_shader_parameter("grain")), fx[0], 2.0)
-	tw.tween_method(func(v): mat.set_shader_parameter("vignette", v), float(mat.get_shader_parameter("vignette")), fx[1], 2.0)
+	tw.tween_property(self, "_grain", fx[0], 2.0)
+	tw.tween_property(self, "_vignette", fx[1], 2.0)
 	tw.tween_method(func(v): mat.set_shader_parameter("desaturate", v), float(mat.get_shader_parameter("desaturate")), fx[2], 2.0)
 	mat.set_shader_parameter("aberration", fx[3])
+
+
+## 0..1 from Pacing: more grain and a tighter vignette as dread builds.
+func set_tension(t: float) -> void:
+	_tension = t
+
+
+func _process(_delta: float) -> void:
+	var mat := rect.material as ShaderMaterial
+	mat.set_shader_parameter("grain", _grain + 0.06 * _tension)
+	mat.set_shader_parameter("vignette", _vignette + 0.20 * _tension)

@@ -8,6 +8,30 @@ extends Node2D
 @export var font_size := 8
 
 
+var _flick: PointLight2D
+
+
+## False alarm (Pacing): a dead tube somewhere above sputters for a moment and
+## the sign jumps out of the dark. Then nothing.
+func flicker() -> void:
+	if _flick != null:
+		return
+	_flick = PointLight2D.new()
+	_flick.texture = LightTextures.radial(96)
+	_flick.color = Color(0.85, 1.0, 0.92)
+	_flick.range_item_cull_mask = GameState.LIGHT_ENV   # never reveals creatures
+	_flick.energy = 0.0
+	_flick.position = Vector2(0, -10)
+	add_child(_flick)
+	AudioDirector.play_at("crackle", global_position, -14.0, 0.1, 300.0)
+	var seq := [0.9, 0.0, 0.0, 1.1, 0.0, 0.6, 0.0, 0.0, 0.0, 0.8, 0.0]
+	for e: float in seq:
+		_flick.energy = e
+		await get_tree().create_timer(randf_range(0.04, 0.12)).timeout
+	_flick.queue_free()
+	_flick = null
+
+
 func _ready() -> void:
 	if wrong:
 		text = text.to_lower()

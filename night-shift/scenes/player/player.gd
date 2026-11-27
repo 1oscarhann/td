@@ -373,8 +373,10 @@ func _update_climb_state() -> void:
 	if feet < stairs.top_y - 3.0:
 		_set_climbing(false, null)
 		return
-	# Walk off at the bottom.
-	if is_on_floor() and v >= 0.0 and absf(Input.get_axis("move_left", "move_right")) > 0.1:
+	# Walk off at the bottom. (Near the bottom counts too: let go of S a few px
+	# early and you'd otherwise hover there, since there's no gravity on stairs.)
+	if (is_on_floor() or feet >= stairs.bottom_y - 6.0) and v >= 0.0 \
+			and absf(Input.get_axis("move_left", "move_right")) > 0.1:
 		_set_climbing(false, null)
 
 

@@ -28,6 +28,9 @@ enum State { HIDDEN, SCRATCH, REACH, RETRACT }
 @export var from_floor := false
 ## Floor arms only come up to the shins.
 @export var floor_reach := 30.0
+## The teaching arm (zone 2): it reaches and feels around like the real ones,
+## but it can't grab. Taught safely first, then used for real.
+@export var harmless := false
 
 var state := State.HIDDEN
 var length := 0.0         # current reach in px
@@ -127,6 +130,7 @@ func _physics_process(delta: float) -> void:
 			if _state_time >= scratch_time:
 				scratch.stop()
 				_enter(State.REACH)
+				GameState.mark_encounter("arm", "arm_%d" % get_instance_id())
 		State.REACH:
 			length = minf(max_length, length + reach_speed * delta)
 			if length >= max_length and _state_time > linger_time and not near:
@@ -146,7 +150,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _check_grab() -> void:
-	if _caught or state != State.REACH or length < max_length * 0.5:
+	if _caught or harmless or state != State.REACH or length < max_length * 0.5:
 		return
 	for body in get_overlapping_bodies():
 		if body.is_in_group("player"):

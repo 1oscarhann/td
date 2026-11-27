@@ -1,6 +1,41 @@
 # Night Shift: progress log
 
-## Test this first: "make it scary" Phase 2 (the Thing is a threat)
+## Test this first: "make it scary" Phase 3 (pacing)
+
+Headphones on. Play it straight through from the start and don't rush: the point
+of this phase is the long, empty stretches.
+
+1. **Length:** the underground is ~5x longer than before. Does the walking ever
+   feel like a walking sim, or does the dread carry it?
+2. **Order and spacing of real encounters:**
+   - zone 1: spiders by the basement stairs
+   - zone 2: the teaching arm, then the eye far down the tight tunnel, then the
+     silhouette crossing a work light, then the lever and the Cables
+   - each about 60 s of walking apart
+3. **Silence before each one:** the hum, drips and drone all drop out for 4-8 s
+   right before every scripted encounter. Do you start dreading the silence
+   itself?
+4. **False alarms** (there are 4x more of these than real scares):
+   - a creature calling far away (muffled, off to one side)
+   - a tap right behind you
+   - knocking in the pipes
+   - something scrabbling in a vent
+   - a FUSE BOX sign flickering under a dying tube
+   They come more often as tension builds. Too many? Too few?
+5. **Tension** (on screen and in the drone): the longer nothing happens, the
+   more the grain and vignette tighten and the deeper the drone gets. A scare
+   spikes it, then it settles. The Thing nearby pushes it up.
+6. **Safe rooms**, one per zone (zone 1, zone 2, zone 3a behind the crawl-under
+   collapse, zone 4): a working light, the hum softens, no false alarms, tension
+   drains. Do they feel like relief?
+7. **The teaching arm** (zone 2, in a small room after the boards): it reaches
+   down and feels around but CAN'T grab you. Light it and it snaps back. The real
+   one is in zone 3b and does grab.
+8. **The leg in the vent** moved to zone 3b, just after you arrive there.
+9. **Stairs fix:** let go of S just before the bottom of a staircase. You can now
+   walk off. Before, you got stuck hovering there.
+
+## Phase 2 checklist (the Thing is a threat), if you haven't done it yet
 
 Headphones on. Press **F3** for the debug overlay: it shows the Thing's state and
 WHY it noticed you ("heard", "light", "noise", "touch").
@@ -676,12 +711,93 @@ the same body.
   - a scripted notice / chase / freeze / lurch sequence
   - the ending
 
+### "Make it scary" Phase 3: pacing
+**Length:**
+- 10 generated "quiet stretches" went into the map, in two passes. The map is
+  372 -> 1623 columns: the underground is ~5x the old route.
+- What they're made of:
+  - flat floors with the ceiling rising and falling (3-8 tiles)
+  - tall chambers and the odd crawl-under gap
+  - pipes, sagging cables, junction boxes, dead strip lights and vents
+  - stock boxes in the basement, water in zone 3
+  - FUSE BOX signs every ~70 columns (wrong ones from zone 3)
+- The stone -> flesh blend in zone 4 continues through its stretches.
+- The tool that did this is a one-off script; the MAP / DECOR in
+  `test_level.gd` are still the source of truth, and the new decor is marked
+  `# ---- quiet stretch`.
+
+**Encounter order** (the one you asked for):
+- spiders -> teaching arm -> the eye -> the silhouette -> the lever and Cables
+  -> zone 3, where the Thing hunts
+- Moved to make room:
+  - the leg in the vent: zone 2 -> zone 3b
+  - the real Ceiling Arm: zone 2 passage -> zone 3b
+  - the silhouette and its work light: open room -> a junction of its own
+  - the teaching arm: basement -> zone 2
+- Removed: a second spider group right after the lever (back-to-back with the
+  Cable).
+
+**Pacing node** (`scenes/levels/pacing.gd`, a child of the level):
+- **Tension 0..1:**
+  - builds over ~2 min without a real encounter, spikes for ~8 s after one
+  - the awake Thing within 520 px pushes it up
+  - the torch off or a deeper zone adds a little
+  - in a safe room it drops to 0.05
+  - it drives the drone (Phase 1), the film grain (+0.06) and the vignette
+    (+0.20)
+- **False alarms:**
+  - one every 6-13 s at tension 0, down to 60% of that at tension 1
+  - never in a safe room, during a silence, within 6 s of a real encounter, or
+    with the Thing within 320 px
+  - types are weighted per zone: far-away creature calls (the Phase 1 one-shots
+    now live here), a tap behind you, pipe knocks (new synth sound), a vent
+    rattle (`creature_taps_1..3`, at the nearest vent), and a FUSE BOX sign
+    flicker (a dying light sputters on it for half a second)
+- **Silence:** "hush" decor fires `Pacing.hush(4-8 s)` just before every
+  scripted encounter. The hum bed, drips, false alarms and the drone all drop
+  out.
+- **Safe rooms:** zones 1, 2, 3 (in 3a, behind the collapse the Thing can't
+  get through) and 4. Each has a working light, the bed 6 dB softer, no false
+  alarms, and tension draining away.
+- **The pacing log:** `GameState.mark_encounter(kind)` is called by spiders
+  (first scatter per group), arms (reaching), Cables (moving), the leg, the
+  glimpses, the Thing (noticing you, first time lit), Lures and the Tunnel.
+  The same creature counts once per scare. `GameState.false_alarms` counts the
+  rest. Phase 5 uses both.
+
+**Other:**
+- **Teaching arm:** `CeilingArm.harmless`. It reaches and feels around, but
+  can't grab.
+- **Stairs:** you could get stuck hovering one pixel above the bottom of a
+  staircase if you let go of S early. Walking off now works near the bottom.
+
+**Verified:**
+- **New pacing test:** walks the shift, the basement and zone 2 at full walking
+  speed, never stopping.
+  - Real encounters at 0 / 61 / 62 / 59 / 61 s apart: spiders, teaching arm,
+    eye, silhouette, Cables.
+  - 22 false alarms against 5 real encounters (4.4x) in 254 s underground.
+- **Descent test:** all 3 trips, every arrival, zone 4, the last stretch and
+  the ending all work on the new map.
+- **Regressions:** death and respawn (zone 3a), Cable grab/release, the leg
+  (now 3b), the real arm (grabs, and retracts when you light its hand).
+- **New check:** the teaching arm reaches all the way down over you and never
+  grabs.
+- **Renders:** the new stretches, all four safe rooms, a sign flicker.
+- **No decor ended up inside rock.**
+- **Cost:** the level loads in ~1.1 s instead of ~0.6 s; frame time is the same.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
 - How dark it looks on a real monitor. My renders are software-rendered PNGs.
 
 ## Known bugs / rough edges
+- Encounter spacing in zones 3 and 4 isn't measured yet (the pacing test stops
+  at the end of zone 2). Phase 5's full run will report it.
+- Silences only come before SCRIPTED encounters. The Thing in zone 3 is
+  dynamic: its approach drops the hum within 240 px (Phase 1), but there's no
+  4-8 s silence before it finds you.
 - In 64 px corridors the Thing's head is bent nearly sideways by the ceiling, so
   the one-eyed head reads less than in open rooms. It's meant to look crammed;
   tell me if it reads wrong.
@@ -690,6 +806,19 @@ the same body.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Length vs spacing:**
+  - Your two targets fight each other. 3-4x the route can't hold ~10
+    encounters each 60-90 s apart at walking speed; that needs ~8x.
+  - I kept your 60 s minimum for the build-up (zones 1-2, measured at full walking
+    speed). The underground ended up ~5x, not 3-4x. A real player who stops,
+    listens and crouches will take longer per gap, so 60-90 s in practice.
+  - If it drags, the stretches are easy to shorten.
+- **The teaching arm can't grab** (the doc: "taught safely first, then used for
+  real"). The real one waits in zone 3b.
+- **Zone 3 has one safe room** (in 3a), zone 3b doesn't, so it's one per zone.
+- **False alarm rate:** one every ~6-13 s of quiet. That's what 3x needed. They're
+  quiet sounds, so I hope it reads as "the tunnels are alive", not noise. Tune
+  `alarm_interval` in `pacing.gd`.
 - **Basement layout:** the doc puts the panel behind the storeroom shelving. I
   followed you: the stairs lead down to the gas station's basement, and the
   boarded-up entrance to the tunnels is down there.

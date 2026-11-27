@@ -39,6 +39,9 @@ const FILES := {
 	"growl": [CREATURE + "creature_growl_1.ogg", CREATURE + "creature_growl_2.ogg",
 			CREATURE + "creature_growl_3.ogg"],
 	"call": [CREATURE + "creature_call.ogg"],
+	# False alarm: something tapping and scrabbling inside a vent.
+	"rattle": [CREATURE + "creature_taps_1.ogg", CREATURE + "creature_taps_2.ogg",
+			CREATURE + "creature_taps_3.ogg"],
 }
 ## Recordings that loop (also flagged loop=true in their .import files).
 const LOOPS := ["hum", "scrape", "thing_breath", "scrape_soft"]
@@ -242,6 +245,7 @@ func _build_library() -> void:
 	_streams["crackle"] = _to_wav(_synth_crackle(), true)
 	_streams["fridge_hum"] = _to_wav(_synth_hum(), true)
 	_streams["drone"] = _to_wav(_synth_drone(), true)
+	_streams["knock"] = _to_wav(_synth_knock())
 	# Everything is a list of variants.
 	for k in _streams:
 		_streams[k] = [_streams[k]]
@@ -368,6 +372,21 @@ func _synth_drone() -> PackedFloat32Array:
 		var swell := 0.75 + 0.25 * sin(TAU * 0.25 * t)
 		s[i] = (sin(TAU * 45.0 * t) * 0.45 + sin(TAU * 52.0 * t) * 0.35
 				+ sin(TAU * 90.0 * t) * 0.08 + lp * 0.6) * swell
+	return s
+
+
+## A knock in the pipes: a dull thud ringing on in a few inharmonic metal
+## partials. False alarms knock two to four times.
+func _synth_knock() -> PackedFloat32Array:
+	var s := _buffer(0.6)
+	var lp := 0.0
+	for i in s.size():
+		var t := float(i) / RATE
+		lp += (_noise() - lp) * 0.2
+		var thud := sin(TAU * 95.0 * t) * exp(-t * 30.0) * 0.8 + lp * exp(-t * 60.0) * 0.8
+		var ring := (sin(TAU * 412.0 * t) * 0.35 + sin(TAU * 731.0 * t) * 0.22
+				+ sin(TAU * 1187.0 * t) * 0.12) * exp(-t * 7.0)
+		s[i] = (thud + ring) * 0.7
 	return s
 
 

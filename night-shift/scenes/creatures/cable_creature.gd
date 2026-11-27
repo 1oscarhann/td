@@ -122,6 +122,7 @@ func _on_switch_flipped(origin: Vector2) -> void:
 	_target_x = to_local(origin).x
 	_enter(State.SLITHER)
 	_crackle.play()
+	GameState.mark_encounter("cable", "cable_%d" % get_instance_id())
 
 
 func _physics_process(delta: float) -> void:

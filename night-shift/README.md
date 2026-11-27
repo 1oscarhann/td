@@ -37,9 +37,18 @@ The route:
    stock, the mop and a familiar shelf of crisps.
 3. At the basement's far end, the boarded-up way into the tunnels (3 boards,
    hold E).
-4. Zone 2: a **tight** tunnel, an **open** room with the lever, a 1-tile
+4. Zone 2: long service tunnels, then the open room with the lever, a 1-tile
    **crouch gap**, and a dead end with an up-stair.
 5. Return trips up the stairs lead on to zones 3 and 4. See PROGRESS.md.
+
+The underground is long on purpose. Real encounters are about a minute of
+walking apart, and the empty stretches in between are carried by sound.
+`scenes/levels/pacing.gd` runs:
+- tension (drone, grain, vignette)
+- false alarms (calls far away, taps behind you, pipe knocks, vent rattles, a
+  flickering sign)
+- a silence before every scripted encounter
+- one safe room per zone
 
 - **Low-res pipeline:** 640x360 viewport, stretch mode `viewport`, aspect `keep`,
   integer scaling, nearest filtering, 2D transform/vertex pixel snapping.

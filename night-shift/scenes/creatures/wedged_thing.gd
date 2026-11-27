@@ -274,6 +274,7 @@ func get_light_probe_points() -> Array:
 func on_torch_lit_changed(lit: bool) -> void:
 	if not lit or state == State.DORMANT or puppet:
 		return
+	GameState.mark_encounter("thing", "thing", 15.0)
 	if not _seen_once:
 		_seen_once = true
 		Narrator.say("it_can_see_you")
@@ -446,6 +447,7 @@ func _notice(at: Vector2, reason := "") -> void:
 	if puppet or state == State.NOTICED or state == State.CHASE:
 		return
 	notice_reason = reason
+	GameState.mark_encounter("thing", "thing", 15.0)
 	_last_known = at
 	_light_seen = 0.0
 	_enter(State.NOTICED)

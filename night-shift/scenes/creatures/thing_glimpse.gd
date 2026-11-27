@@ -71,6 +71,8 @@ func _eye(delta: float, p: Node2D) -> void:
 		return
 	target_x = global_position.x
 	if _glint_on:
+		if _glinted == 0.0:
+			GameState.mark_encounter("glimpse", "glimpse_eye", 1e9)
 		_glinted += delta
 	if absf(p.global_position.x - global_position.x) < vanish_range or _glinted > 1.2:
 		# It pulls back, away from you, fast.
@@ -86,6 +88,7 @@ func _cross(p: Node2D) -> void:
 		if p.global_position.x > trigger_x:
 			_started = true
 			visible = true
+			GameState.mark_encounter("glimpse", "glimpse_cross", 1e9)
 			speed_override = 32.0
 			target_x = to_x
 		return

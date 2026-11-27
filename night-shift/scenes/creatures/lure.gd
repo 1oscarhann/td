@@ -109,12 +109,14 @@ func _check_player() -> void:
 		"vanish":
 			if d < trigger_distance:
 				_go_dark()
+				GameState.mark_encounter("lure", "lure_%d" % get_instance_id())
 		"choice":
 			if d < trigger_distance * 0.7:
 				_reveal()
 		"bite":
 			if d < trigger_distance * 0.6 and _lunge == 0.0:
 				_lunge = 0.01
+				GameState.mark_encounter("lure", "lure_%d" % get_instance_id())
 				AudioDirector.play_at("crack", global_position + _tube_pos(), 2.0, 0.1, 700.0, 0.5)
 			if _lunge >= 1.0:
 				_done = true
@@ -125,6 +127,7 @@ func _check_player() -> void:
 ## The wrong choice: it flares and, for a moment, you see what it is.
 func _reveal() -> void:
 	_done = true
+	GameState.mark_encounter("lure", "lure_%d" % get_instance_id())
 	_reveal_left = 1.3
 	_light.energy = 2.6
 	if _body:
