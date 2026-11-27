@@ -31,10 +31,15 @@ startup (the UI click, the fridge hum, the sub-bass drone, and so on).
 
 ## What's in the slice
 
-The route is storeroom (power's out, red EXIT sign), then the boarded panel (3 boards, hold E), then the
-stairs down, then the tunnel. The tunnel has a left dead end where the Thing sleeps next
-to a familiar shelf of crisps, then a **tight** 2-tile tunnel, an **open** 8-tile room,
-a 1-tile **crouch gap**, and a dead end where the FUSE BOX sign points into the wall.
+The route:
+1. The storeroom (power's out, red EXIT sign).
+2. The stairs down to the gas station's **basement**: a concrete cellar with
+   stock, the mop and a familiar shelf of crisps.
+3. At the basement's far end, the boarded-up way into the tunnels (3 boards,
+   hold E).
+4. Zone 2: a **tight** tunnel, an **open** room with the lever, a 1-tile
+   **crouch gap**, and a dead end with an up-stair.
+5. Return trips up the stairs lead on to zones 3 and 4. See PROGRESS.md.
 
 - **Low-res pipeline:** 640x360 viewport, stretch mode `viewport`, aspect `keep`,
   integer scaling, nearest filtering, 2D transform/vertex pixel snapping.
@@ -50,12 +55,21 @@ a 1-tile **crouch gap**, and a dead end where the FUSE BOX sign points into the 
   gets raycasts to its probe points (`get_light_probe_points()`) against the world layer.
   The checks are exposed as `GameState.is_lit(node)` / `get_lit_time(node)`, and the
   torch calls `on_torch_lit_changed(lit)` on the creature.
-- **Wedged Thing (placeholder):** wakes when you reach the tunnel and stalks towards you.
-  It hunts noises (`GameState.noise_made`) and notices a beam pointed its way from 230 px.
-  Lit, it **freezes for 2 s** with its legs twitching, then comes **faster** for 3.5 s and ignores the
-  light. Each freeze makes it angrier. Its speed scales with tunnel height: slow
-  and loud when squeezed, fast in the open room. It can't fit under the crouch gap.
-  It has procedural two-bone IK legs stepping on floor *and* ceiling, a scrape loop and leg taps.
+- **Wedged Thing:** only glimpsed in zone 2 (`thing_glimpse.gd`). It hunts from
+  zone 3.
+  - **States:** DORMANT, PATROL, NOTICED, CHASE, FROZEN, SEARCH.
+  - **Noticing you:** by how you move (`Player.hearing_radius()`), by noise
+    events, or by your torch on it for 1.5 s.
+  - **Light:** it freezes for 1 s, then lurches on.
+  - **Losing it:** after 3 s without hearing or seeing you it searches, then gives
+    up.
+  - **Director:** a nudge every 60-120 s.
+  - **Hiding:** you can hide UNDER it (crouched, still, in the dark).
+  - **Tunnel height:** speed scales with it, and it can't fit through the crouch
+    gaps.
+  - **How it's drawn:** procedurally, front-on, from the concept art. Ten legs
+    with their own step timing, blade arms and one eye on a stalk. Drag, breath,
+    gurgle and tap sounds.
 - **Narrator:** autoload `say(line_id)`. Lines are in `data/narrator_lines.json`.
   There's a 20 s global cooldown, no repeats, and a priority queue where low-priority lines drop.
   The typewriter has uneven delays, pauses, a static hiss, a 2-4 s hold, a 1 s fade and a rare linger.
@@ -112,7 +126,8 @@ Light mask bit 1 is the environment (everything). Bit 2 is creatures, and only t
 
 - Player speeds, stamina, noise radii: `@export`s on `Player`.
 - Torch angle, length, energy, banding: `@export`s on `Torch`.
-- Thing speeds, gap scaling, freeze/enrage times, senses: `@export`s on `WedgedThing`.
+- Thing speeds, gap scaling, light/notice times, senses, director: `@export`s on `WedgedThing`.
+  How far you can be heard: the noise `@export`s on `Player`.
 - Darkness per zone, hum volume, reverb: constants at the top of `test_level.gd`.
 - Narrator cooldown: `Narrator.global_cooldown`. Per-line `priority`, `min_gap` and
   `max_wait` go in the JSON.
@@ -122,7 +137,7 @@ Light mask bit 1 is the environment (everything). Bit 2 is creatures, and only t
 
 ## Answers this slice gives to the doc's open questions (all provisional)
 
-- **Wedged Thing light rule:** freeze 2 s, then enrage (faster, ignores light). Test it.
+- **Wedged Thing light rule:** freeze 1 s, then it lurches on and ignores the light for 2.5 s.
 - **Death:** checkpoint restart.
 - Cable grabs, the ending, the return trips and the final title are untouched.
 

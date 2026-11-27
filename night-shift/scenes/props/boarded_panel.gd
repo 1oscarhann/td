@@ -26,6 +26,8 @@ const PLANK_TEX := preload("res://art/props/plank.tres")
 ## How far (px) a board coming free carries. Big on purpose.
 @export var noise_radius := 260.0
 ## Later in the game: boards splintered outward, nails bent the wrong way.
+## Something already came through: it starts broken open, the boards hanging
+## off the frame and lying on YOUR side of it.
 @export var pushed_from_inside := false
 ## Disabled panels can't be pulled yet (Act 0: nothing to fix until the power dies).
 @export var enabled := true
@@ -61,6 +63,12 @@ func _ready() -> void:
 	$InteractZone.collision_layer = GameState.LAYER_INTERACT
 	$InteractZone/Shape.shape = zone
 	$InteractZone/Shape.position = $Blocker/Shape.position
+
+	if pushed_from_inside:
+		boards_left = 0
+		$Blocker/Shape.disabled = true
+		_scatter_pushed_boards()
+		return
 
 	var occ := OccluderPolygon2D.new()
 	occ.polygon = PackedVector2Array([
@@ -132,6 +140,16 @@ func _rip_board() -> void:
 		opened.emit()
 
 
+## Pushed from inside: two planks lie splintered on the near side, flung out.
+func _scatter_pushed_boards() -> void:
+	for i in 2:
+		var plank := Sprite2D.new()
+		plank.texture = PLANK_TEX
+		plank.position = Vector2(-9.0 - 9.0 * i, -3.0 - i)
+		plank.rotation = 0.15 - 0.3 * i
+		add_child(plank)
+
+
 ## The plank you pulled falls to the floor in front of the panel and stays there.
 func _drop_board(board: Dictionary) -> void:
 	var plank := Sprite2D.new()
@@ -153,6 +171,13 @@ func _draw() -> void:
 	draw_texture_rect(HOLE_TEX, Rect2(0, -h, w, h), false)
 
 	var plank_size := Vector2(PLANK_TEX.get_width(), PLANK_TEX.get_height())
+	if pushed_from_inside:
+		# One board still hanging off a bent nail at the top of the frame,
+		# swung outward. The rest are on the floor.
+		draw_set_transform(Vector2(w - 2.0, -h + 4.0), 1.25)
+		draw_texture(PLANK_TEX, Vector2(0, -plank_size.y * 0.5))
+		draw_set_transform(Vector2.ZERO)
+		return
 	for i in _boards.size():
 		var b: Dictionary = _boards[i]
 		var angle := float(b.angle)

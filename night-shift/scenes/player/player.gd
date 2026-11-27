@@ -30,10 +30,16 @@ extends CharacterBody2D
 @export_range(0.0, 1.0) var exhausted_until := 0.35
 
 @export_group("Noise radius (px)")
-@export var walk_noise := 70.0
-@export var run_noise := 190.0
-@export var crouch_noise := 0.0
-@export var climb_noise := 50.0
+## How far away the Wedged Thing can hear you. Footsteps also send these as
+## noise events. Crouch = 32, walk = 96, run = 220 (scary phase 2 spec).
+@export var walk_noise := 96.0
+@export var run_noise := 220.0
+@export var crouch_noise := 32.0
+@export var climb_noise := 96.0
+## Standing still: you can only be heard from (almost) touching distance.
+## Crouched and still in the dark you make no sound at all.
+@export var still_noise := 18.0
+@export var still_crouched_noise := 0.0
 
 ## Where the torch hand sits (facing right). Matches the 44 px sprite's front
 ## shoulder; player_visual.gd draws the arm from the shoulder to here.
@@ -66,6 +72,8 @@ var _interactable = null        # duck typed: interact_hold(), can_interact(), .
 var _active_interactable = null # the one we're currently holding E on
 var _headroom := RectangleShape2D.new()
 var _room_mid_y := 0.0
+var _shake := 0.0
+var _shake_left := 0.0
 
 @onready var torch: Torch = $Torch
 @onready var stand_shape: CollisionShape2D = $StandShape
@@ -134,6 +142,13 @@ func _update_camera(delta: float) -> void:
 			feet - STAND_HEIGHT - 10.0 + view.y * 0.5)   # head stays in view
 	var target := Vector2(m.x * camera_lead, target_y - feet)
 	camera.position = camera.position.lerp(target, clampf(delta * 4.0, 0.0, 1.0))
+	if _shake_left > 0.0:
+		_shake_left -= delta
+		var k := clampf(_shake_left / 0.3, 0.0, 1.0)
+		camera.offset = Vector2(randf_range(-1, 1), randf_range(-1, 1)).round() * _shake * k
+	else:
+		_shake = 0.0
+		camera.offset = Vector2.ZERO
 
 
 ## Middle of the open space at the player's x (floor-to-ceiling raycasts).
@@ -177,6 +192,26 @@ func respawn(pos: Vector2) -> void:
 ## Let go of any stairs (used before teleports).
 func stop_climbing() -> void:
 	_set_climbing(false, null)
+
+
+## How far away something can hear you right now: depends only on how you're
+## moving. Standing still in the dark, crouched, you're nearly silent.
+func hearing_radius() -> float:
+	if climbing:
+		return climb_noise
+	if absf(velocity.x) < 4.0:
+		return still_crouched_noise if crouching else still_noise
+	if crouching:
+		return crouch_noise
+	if running:
+		return run_noise
+	return walk_noise
+
+
+## Small screen shake (world px) for `time` seconds.
+func shake(strength: float, time: float) -> void:
+	_shake = maxf(_shake, strength)
+	_shake_left = maxf(_shake_left, time)
 
 
 ## Jump the camera straight to its framed position (no smoothing).

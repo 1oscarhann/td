@@ -1,80 +1,125 @@
 class_name WedgedThing
 extends Area2D
-## The Wedged Thing (placeholder). Main threat.
+## The Wedged Thing. Main threat.
 ##
-## A tall, thin, ribbed body with one eye and many long legs, too big for the
-## tunnels: it is wedged between floor and ceiling, legs braced on both,
-## squeezing itself along. Drawn procedurally (lines + rects) with two-bone IK
-## legs that step one at a time on the floor AND the ceiling.
+## LOOK (from the concept art, original design): a tall charcoal body seen from
+## the front. One long head-stalk with a single eye near the top and a seam of a
+## mouth running down it, spiked bony shoulders, a ribbed chest, a hollow gut,
+## two very long arms ending in blades that hang to the floor, and a skirt of ten
+## long curved legs splaying out from the pelvis. Too big for the tunnels: in a
+## low tunnel it's crammed in, head bent against the ceiling, shoulder spikes
+## scraping it, legs splayed wider.
 ##
-## VISIBILITY: the root has a CanvasItemMaterial with Light Mode = Light Only and
-## light_mask = creature bit, so everything drawn here exists only inside the
-## torch beam. Out of the beam you get sound only: scraping and leg taps.
+## VISIBILITY: the root has a Light Only material on the creature light mask, so
+## all of this exists only inside the torch beam. Out of the beam: sound only.
 ##
-## LIGHT RULE (the open question from the doc, implemented as proposed):
-##   Lit -> freezes for `freeze_time` (2 s), legs still twitching. Then it comes
-##   FASTER for `enrage_time`, ignoring the light. Each freeze makes it angrier.
-##   Lighting it buys time but makes it worse.
+## BEHAVIOUR (scary phase 2):
+##   DORMANT  sleeping / not here yet. Stays dormant until zone 3.
+##   PATROL   wanders slowly between points. It does NOT know where you are.
+##            It notices you by HEARING (how you move: crouch 32 px, walk 96,
+##            run 220, standing still 18, crouched and still: nothing), by
+##            noise events (boards, levers),
+##            or by your torch held on it for 1.5 s. While lit it holds still.
+##   NOTICED  freezes 0.8 s, the sting, the head snaps to you, the screen jolts.
+##   CHASE    ~75 px/s at a normal tunnel height (faster than walking, slower
+##            than running), scaled by the gap rule. Lit -> FROZEN for 1 s, then
+##            it lurches on and ignores the light for a moment.
+##            It tracks you while it can hear you or see you (LOS: 48 px in the
+##            dark, 420 px if your torch is on). 3 s without either -> SEARCH.
+##   SEARCH   goes to where it last had you and sniffs around for 6 s, then
+##            back to PATROL.
+##   Director: every 60-120 s of patrolling it drifts towards your general area,
+##   never your exact position.
+##
+## HIDING: its body sits high on the leg skirt. Crouched and still in the dark,
+## in a tunnel tall enough, it can walk right over you. Moving, standing or a
+## lit torch gives you away. In tight tunnels there's no room under it.
 ##
 ## TUNNEL HEIGHT IS THE DESIGN: speed scales with the floor-to-ceiling gap.
-##   Tight tunnels: squeezed, slow, louder scraping. Open rooms: fast.
-##   Gaps lower than `min_squeeze` (the crouch gaps) stop it completely.
-##
+## Gaps lower than `min_squeeze` (the crouch gaps) stop it completely.
 ## The root sits on the floor. It only moves horizontally along its tunnel.
 
-enum State { DORMANT, STALK, HUNT, FROZEN, ENRAGED }
+enum State { DORMANT, PATROL, NOTICED, CHASE, FROZEN, SEARCH }
 
-@export_group("Speed (px/s)")
-## Slow, constant drift towards the player once awake ("follows the player").
-@export var stalk_speed := 18.0
-## Heard something / saw the beam: heads for it.
-@export var hunt_speed := 38.0
-@export var enrage_multiplier := 1.8
+@export_group("Speed (px/s at normal_gap)")
+@export var patrol_speed := 20.0
+@export var chase_speed := 75.0
+@export var search_speed := 32.0
 ## Floor-to-ceiling gap (px) at which speed is exactly 1x. Smaller = slower.
-@export var normal_gap := 84.0
+## 72: tight tunnels (48) ~50 px/s, corridors (64-96) 67-100, rooms 130+.
+@export var normal_gap := 72.0
 ## Can't fit through gaps lower than this. Crouch gaps (32 px) are safe.
 @export var min_squeeze := 40.0
 ## Never stretches taller than this, even in a shaft.
 @export var max_gap := 176.0
 
-@export_group("Light")
-@export var freeze_time := 2.0
-@export var enrage_time := 3.5
-## After a rage ends it can't be frozen again for this long.
-@export var freeze_immunity := 1.0
-
 @export_group("Senses")
-## Seconds it keeps hunting a noise before going back to stalking.
-@export var hunt_memory := 5.0
-## Always knows where the player is inside this radius.
-@export var sense_radius := 90.0
-## Notices a beam pointed its way from this far, even out of the beam's reach.
+## Torch held on it (or pointed at it from afar) this long while it's unaware.
+@export var light_notice_time := 1.5
+## How far it can see you with your torch OFF while it hunts (it hunts by
+## sound). Searching, it only sniffs: in the dark, it can't see you at all.
+@export var sight_dark := 48.0
+## ...and with it ON. Your light gives you away.
+@export var sight_torch := 420.0
+## Seconds without hearing or seeing you before it gives up the chase.
+@export var lose_time := 3.0
+@export var search_time := 6.0
+## A beam pointed its way is noticed from this far, even past the beam's reach.
 @export var light_sight_range := 230.0
-## The eye catches the torch from this far (well past the 120 px beam) and
-## glints back: "a single bright pixel in the dark is the warning sign".
+## The eye catches the torch from this far and glints back.
 @export var glint_range := 340.0
 ## Delay before it moves again after the player respawns.
 @export var respawn_grace := 3.0
 
+@export_group("Light")
+@export var notice_time := 0.8
+@export var freeze_time := 1.0
+## After a freeze it can't be frozen again for this long ("then continue").
+@export var freeze_immunity := 2.5
+@export var lurch_time := 0.45
+
+@export_group("Director")
+@export var nudge_min := 60.0
+@export var nudge_max := 120.0
+
+## Its full height when nothing is in the way (3x the player).
+const NATURAL_H := 132.0
+## Body proportions as fractions of its current height.
+const PELVIS := 0.42
+const SHOULDER := 0.80
 const BODY_HALF_WIDTH := 6.0
-const STEP_DISTANCE := 12.0
-const FLOOR := 1
-const CEILING := -1
+const STEP_DISTANCE := 14.0
+## The breathing fades in this close (px), only while it's NOT in the beam.
+const BREATH_RANGE := 200.0
+## [rest x at natural height, behind the body?, length/arch factor]. Irregular
+## on purpose: no two legs the same.
+const LEG_LAYOUT := [
+	[-46.0, true, 1.00], [47.0, true, 0.94], [-15.0, true, 0.90], [16.0, true, 0.97],
+	[-55.0, false, 1.08], [-39.0, false, 0.93], [-25.0, false, 1.02],
+	[24.0, false, 0.98], [38.0, false, 1.10], [53.0, false, 0.90],
+]
 
 var state := State.DORMANT
-var dir := -1                 # facing / travel direction (+1 = right)
+var dir := -1                 # travel / lean direction (+1 = right)
 var floor_y := 0.0
 var ceil_y := 0.0
-var gap := 64.0               # clamped floor-to-ceiling gap used for the body
+var gap := 84.0               # clamped floor-to-ceiling gap
 var target_x := 0.0
+## Scripted puppets (zone 2 glimpses) and the ending drive speed directly.
+var speed_override := -1.0
+## A puppet never catches, notices or talks.
+var puppet := false
+## Drawn pitch black: a cut-out against a light (the zone 2 glimpse).
+var silhouette := false
 
 var _active := false          # woken up by the level at least once
+var _wake_chase := false      # wake straight into a chase (the zone 4 climax)
 var _spawn := Vector2.ZERO
 var _state_time := 0.0
-var _hunt_left := 0.0
-var _immune_left := 0.0
 var _wake_left := 0.0
-var _sight_cooldown := 0.0
+var _immune_left := 0.0
+var _lurch_left := 0.0
+var _kick := 0.0              # lurch jolt (px), decays
 var _anger := 0
 var _moving := false
 var _blocked := false
@@ -82,18 +127,44 @@ var _caught := false
 var _seen_once := false
 var _flickered := false
 var _t := 0.0
-var _legs: Array = []         # [{surface, rest, hip, foot, from, to, t}]
+var _legs: Array = []
 var _shape := RectangleShape2D.new()
 var _glint: Node2D
 var _glint_on := false
 var _glint_check := 0.0
-var _twitch := 0.0          # current head-snap offset (px), decays
+var _twitch := 0.0            # sudden head snap offset (rad), decays
 var _twitch_timer := 2.0
 var _breath: AudioStreamPlayer2D
 var _gurgle_timer := 6.0
 var _notice_cooldown := 0.0
-## The breathing fades in this close (px), only while it's NOT in the beam.
-const BREATH_RANGE := 200.0
+## Why it last noticed you (debug overlay): "heard", "light", "noise", "touch"...
+var notice_reason := ""
+
+# Senses and memory.
+var _last_known := Vector2.ZERO
+var _unseen := 0.0
+var _light_seen := 0.0
+var _sense_timer := 0.0
+var _perceived := false
+var _beam_timer := 0.0
+var _beam_on_me := false
+
+# Patrol.
+var _span_ready := false
+var _span_tries := 0
+var _patrol_min := 0.0
+var _patrol_max := 0.0
+var _patrol_goal := 0.0
+var _patrol_pause := 0.0
+var _nudge_left := 90.0
+var _sniffing := false
+var _sniff_time := 0.0
+var _sniff_next := 0.0
+
+# Animation.
+var _head_angle := 0.0        # head-stalk tilt from vertical (rad, + = right)
+var _arm_phase := 0.0
+var _bob_phase := 0.0
 
 @onready var scrape: AudioStreamPlayer2D = $Scrape
 
@@ -107,6 +178,7 @@ func _ready() -> void:
 	_spawn = global_position
 	floor_y = global_position.y
 	target_x = global_position.x
+	_patrol_goal = target_x
 	_refresh_space()
 	_init_legs()
 	GameState.noise_made.connect(_on_noise)
@@ -136,27 +208,30 @@ func _ready() -> void:
 
 # --------------------------------------------------------------------------- API
 
-## Wake it up (the level calls this when the player reaches the tunnel).
+## Wake it up. It starts patrolling (it doesn't know where you are).
 func activate() -> void:
 	_active = true
 	if state == State.DORMANT and _wake_left <= 0.0:
-		_enter(State.STALK)
+		_wake()
 
 
 ## Move it to another section of the basement (return trips). It starts
-## dormant and wakes after `delay` seconds if `active`.
-func relocate(pos: Vector2, active: bool, delay := 3.0) -> void:
+## dormant and wakes after `delay` seconds if `active`. With `chase` it wakes
+## already hunting you (the zone 4 climax).
+func relocate(pos: Vector2, active: bool, delay := 3.0, chase := false) -> void:
 	_spawn = pos
 	_active = active
 	reset()
+	_wake_chase = chase
 	if active:
-		_wake_left = delay
+		_wake_left = maxf(delay, 0.01)
 
 
 ## The last stretch: it simply stops following you. No explanation.
 func stop_chasing() -> void:
 	_active = false
 	_wake_left = 0.0
+	_wake_chase = false
 	_enter(State.DORMANT)
 
 
@@ -165,11 +240,17 @@ func reset() -> void:
 	global_position = _spawn
 	floor_y = _spawn.y
 	target_x = _spawn.x
+	_patrol_goal = _spawn.x
 	_refresh_space()
 	_anger = 0
 	_caught = false
-	_hunt_left = 0.0
 	_immune_left = 0.0
+	_lurch_left = 0.0
+	_unseen = 0.0
+	_light_seen = 0.0
+	_span_ready = false
+	_span_tries = 0
+	_head_angle = 0.0
 	_enter(State.DORMANT)
 	_wake_left = respawn_grace if _active else 0.0
 	_init_legs()
@@ -177,32 +258,31 @@ func reset() -> void:
 
 ## Points the torch raycasts to. Lit if any of them is in the beam with clear LOS.
 func get_light_probe_points() -> Array:
-	var eye: Vector2 = _body_points().eye
+	var b := _body_points()
+	var pelvis: Vector2 = b.pelvis
+	var shoulders: Vector2 = b.shoulders
+	var eye: Vector2 = b.eye
 	return [
-		global_position + Vector2(0, -gap * 0.5),
-		global_position + Vector2(0, -gap * 0.25),
-		global_position + Vector2(0, -gap * 0.75),
+		global_position + pelvis,
+		global_position + pelvis.lerp(shoulders, 0.5),
+		global_position + shoulders,
 		global_position + eye,
 	]
 
 
 ## Called by the torch when the beam starts / stops touching it.
 func on_torch_lit_changed(lit: bool) -> void:
-	if not lit or state == State.DORMANT:
+	if not lit or state == State.DORMANT or puppet:
 		return
 	if not _seen_once:
 		_seen_once = true
 		Narrator.say("it_can_see_you")
-	if (state == State.STALK or state == State.HUNT) and _immune_left <= 0.0:
-		_anger += 1
-		_enter(State.FROZEN)
-		# A low groan as it locks up.
-		AudioDirector.play_at("creak", _center(), -8.0, 0.0, 420.0, 0.5)
 
 
 func debug_text() -> String:
-	return "%s gap:%d anger:%d%s" % [State.keys()[state], int(gap), _anger,
-			" BLOCKED" if _blocked else ""]
+	return "%s gap:%d anger:%d light:%.1f unseen:%.1f%s%s" % [State.keys()[state], int(gap), _anger,
+			_light_seen, _unseen, " BLOCKED" if _blocked else "",
+			(" (" + notice_reason + ")") if notice_reason != "" else ""]
 
 
 # ---------------------------------------------------------------------- behaviour
@@ -211,47 +291,59 @@ func _physics_process(delta: float) -> void:
 	_t += delta
 	_state_time += delta
 	_immune_left = maxf(0.0, _immune_left - delta)
-	_hunt_left = maxf(0.0, _hunt_left - delta)
+	_lurch_left = maxf(0.0, _lurch_left - delta)
+	_notice_cooldown = maxf(0.0, _notice_cooldown - delta)
+	_kick = move_toward(_kick, 0.0, 40.0 * delta)
 	if GameState.player == null:
 		return
 	if state == State.DORMANT and not _moving:
 		# Tile collision may not exist on the spawn frame; keep measuring the
 		# tunnel while it waits so it's drawn the right height if you light it.
 		_refresh_space()
-	var player_pos: Vector2 = GameState.player.global_position
+	var player: Player = GameState.player
+	var lit := GameState.is_lit(self)
+
+	if state != State.DORMANT:
+		if not _span_ready:
+			_compute_span()
+		_sense_timer -= delta
+		if _sense_timer <= 0.0:
+			_sense_timer = 0.1
+			_perceived = _hears(player) or _sees(player)
+			if _perceived:
+				_last_known = player.global_position
+		_beam_timer -= delta
+		if _beam_timer <= 0.0:
+			_beam_timer = 0.15
+			_beam_on_me = not lit and _beam_points_at_me()
 
 	match state:
 		State.DORMANT:
 			if _wake_left > 0.0:
 				_wake_left -= delta
 				if _wake_left <= 0.0:
-					_enter(State.STALK)
-					_notice()
-		State.STALK:
-			target_x = player_pos.x
-		State.HUNT:
-			if _hunt_left <= 0.0:
-				_enter(State.STALK)
+					_wake()
+		State.PATROL:
+			_patrol(delta, lit, player)
+		State.NOTICED:
+			target_x = global_position.x
+			if _state_time >= notice_time:
+				_unseen = 0.0
+				_enter(State.CHASE)
+		State.CHASE:
+			_chase(delta, lit)
 		State.FROZEN:
+			target_x = global_position.x
 			if _state_time >= freeze_time:
-				_enter(State.ENRAGED)
+				# It doesn't ease back in. It lurches.
+				_immune_left = freeze_immunity
+				_lurch_left = lurch_time
+				_kick = 5.0 * float(dir)
+				_enter(State.CHASE)
 				if _anger == 1:
 					Narrator.say("it_likes_the_light")
-		State.ENRAGED:
-			# It knows exactly where the light came from.
-			target_x = player_pos.x
-			if _state_time >= enrage_time:
-				_immune_left = freeze_immunity
-				_hunt_left = hunt_memory
-				_enter(State.HUNT)
-
-	if state == State.STALK or state == State.HUNT:
-		if _center().distance_to(player_pos + Vector2(0, -14)) < sense_radius:
-			target_x = player_pos.x
-		_sight_cooldown -= delta
-		if _sight_cooldown <= 0.0:
-			_sight_cooldown = 0.2
-			_check_torch_sight()
+		State.SEARCH:
+			_search(delta, lit, player)
 
 	_update_glint(delta)
 	_update_twitch(delta)
@@ -259,7 +351,7 @@ func _physics_process(delta: float) -> void:
 	_update_legs(delta)
 	_update_shape()
 	_update_audio(delta)
-	_check_events(player_pos)
+	_check_events(player.global_position)
 	_check_catch()
 	queue_redraw()
 
@@ -269,25 +361,208 @@ func _enter(new_state: State) -> void:
 	_state_time = 0.0
 
 
-## Noise system: it hunts by sound.
+func _wake() -> void:
+	if _wake_chase and GameState.player != null:
+		_notice(GameState.player.global_position, "woke hunting")
+	else:
+		_enter(State.PATROL)
+		_nudge_left = randf_range(nudge_min, nudge_max)
+		_patrol_pause = randf_range(0.5, 2.0)
+
+
+## Unaware. Wanders, pauses, listens.
+func _patrol(delta: float, lit: bool, player: Player) -> void:
+	if lit or _beam_on_me:
+		# The light holds it still, and if it stays on it, it notices.
+		_light_seen += delta
+		target_x = global_position.x
+		if _light_seen >= light_notice_time:
+			_notice(player.global_position, "light")
+		return
+	_light_seen = maxf(0.0, _light_seen - delta * 0.5)
+	if _perceived and _hears(player):
+		_notice(player.global_position, "heard")
+		return
+	# The director: now and then it drifts towards where you roughly are.
+	_nudge_left -= delta
+	if _nudge_left <= 0.0:
+		_nudge_left = randf_range(nudge_min, nudge_max)
+		_pick_patrol_point(true)
+	if _patrol_pause > 0.0:
+		_patrol_pause -= delta
+		target_x = global_position.x
+		if _patrol_pause <= 0.0:
+			_pick_patrol_point(false)
+		return
+	target_x = _patrol_goal
+	if absf(_patrol_goal - global_position.x) < 3.0 or (_blocked and _state_time > 0.5):
+		_patrol_pause = randf_range(1.5, 4.5)
+
+
+## It knows. Head locked on, coming.
+func _chase(delta: float, lit: bool) -> void:
+	if lit and _immune_left <= 0.0:
+		_anger = mini(_anger + 1, 4)
+		_enter(State.FROZEN)
+		AudioDirector.play_at("creak", _center(), -8.0, 0.0, 420.0, 0.5)
+		return
+	if _perceived:
+		_unseen = 0.0
+	else:
+		_unseen += delta
+	target_x = _last_known.x
+	if _unseen >= lose_time:
+		_enter(State.SEARCH)
+		_sniffing = false
+		_sniff_time = 0.0
+
+
+## Lost you. Goes where it last had you, then sniffs about.
+func _search(delta: float, lit: bool, player: Player) -> void:
+	if lit:
+		_notice(player.global_position, "light")   # the light came from somewhere
+		return
+	if _perceived:
+		_notice(player.global_position, "heard")
+		return
+	if not _sniffing:
+		target_x = _last_known.x
+		if absf(_last_known.x - global_position.x) < 4.0 or _blocked or _state_time > 10.0:
+			_sniffing = true
+			_sniff_next = 0.0
+		return
+	_sniff_time += delta
+	_sniff_next -= delta
+	if _sniff_next <= 0.0:
+		_sniff_next = randf_range(0.9, 1.7)
+		target_x = _last_known.x + randf_range(-36.0, 36.0)
+	if _sniff_time >= search_time:
+		_enter(State.PATROL)
+		_pick_patrol_point(false)
+
+
+## Something gave you away: freeze, snap the head round, sting, then come.
+func _notice(at: Vector2, reason := "") -> void:
+	if puppet or state == State.NOTICED or state == State.CHASE:
+		return
+	notice_reason = reason
+	_last_known = at
+	_light_seen = 0.0
+	_enter(State.NOTICED)
+	target_x = global_position.x
+	if absf(at.x - global_position.x) > 2.0:
+		dir = 1 if at.x > global_position.x else -1
+	_head_angle = _head_target_angle()     # snaps in one go, no easing
+	if _notice_cooldown <= 0.0:
+		_notice_cooldown = 4.0
+		AudioDirector.hush_drone(0.8)
+		AudioDirector.play_at("notice", _center(), 0.0, 0.04, 700.0)
+	var p = GameState.player
+	if p != null and p.global_position.distance_to(global_position) < 450.0:
+		p.shake(2.0, 0.3)
+
+
+## Noise system: boards, levers, footsteps.
 func _on_noise(origin: Vector2, radius: float) -> void:
-	if state == State.DORMANT or state == State.FROZEN or state == State.ENRAGED:
+	if puppet or state == State.DORMANT or state == State.FROZEN or state == State.NOTICED:
 		return
-	if _center().distance_to(origin) > radius:
+	if _ear().distance_to(origin) > radius:
 		return
-	target_x = origin.x
-	_hunt_left = hunt_memory
-	if state == State.STALK:
-		_enter(State.HUNT)
-		_notice()
+	match state:
+		State.PATROL, State.SEARCH:
+			_notice(origin, "noise")
+		State.CHASE:
+			if not _perceived:
+				_last_known = origin
+				_unseen = 0.0
 
 
-## It has heard / found you: the sting. (Phase 2 gives this its own state.)
-func _notice() -> void:
-	if _notice_cooldown > 0.0:
+## Can it hear you? Only depends on how you move (Player.hearing_radius). It
+## feels you through the floor, so it's the distance along the tunnel that
+## counts, not how high its body is. Crouched and still, you make no sound.
+func _hears(player: Player) -> bool:
+	if absf(player.global_position.y - global_position.y) > 100.0:
+		return false
+	return absf(player.global_position.x - global_position.x) <= player.hearing_radius()
+
+
+## Can it see you? Barely in the dark; from far away if your torch is on.
+func _sees(player: Player) -> bool:
+	var torch_on: bool = GameState.torch != null and GameState.torch.is_on
+	var reach := sight_torch if torch_on else (sight_dark if state == State.CHASE else 0.0)
+	if reach <= 0.0:
+		return false
+	var eye := global_position + (_body_points().eye as Vector2)
+	var chest := player.global_position + Vector2(0, -12.0 if player.crouching else -24.0)
+	if eye.distance_to(chest) > reach:
+		return false
+	var query := PhysicsRayQueryParameters2D.create(eye, chest, GameState.LAYER_WORLD)
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
+## It listens from the pelvis, low down where its legs feel the floor.
+func _ear() -> Vector2:
+	return global_position + Vector2(0, -_height() * PELVIS)
+
+
+func _pick_patrol_point(near_player: bool) -> void:
+	var lo := _patrol_min
+	var hi := _patrol_max
+	_patrol_pause = 0.0
+	if hi - lo < 40.0:
+		_patrol_goal = global_position.x
 		return
-	_notice_cooldown = 10.0
-	AudioDirector.play_at("notice", _center(), 0.0, 0.04, 700.0)
+	var goal := global_position.x
+	if near_player and GameState.player != null:
+		# Your general area, never your exact spot.
+		var px: float = GameState.player.global_position.x
+		var side := -1.0 if randf() < 0.5 else 1.0
+		goal = px + side * randf_range(120.0, 300.0)
+		if goal < lo or goal > hi:
+			goal = px - side * randf_range(120.0, 300.0)
+	else:
+		for i in 6:
+			goal = randf_range(lo, hi)
+			if absf(goal - global_position.x) > 120.0:
+				break
+	_patrol_goal = clampf(goal, lo, hi)
+
+
+## Where it can get to from here: walk left and right with the same rules as
+## _move until a wall, a step, or a gap it can't squeeze into.
+func _compute_span() -> void:
+	_span_tries += 1
+	_patrol_min = _scan(-1)
+	_patrol_max = _scan(1)
+	_span_ready = _patrol_max - _patrol_min > 24.0 or _span_tries > 30
+
+
+func _scan(s: int) -> float:
+	var space := get_world_2d().direct_space_state
+	var x := global_position.x
+	for i in 175:
+		var nx := x + float(s) * 8.0
+		var lead := nx + float(s) * BODY_HALF_WIDTH
+		var eye_level := Vector2(x, floor_y - 8.0)
+		var wall := space.intersect_ray(PhysicsRayQueryParameters2D.create(
+				eye_level, Vector2(lead, floor_y - 8.0), GameState.LAYER_WORLD))
+		var m := _measure_at(lead)
+		if not wall.is_empty() or m.x - m.y < min_squeeze or absf(m.x - floor_y) > 2.0:
+			break
+		x = nx
+	return x
+
+
+func _head_target_angle() -> float:
+	var p = GameState.player
+	var look := _last_known
+	if p != null and (state == State.CHASE or state == State.NOTICED) and _perceived:
+		look = p.global_position + Vector2(0, -24)
+	if p == null and _last_known == Vector2.ZERO:
+		return 0.25 * float(dir)
+	var base := global_position + Vector2(0, -_height() * SHOULDER)
+	var to := look - base
+	return clampf(atan2(to.x, -to.y), -1.0, 1.0)
 
 
 ## The eye glint: when the torch points at the eye from up to `glint_range`
@@ -298,7 +573,7 @@ func _update_glint(delta: float) -> void:
 	_glint_check -= delta
 	if _glint_check <= 0.0:
 		_glint_check = 0.08
-		_glint_on = _torch_points_at_eye(glint_range, 0.0)
+		_glint_on = not silhouette and _torch_points_at_eye(glint_range, 0.0)
 		if _glint_on and not _seen_once and state != State.DORMANT:
 			_seen_once = true
 			Narrator.say("it_can_see_you")   # first time the eye glints
@@ -310,11 +585,11 @@ func _update_glint(delta: float) -> void:
 
 ## Now and then the head snaps sideways and back. Wrong movement beats blood.
 func _update_twitch(delta: float) -> void:
-	_twitch = move_toward(_twitch, 0.0, 30.0 * delta)
+	_twitch = move_toward(_twitch, 0.0, 3.0 * delta)
 	_twitch_timer -= delta
-	if _twitch_timer <= 0.0 and state != State.DORMANT:
-		_twitch = randf_range(3.0, 5.0) * (1.0 if randf() < 0.5 else -1.0)
-		_twitch_timer = randf_range(0.6, 1.5) if state == State.ENRAGED else randf_range(1.5, 4.0)
+	if _twitch_timer <= 0.0 and state != State.DORMANT and state != State.FROZEN:
+		_twitch = randf_range(0.25, 0.45) * (1.0 if randf() < 0.5 else -1.0)
+		_twitch_timer = randf_range(0.8, 2.0) if state == State.CHASE else randf_range(2.0, 5.0)
 
 
 func _torch_points_at_eye(max_range: float, slack: float) -> bool:
@@ -339,39 +614,26 @@ func _draw_glint() -> void:
 	_glint.draw_rect(Rect2(0, 0, 1, 1), Color(1.0, 0.95, 0.78, flick))
 
 
-## Some of the danger is looking for the torch: a beam pointed its way is
-## noticed from well beyond the distance the beam actually lights.
-func _check_torch_sight() -> void:
-	var torch = GameState.torch
-	if torch == null or not torch.is_on or GameState.is_lit(self):
-		return
-	var from: Vector2 = torch.global_position
-	var eye_local: Vector2 = _body_points().eye
-	var eye := global_position + eye_local
-	var to := eye - from
-	if to.length() > light_sight_range:
-		return
-	var half := deg_to_rad(float(torch.cone_angle_deg)) * 0.5 + 0.2
-	if absf(angle_difference(float(torch.global_rotation), to.angle())) > half:
-		return
-	var query := PhysicsRayQueryParameters2D.create(from, eye, GameState.LAYER_WORLD)
-	if not get_world_2d().direct_space_state.intersect_ray(query).is_empty():
-		return
-	target_x = from.x
-	_hunt_left = hunt_memory
-	if state == State.STALK:
-		_enter(State.HUNT)
+## A beam pointed its way from well beyond the distance it lights still counts
+## as "the torch on it": some of the danger is looking for it.
+func _beam_points_at_me() -> bool:
+	return _torch_points_at_eye(light_sight_range, 0.2)
 
 
 func _current_speed() -> float:
 	var base := 0.0
-	match state:
-		State.STALK:
-			base = stalk_speed
-		State.HUNT:
-			base = hunt_speed
-		State.ENRAGED:
-			base = hunt_speed * enrage_multiplier * (1.0 + 0.15 * float(_anger - 1))
+	if speed_override >= 0.0:
+		base = speed_override
+	else:
+		match state:
+			State.PATROL:
+				base = patrol_speed
+			State.SEARCH:
+				base = search_speed
+			State.CHASE:
+				base = chase_speed * (1.0 + 0.06 * float(_anger))
+				if _lurch_left > 0.0:
+					base *= 1.7
 	return base * clampf(gap / normal_gap, 0.5, 1.8)
 
 
@@ -431,9 +693,21 @@ func _refresh_space() -> void:
 	gap = clampf(floor_y - ceil_y, 16.0, max_gap)
 
 
+## Its current height: as tall as the tunnel lets it be.
+func _height() -> float:
+	return clampf(gap - 2.0, 30.0, NATURAL_H)
+
+
+## The catch box. Unaware or searching, only the torso counts (pelvis up), so a
+## crouched player can be underneath it. Hunting, it reaches all the way down.
 func _update_shape() -> void:
-	_shape.size = Vector2(BODY_HALF_WIDTH * 2.0, maxf(gap * 0.8, 14.0))
-	$Shape.position = Vector2(0, -gap * 0.5)
+	var h := _height()
+	var top := -h
+	var bottom := -h * PELVIS
+	if state == State.CHASE:
+		bottom = -2.0
+	_shape.size = Vector2(BODY_HALF_WIDTH * 2.0, bottom - top)
+	$Shape.position = Vector2(0, (top + bottom) * 0.5)
 
 
 func _update_audio(delta: float) -> void:
@@ -441,14 +715,13 @@ func _update_audio(delta: float) -> void:
 	var target_db := -60.0
 	if _moving:
 		var loud := clampf(_current_speed() / 50.0, 0.25, 1.0)
-		if gap < 48.0:
-			loud = minf(loud * 1.4, 1.0)   # squeezed: skin dragging on both surfaces
+		if gap < 64.0:
+			loud = minf(loud * 1.4, 1.0)   # squeezed: skin dragging on the ceiling
 		target_db = linear_to_db(loud) - 4.0
 		scrape.pitch_scale = 0.8 + _current_speed() / 160.0
 	scrape.volume_db = lerpf(scrape.volume_db, target_db, clampf(delta * 6.0, 0.0, 1.0))
 
 	# Breathing: close and NOT lit. Fades in over ~2 s, out over ~1 s.
-	_notice_cooldown = maxf(0.0, _notice_cooldown - delta)
 	var breath_db := -60.0
 	if GameState.player != null and not GameState.is_lit(self) \
 			and _center().distance_to(GameState.player.global_position) < BREATH_RANGE:
@@ -465,6 +738,8 @@ func _update_audio(delta: float) -> void:
 
 
 func _check_events(player_pos: Vector2) -> void:
+	if puppet:
+		return
 	# Scripted torch flicker the first time it gets close.
 	if not _flickered and state != State.DORMANT and global_position.distance_to(player_pos) < 150.0:
 		_flickered = true
@@ -475,245 +750,386 @@ func _check_events(player_pos: Vector2) -> void:
 
 
 func _check_catch() -> void:
-	if _caught or state == State.DORMANT:
+	if _caught or puppet or state == State.DORMANT:
 		return
 	for body in get_overlapping_bodies():
 		if body.is_in_group("player"):
-			_caught = true
-			GameState.player_caught.emit(self)
+			if state == State.PATROL:
+				_notice(body.global_position, "touch")   # walked into it: it knows now
+			elif state != State.NOTICED:
+				_caught = true
+				GameState.player_caught.emit(self)
 			return
 
 
 func _center() -> Vector2:
-	return global_position + Vector2(0, -gap * 0.5)
+	return global_position + Vector2(0, -_height() * 0.6)
 
 
 # --------------------------------------------------------------------------- legs
-# Placeholder procedural legs: two-bone IK, feet planted on floor and ceiling,
-# one leg per surface stepping at a time. Swap for Skeleton2D + Bone2D later;
-# the foot-target logic carries over.
+# Ten legs, each its own timing: it waits a beat before a step when it's
+# unaware, steps fast and messy when it's hunting. Feet are planted in world
+# space, so the body slides over them and they catch up.
 
 func _init_legs() -> void:
 	_legs.clear()
-	# A skirt of six long sickle legs from the pelvis, braced on the floor...
-	for r: float in [-30.0, -19.0, -8.0, 8.0, 19.0, 30.0]:
-		_legs.append(_make_leg(FLOOR, r, 0.30))
-	# ...two long blade-arms hooked into the ceiling, and two shoulder spurs.
-	for r: float in [-16.0, 16.0]:
-		_legs.append(_make_leg(CEILING, r, 0.60))
-	for r: float in [-28.0, 28.0]:
-		_legs.append(_make_leg(CEILING, r, 0.56))
+	var spread := _spread()
+	for l: Array in LEG_LAYOUT:
+		var rest: float = l[0]
+		var foot := Vector2(global_position.x + rest * spread, floor_y)
+		_legs.append({"rest": rest, "back": l[1], "k": l[2], "foot": foot, "from": foot,
+				"to": foot, "t": 1.0, "dur": 0.2, "lift": 6.0, "wait": -1.0})
 
 
-func _make_leg(surface: int, rest: float, hip: float) -> Dictionary:
-	var foot := Vector2(global_position.x + rest * dir, _surface_y(surface))
-	return {"surface": surface, "rest": rest, "hip": hip,
-			"foot": foot, "from": foot, "to": foot, "t": 1.0}
+## Width scale: squashed into a low tunnel it gets a little narrower too (so it
+## stays the same creature, crammed in, not a squat crab).
+func _wscale() -> float:
+	return lerpf(_height() / NATURAL_H, 1.0, 0.4)
 
 
-func _surface_y(surface: int) -> float:
-	if surface == FLOOR:
-		return floor_y
-	if floor_y - ceil_y <= max_gap + 8.0:
-		return ceil_y
-	return floor_y - gap * 0.9   # ceiling out of reach (a shaft): legs reach up into nothing
+## Legs splay wider the more it's squashed.
+func _spread() -> float:
+	return _wscale() * (1.0 + 0.35 * (1.0 - _height() / NATURAL_H))
 
 
 func _update_legs(delta: float) -> void:
-	var step_time := 0.1 if state == State.ENRAGED else 0.2
-	var stepping := {FLOOR: 0, CEILING: 0}
+	_update_pose(delta)
+	var chase := state == State.CHASE
+	var max_stepping := 3 if chase else 2
+	var spread := _spread()
+	var stepping := 0
 	for leg in _legs:
 		if float(leg.t) < 1.0:
-			stepping[leg.surface] += 1
+			stepping += 1
+	var still := state == State.FROZEN or state == State.NOTICED or state == State.DORMANT
 	for leg in _legs:
-		var surface: int = leg.surface
-		var surface_y := _surface_y(surface)
-		var desired := Vector2(global_position.x + (float(leg.rest) + 3.0) * dir, surface_y)
+		var desired := Vector2(global_position.x + float(leg.rest) * spread, floor_y)
 		if float(leg.t) < 1.0:
-			var k := minf(1.0, float(leg.t) + delta / step_time)
+			var k := minf(1.0, float(leg.t) + delta / float(leg.dur))
 			leg.t = k
 			var from: Vector2 = leg.from
 			var p := from.lerp(leg.to, smoothstep(0.0, 1.0, k))
-			p.y -= sin(k * PI) * 5.0 * surface   # floor feet lift up, ceiling feet drop
+			p.y -= sin(k * PI) * float(leg.lift)
 			leg.foot = p
 			if k >= 1.0:
 				leg.foot = leg.to
-				AudioDirector.play_at("tap", leg.foot, -14.0 if surface == FLOOR else -18.0, 0.2, 380.0)
-		else:
-			var foot: Vector2 = leg.foot
-			foot.y = surface_y   # stay braced as the tunnel height changes
-			leg.foot = foot
-			var max_stepping := 2 if surface == FLOOR else 1
-			if state != State.FROZEN and stepping[surface] < max_stepping \
-					and foot.distance_to(desired) > STEP_DISTANCE:
-				leg.from = foot
-				leg.to = desired + Vector2(dir * 5.0, 0)
-				leg.t = 0.0
-				stepping[surface] += 1
+				if not bool(leg.back):
+					AudioDirector.play_at("tap", leg.foot, -15.0, 0.2, 380.0)
+			continue
+		var foot: Vector2 = leg.foot
+		foot.y = floor_y
+		leg.foot = foot
+		if still:
+			continue
+		var too_far := absf(foot.x - desired.x) > STEP_DISTANCE * (1.4 if chase else 1.0)
+		if not too_far or stepping >= max_stepping:
+			leg.wait = -1.0
+			continue
+		if float(leg.wait) < 0.0:
+			leg.wait = randf_range(0.0, 0.05) if chase else randf_range(0.0, 0.35)   # a beat of hesitation
+		leg.wait = float(leg.wait) - delta
+		if float(leg.wait) > 0.0:
+			continue
+		var ahead := signf(desired.x - foot.x)
+		leg.from = foot
+		leg.to = Vector2(desired.x + ahead * (STEP_DISTANCE * 0.5 + randf_range(0.0, 4.0)), floor_y)
+		leg.dur = (0.11 if chase else 0.24) * randf_range(0.75, 1.3)
+		leg.lift = randf_range(5.0, 9.0) * (1.5 if chase else 1.0)
+		leg.t = 0.0
+		leg.wait = -1.0
+		stepping += 1
 
 
-## Two-bone IK. Picks the knee that bends AWAY from the body: spidery, wrong.
-func _knee(hip: Vector2, foot: Vector2, seg: float, body_x: float) -> Vector2:
-	var d := clampf(hip.distance_to(foot), 0.01, seg * 2.0 - 0.01)
-	var base := (foot - hip).angle()
-	var a := acos(clampf(d / (2.0 * seg), -1.0, 1.0))
-	var k1 := hip + Vector2.from_angle(base + a) * seg
-	var k2 := hip + Vector2.from_angle(base - a) * seg
-	return k1 if absf(k1.x - body_x) > absf(k2.x - body_x) else k2
+## Head, arms and body motion. The head eases slowly while it wanders, snaps
+## when it notices, stays locked on you while it hunts.
+func _update_pose(delta: float) -> void:
+	var target := 0.0
+	var rate := 0.6
+	match state:
+		State.PATROL, State.DORMANT:
+			target = sin(_t * 0.35 + 1.7) * 0.3
+			rate = 0.25
+		State.NOTICED, State.CHASE:
+			target = _head_target_angle()
+			rate = 14.0
+		State.FROZEN:
+			if GameState.torch != null:
+				var to: Vector2 = GameState.torch.global_position - global_position - Vector2(0, -_height() * SHOULDER)
+				target = clampf(atan2(to.x, -to.y), -1.0, 1.0)
+			rate = 0.35       # turns slowly towards the light
+		State.SEARCH:
+			target = sin(_t * 2.3) * 0.5
+			rate = 2.0
+	_head_angle = move_toward(_head_angle, target, rate * delta)
+	if state != State.FROZEN and state != State.NOTICED:
+		var moving_rate := 6.0 if state == State.CHASE else (1.4 if _moving else 0.4)
+		_arm_phase += delta * moving_rate
+		if _moving:
+			_bob_phase += delta * (9.0 if state == State.CHASE else 3.0)
 
 
-## Key body points in local space, shared by drawing and light probes.
-## Silhouette from the concept art: pelvis low with the leg skirt, a gaunt
-## ribcage, broad bony shoulders, and a long neck-stalk with ONE eye at its end.
-## In a low tunnel the stalk folds forward along the ceiling.
+## Key body points in local space, shared by drawing, light probes and senses.
 func _body_points() -> Dictionary:
-	var sway := 0.0 if state == State.FROZEN else sin(_t * 1.3) * 1.5
-	var room := floor_y - ceil_y
-	var pelvis := Vector2(sway * 0.5, -gap * 0.30)
-	var shoulders := Vector2(sway, -gap * 0.58)
-	var stalk := clampf(gap * 0.32, 10.0, 34.0)
-	var up := minf(stalk, room + shoulders.y - 4.0)         # room left above the shoulders
-	var lean := sqrt(maxf(0.0, stalk * stalk - up * up))
-	var head := shoulders + Vector2(dir * (lean + 2.0), -up)
-	head += Vector2(dir, 0).orthogonal() * _twitch           # sudden head snaps
-	if state == State.FROZEN and GameState.torch != null:
-		# Frozen in the light, the head turns slowly to face it.
-		var to_torch: Vector2 = GameState.torch.global_position - global_position - head
-		head += to_torch.normalized() * minf(_state_time * 2.0, 3.0)
-	var breath := sin(_t * (5.0 if state == State.ENRAGED else 2.2)) * 0.5 + 0.5
-	return {"sway": sway, "pelvis": pelvis, "shoulders": shoulders, "head": head,
-			"eye": head, "breath": breath, "torso_top": shoulders.y, "torso_bottom": pelvis.y,
-			"neck": shoulders, "tip": head}
+	var h := _height()
+	var c := 1.0 - h / NATURAL_H                          # 0 = free, ~0.6 = crammed
+	var w := _wscale()
+	var frozen := state == State.FROZEN or state == State.NOTICED
+	var chase := state == State.CHASE
+	var sway := 0.0 if frozen else sin(_t * 1.1) * 1.2
+	var bob := absf(sin(_bob_phase)) * (2.0 if chase else 0.6)
+	var lean := float(dir) * (3.0 if chase else 0.0) + _kick
+	var breath := sin(_t * (4.0 if chase else 1.8)) * 0.5 + 0.5
+	var pelvis := Vector2(sway * 0.5 + lean * 0.4, -h * PELVIS + bob * 0.5)
+	var shoulders := Vector2(sway + lean, -h * SHOULDER + bob)
+	var sw := 19.0 * w                                     # shoulder half-width
+	# Head-stalk: tilts by _head_angle, and bends further if the ceiling is in the way.
+	var head_base := shoulders + Vector2(0, -2)
+	var head_len := h * 0.21
+	var tilt := _head_angle + _twitch
+	var room := maxf(4.0, gap - 3.0 + head_base.y)        # px from the head base to the ceiling
+	if cos(tilt) * head_len > room:
+		var bend := acos(clampf(room / head_len, 0.0, 1.0))
+		var s := signf(tilt) if absf(tilt) > 0.05 else float(dir)
+		tilt = s * maxf(absf(tilt), bend)
+	var axis := Vector2(sin(tilt), -cos(tilt))
+	var head_top := head_base + axis * head_len
+	var eye := head_base + axis * (head_len * 0.82)
+	# Arms: hanging from the shoulders, blades reaching down to the floor.
+	var arms := []
+	for side: float in [-1.0, 1.0]:
+		var sh := shoulders + Vector2(side * sw, 2.0)
+		var swing := 0.0 if frozen else sin(_arm_phase + (0.0 if side < 0.0 else PI)) * (5.0 if chase else 1.5)
+		# Splayed out from the body like the concept's A-shape.
+		var elbow := sh + Vector2(side * (11.0 * w + 4.0 * c) + swing * 0.4, h * 0.30)
+		var tip := Vector2(sh.x + side * (15.0 * w) + swing, -h * 0.10 - 1.0)
+		if chase:
+			tip.x += float(dir) * 6.0     # blades reach forward while it hunts
+		arms.append({"side": side, "shoulder": sh, "elbow": elbow, "tip": tip})
+	return {"h": h, "c": c, "w": w, "pelvis": pelvis, "shoulders": shoulders, "sw": sw,
+			"head_base": head_base, "head_top": head_top, "axis": axis, "head_len": head_len,
+			"eye": eye, "arms": arms, "breath": breath}
 
 
 # ------------------------------------------------------------------------ drawing
-# Charcoal skin with pale bone where the light catches it: ribs, knuckles, the
-# edges of the blades. Drawn under the Light Only material, so the beam only
-# ever shows you parts of it. Original design inspired by the concept art.
+# Charcoal skin with pale bone where the light catches it. Shading is cheap:
+# every limb is a strip of quads with a 1 px rim on the edge that faces the
+# torch and a dark edge on the side away from it, so it reads as solid volume
+# in the beam. Drawn under the Light Only material.
 
-const DARK := Color(0.06, 0.06, 0.07)
-const SKIN := Color(0.15, 0.15, 0.16)
-const MID := Color(0.26, 0.25, 0.25)
-const BONE := Color(0.50, 0.48, 0.45)
-const EYE_WHITE := Color(0.93, 0.87, 0.70)   # warm, torch-like: seed for ending A
+# Tuned for the torch beam, which falls off to nothing at 120 px: brighter
+# than "charcoal" on paper so it still reads at the edge of the beam.
+const DARK := Color(0.05, 0.05, 0.06)
+const SKIN := Color(0.30, 0.29, 0.29)
+const SKIN_BACK := Color(0.17, 0.17, 0.18)
+const SKIN_LIT := Color(0.42, 0.40, 0.39)
+const RIM := Color(0.58, 0.55, 0.51)
+const BONE := Color(0.74, 0.70, 0.63)
+const GUT := Color(0.42, 0.24, 0.23)
+const EYE_WHITE := Color(0.93, 0.87, 0.70)   # warm, torch-like: seed for the ending
 const PUPIL := Color(0.02, 0.02, 0.02)
+const SIL := Color(0.012, 0.012, 0.015)
+
+var _light_dir := Vector2(-0.5, -0.8)
 
 
-## A curved limb: quadratic bezier a -> (bend) -> b, tapering w0 -> w1, with a
-## thin lit rim. This is what gives the legs the concept art's sickle curve.
-func _curve(a: Vector2, ctrl: Vector2, b: Vector2, w0: float, w1: float, col: Color, rim := MID) -> void:
-	var n := 7
-	var prev := a
-	for i in range(1, n + 1):
-		var t := float(i) / n
-		var p := a.lerp(ctrl, t).lerp(ctrl.lerp(b, t), t)
-		var w := lerpf(w0, w1, t)
-		draw_line(prev, p, col, w)
-		if w >= 2.0:
-			var side := (p - prev).orthogonal().normalized()
-			draw_line(prev - side * (w * 0.5), p - side * (w * 0.5), rim, 1.0)
-		prev = p
+func _col(c: Color) -> Color:
+	return SIL if silhouette else c
 
 
-func _seg(a: Vector2, b: Vector2, w0: float, w1: float, col: Color, edge := MID) -> void:
-	_curve(a, a.lerp(b, 0.5), b, w0, w1, col, edge)
+## Cubic bezier sampled into n+1 points.
+func _bez(p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2, n: int) -> PackedVector2Array:
+	var pts := PackedVector2Array()
+	for i in n + 1:
+		var t := float(i) / float(n)
+		var u := 1.0 - t
+		pts.append(p0 * (u * u * u) + p1 * (3.0 * u * u * t) + p2 * (3.0 * u * t * t) + p3 * (t * t * t))
+	return pts
+
+
+## A tapering limb along `pts`, width w0 -> w1, rim-lit on the torch side.
+func _limb(pts: PackedVector2Array, w0: float, w1: float, base: Color, rim := RIM) -> void:
+	var n := pts.size()
+	if n < 2:
+		return
+	var col := _col(base)
+	var cols := PackedColorArray([col, col, col, col])
+	var none := PackedVector2Array()
+	for i in n - 1:
+		var a := pts[i]
+		var b := pts[i + 1]
+		var d := b - a
+		if d.length_squared() < 0.0001:
+			continue
+		var nrm := d.orthogonal().normalized()
+		var wa := lerpf(w0, w1, float(i) / float(n - 1)) * 0.5
+		var wb := lerpf(w0, w1, float(i + 1) / float(n - 1)) * 0.5
+		draw_primitive(PackedVector2Array([a + nrm * wa, b + nrm * wb, b - nrm * wb, a - nrm * wa]), cols, none)
+		if silhouette or wa < 0.9:
+			continue
+		var lit_side := 1.0 if nrm.dot(_light_dir) > 0.0 else -1.0
+		if absf(nrm.dot(_light_dir)) > 0.2:
+			draw_line(a + nrm * wa * lit_side, b + nrm * wb * lit_side, rim, 1.0)
+		draw_line(a - nrm * wa * lit_side, b - nrm * wb * lit_side, DARK, 1.0)
 
 
 func _draw() -> void:
 	var b := _body_points()
-	var sway: float = b.sway
+	var h: float = b.h
+	var c: float = b.c
+	var w: float = b.w
+	var lw := maxf(w, 0.7)                                # limb thickness scale
 	var pelvis: Vector2 = b.pelvis
 	var shoulders: Vector2 = b.shoulders
-	var head: Vector2 = b.head
+	var sw: float = b.sw
 	var breath: float = b.breath
-	var twitchy := state == State.FROZEN and randf() < 0.3
-	var squeeze := clampf(gap / 120.0, 0.35, 1.0)   # tight tunnels compress the limbs
+	var frozen := state == State.FROZEN
+	var hunting := state == State.CHASE or state == State.NOTICED
+	if GameState.torch != null:
+		_light_dir = (GameState.torch.global_position - global_position - Vector2(0, -h * 0.6)).normalized()
 
-	# 1) Limbs. Floor: a skirt of sickle legs bowing out from the pelvis.
-	#    Ceiling: blade-arms and spurs, elbows hanging, scythes hooked in.
-	for leg in _legs:
-		var floor_leg: bool = int(leg.surface) == FLOOR
-		var foot: Vector2 = leg.foot - global_position
-		var side := 1.0 if foot.x > sway else -1.0
-		var jitter := Vector2(randf_range(-2, 2), randf_range(-2, 2)) if twitchy else Vector2.ZERO
-		if floor_leg:
-			var root := pelvis + Vector2(side * 3.0, 1.0)
-			var reach := absf(foot.x - root.x)
-			var knee := root + Vector2(side * clampf(reach * 0.55, 6.0, 34.0), -clampf(gap * 0.10, 3.0, 14.0) * squeeze) + jitter
-			_curve(root, root + Vector2(side * 3.0, -2.0), knee, 4.0, 3.0, SKIN)
-			# Long shin bowing outward, ending in a hooked point.
-			var ctrl := knee.lerp(foot, 0.5) + Vector2(side * 6.0 * squeeze, -4.0)
-			_curve(knee, ctrl, foot, 3.0, 1.0, SKIN)
-			draw_line(foot, foot + Vector2(-side * 2.0, -1.0), BONE, 1.0)          # the hook
-			var k := knee.round()
-			draw_rect(Rect2(k - Vector2(1, 1), Vector2(3, 3)), MID)
-			draw_rect(Rect2(k - Vector2(1, 1), Vector2(1, 1)), BONE)
-		else:
-			var is_arm := absf(float(leg.rest)) < 20.0
-			var root := shoulders + Vector2(side * (8.0 if is_arm else 5.0), 0)
-			var elbow := root + Vector2(side * clampf(absf(foot.x - root.x) * 0.5 + 6.0, 6.0, 30.0), 5.0 * squeeze) + jitter
-			_curve(root, root + Vector2(side * 2.0, 2.0), elbow, 3.0 if is_arm else 2.0, 2.0, SKIN)
-			# Forearm into a long scythe, its point hooked into the ceiling.
-			var ctrl := elbow.lerp(foot, 0.5) + Vector2(side * 7.0 * squeeze, 3.0)
-			_curve(elbow, ctrl, foot, 2.0, 1.0, SKIN, BONE if is_arm else MID)
-			if is_arm:
-				draw_line(foot, foot + Vector2(side * 4.0, 3.0), BONE, 1.0)       # blade edge back down
-			draw_rect(Rect2(elbow.round() - Vector2(1, 1), Vector2(2, 2)), BONE.darkened(0.3))
+	# 1) Legs: the four behind the body first (darker, thinner), then the six in
+	#    front. Each one arcs out from the pelvis, up a little, then down almost
+	#    straight to a needle point that hooks inward.
+	for pass_back: bool in [true, false]:
+		for leg in _legs:
+			if bool(leg.back) != pass_back:
+				continue
+			var foot: Vector2 = leg.foot - global_position
+			if frozen:
+				foot += Vector2(randf_range(-1, 1), randf_range(-1, 0)).round()   # tips tremble
+			var side := signf(float(leg.rest))
+			var k: float = leg.k
+			var root := pelvis + Vector2(side * clampf(absf(float(leg.rest)) * 0.22, 3.0, 12.0) * w, 2.0)
+			var reach := foot.x - root.x
+			var arch := h * (0.07 + 0.05 * k)
+			# Out and slightly up from the hips, then a long sweep down to the point.
+			var p1 := root + Vector2(reach * 0.55, -arch)
+			var p2 := Vector2(foot.x + side * 3.0 * w, lerpf(root.y, foot.y, 0.35) - arch * 0.2)
+			var pts := _bez(root, p1, p2, foot, 10)
+			if pass_back:
+				_limb(pts, 5.0 * lw, 1.0, SKIN_BACK, SKIN)
+			else:
+				_limb(pts, 8.0 * lw, 1.0, SKIN)
+				if not silhouette:
+					for j: int in [3, 6]:                       # too many knuckles
+						var kn := pts[j].round()
+						draw_rect(Rect2(kn - Vector2(1, 1), Vector2(2, 2)), SKIN_LIT)
+						draw_rect(Rect2(kn - Vector2(1, 1), Vector2(1, 1)), BONE)
+			draw_line(foot, foot + Vector2(-side * 2.0, -2.0), _col(BONE), 1.0)   # hooked tip
 
-	# 2) Pelvis and a stringy gut between the hips and the ribs.
-	draw_rect(Rect2(pelvis.round() - Vector2(5, 1), Vector2(10, 3)), SKIN)
-	draw_rect(Rect2(pelvis.round() - Vector2(5, 1), Vector2(10, 1)), MID)
-	var gut_top := shoulders.y + (pelvis.y - shoulders.y) * 0.55
-	for i in 4:
-		var gx := sway * 0.75 + (i - 1.5) * 1.6
-		var p0 := Vector2(gx, gut_top)
-		var p1 := Vector2(gx + sin(_t * 1.7 + i) * 1.0, pelvis.y)
-		draw_line(p0, p1, MID if i % 2 else SKIN, 1.0)
-	draw_line(Vector2(sway, gut_top), pelvis, DARK, 1.0)
-
-	# 3) Ribcage: wide at the shoulders, breathing, ribs picked out in bone.
-	var y := shoulders.y
-	while y < gut_top:
-		var k := (y - shoulders.y) / maxf(gut_top - shoulders.y, 1.0)
-		var half := lerpf(9.0 * maxf(squeeze, 0.6), 3.5, k) + breath * (1.0 - k) * 1.5
-		var cx := sway * (1.0 - k * 0.25)
-		draw_rect(Rect2(cx - half, y, half * 2.0, 1), SKIN)
-		if int(y - shoulders.y) % 3 == 1 and k < 0.85:
-			# A rib: bone arcing from the sternum out and down, shorter lower down.
-			var rib := (half - 1.5) * (1.0 - k * 0.4)
-			draw_rect(Rect2(cx - rib - 0.5, y, rib, 1), BONE.darkened(0.35 + k * 0.35))
-			draw_rect(Rect2(cx + 1.0, y, rib, 1), BONE.darkened(0.45 + k * 0.35))
-			draw_rect(Rect2(cx - half, y + 1.0, 1, 1), DARK)   # gap between ribs at the flank
+	# 2) Torso, top to bottom, one pixel row at a time: traps, a broad ribcage,
+	#    a waist pinched far too thin, a hollow gut, then the hip ring.
+	var top := shoulders.y + 1.0
+	var bot := pelvis.y + 1.0
+	var span := maxf(bot - top, 1.0)
+	var lit_right := _light_dir.x > 0.0
+	var y := top
+	while y <= bot:
+		var t := (y - top) / span
+		var hw := _torso_half(t) * w
+		if t < 0.5:
+			hw += breath * (1.0 - t * 2.0) * 1.2
+		var cx := lerpf(shoulders.x, pelvis.x, t)
+		draw_rect(Rect2(cx - hw, y, hw * 2.0, 1), _col(SKIN))
+		if not silhouette:
+			var lit_x := cx + hw - 2.0 if lit_right else cx - hw
+			var dark_x := cx - hw if lit_right else cx + hw - 1.0
+			draw_rect(Rect2(lit_x, y, 2, 1), SKIN_LIT)
+			draw_rect(Rect2(dark_x, y, 1, 1), DARK)
+			# Ribs: ridges arcing down and out from the sternum, every 3 px,
+			# catching the light on one side only.
+			if t > 0.08 and t < 0.4 and int(y - top) % 3 == 0:
+				var rib := hw - 2.5
+				var near := 1.0 if lit_right else -1.0
+				draw_line(Vector2(cx + near, y), Vector2(cx + near * rib, y + 2), RIM.darkened(0.15 + t), 1.0)
+				draw_line(Vector2(cx - near, y), Vector2(cx - near * rib, y + 2), SKIN_LIT, 1.0)
+				draw_line(Vector2(cx - near, y + 1), Vector2(cx - near * rib, y + 3), DARK, 1.0)
+			# The gut: a dark cavity with something coiled in it.
+			if t > 0.44 and t < 0.88:
+				var cav := maxf(hw * 0.55, 1.5)
+				draw_rect(Rect2(cx - cav, y, cav * 2.0, 1), DARK)
 		y += 1.0
-	draw_line(Vector2(sway, shoulders.y), Vector2(sway, gut_top), DARK, 1.0)   # sternum groove
-	draw_rect(Rect2(shoulders.round() - Vector2(10, 1), Vector2(20, 2)), MID)   # collar bones
-	draw_rect(Rect2(shoulders.round() - Vector2(10, 1), Vector2(3, 1)), BONE)
-	draw_rect(Rect2(shoulders.round() + Vector2(7, -1), Vector2(3, 1)), BONE)
+	if not silhouette:
+		var mid := lerpf(top, bot, 0.66)
+		var cxm := lerpf(shoulders.x, pelvis.x, 0.66)
+		for i in 4:
+			var gp := Vector2(cxm + (i % 2) * 3.0 - 1.5 + sin(_t * 0.9 + i) * 0.6, mid - 4.0 + i * 3.0)
+			draw_arc(gp, 1.8 + (i % 2) * 0.6, 0.0, TAU * 0.8, 6, GUT, 1.0)
+		draw_line(Vector2(shoulders.x, top + 1), Vector2(lerpf(shoulders.x, pelvis.x, 0.4), lerpf(top, bot, 0.4)), DARK, 1.0)   # sternum
+		for side: float in [-1.0, 1.0]:                        # collar bones
+			draw_line(shoulders + Vector2(side * 2.0, 2.0), shoulders + Vector2(side * (sw - 3.0), 1.0), BONE.darkened(0.2), 1.0)
+		# Hip ring: a lumpy mass the legs grow out of.
+		for i in 7:
+			var hx := pelvis.x + (float(i) - 3.0) * 3.6 * w
+			draw_circle(Vector2(hx, pelvis.y + 2.0 + absf(float(i) - 3.0) * 0.6), 2.8 * lw, SKIN if i % 2 else SKIN_LIT)
+		draw_line(pelvis + Vector2(-11.0 * w, 4.0), pelvis + Vector2(11.0 * w, 4.0), DARK, 1.0)
 
-	# 4) The neck-stalk and an elongated skull, the eye at its very end.
-	var hd := (head - shoulders).normalized()
-	var skull_base := head - hd * 9.0
-	_seg(shoulders + Vector2(0, -1), skull_base, 3.0, 2.0, SKIN)
-	for i in 6:
-		var t := float(i) / 5.0
-		var p := skull_base.lerp(head, t)
-		var w := 3.0 + sin(t * PI) * 2.5
-		draw_line(p - hd.orthogonal() * (w * 0.5), p + hd.orthogonal() * (w * 0.5), SKIN, 1.5)
-	draw_line(skull_base, head, MID, 1.0)
-	# Vertical mouth-slit under the eye; it opens when it's angry.
-	var mouth := head - hd * 5.0
-	var slit := 3.0 if state == State.ENRAGED else 1.5
-	draw_line(mouth - hd * slit, mouth + hd * 1.0, DARK, 1.0 if state != State.ENRAGED else 2.0)
-	if state == State.ENRAGED:
-		var perp := hd.orthogonal()
-		for i in 3:
-			draw_rect(Rect2((mouth - hd * i + perp).round(), Vector2(1, 1)), BONE)   # teeth
+	# 3) Shoulders: bony knobs with spikes curling up and out (they scrape the
+	#    ceiling in low tunnels).
+	for side: float in [-1.0, 1.0]:
+		var knob := shoulders + Vector2(side * sw, 1.0)
+		draw_circle(knob, 4.0 * lw, _col(SKIN))
+		if not silhouette:
+			draw_circle(knob + Vector2(-side * 0.5, -1.0), 1.4, SKIN_LIT)
+		for s in 2:
+			var root := knob + Vector2(side * (1.0 - s * 3.0), -2.0)
+			var tip := root + Vector2(side * (5.0 - s * 2.0), -10.0 + s * 3.0)
+			tip.y = maxf(tip.y, -gap + 2.0)
+			_limb(_bez(root, root + Vector2(0, -3), tip + Vector2(-side * 2.0, 2.0), tip, 4), 3.0, 1.0, SKIN)
+			if not silhouette:
+				draw_rect(Rect2(tip.round(), Vector2(1, 1)), BONE)
 
-	# 5) The eye: pale, warm, with a pupil that follows you.
-	var e := head.round()
-	draw_rect(Rect2(e - Vector2(2, 2), Vector2(5, 5)), DARK)                     # socket
-	draw_rect(Rect2(e - Vector2(1, 1), Vector2(3, 3)), EYE_WHITE)
-	var look := Vector2.ZERO
-	if GameState.player != null:
-		look = (GameState.player.global_position + Vector2(0, -30) - global_position - head).normalized()
-	draw_rect(Rect2((e + look).round(), Vector2(1, 1)), PUPIL)
+	# 4) Arms: long, hanging, ending in blades that curl inward at the floor.
+	for arm in b.arms:
+		var side: float = arm.side
+		var sh: Vector2 = arm.shoulder
+		var elbow: Vector2 = arm.elbow
+		var tip: Vector2 = arm.tip
+		if frozen:
+			tip += Vector2(randf_range(-1, 1), 0).round()
+		_limb(_bez(sh, sh + Vector2(side * 3.0, 4.0), elbow + Vector2(0, -6.0), elbow, 5), 7.0 * lw, 5.0 * lw, SKIN)
+		# The forearm bows out, then sweeps back in: a long scythe.
+		var ctrl := elbow.lerp(tip, 0.45) + Vector2(side * (6.0 * w + 3.0 * c), 0)
+		var blade := _bez(elbow, ctrl, tip + Vector2(side * 2.0 * w, -h * 0.12), tip, 10)
+		_limb(blade, 5.0 * lw, 1.0, SKIN, BONE)
+		draw_line(tip, tip + Vector2(-side * 3.0, -2.0), _col(BONE), 1.0)               # the hook
+		draw_line(elbow, elbow + Vector2(side * 4.0, -5.0), _col(SKIN_LIT), 2.0)       # elbow spur
+		if not silhouette:
+			draw_rect(Rect2((elbow + Vector2(side * 4.0, -5.0)).round(), Vector2(1, 1)), BONE)
+
+	# 5) The head: one tall stalk, rounded at the top, a seam of a mouth running
+	#    down the front (it splits open, teeth showing, when it hunts) and ONE
+	#    eye near the top.
+	var hb: Vector2 = b.head_base
+	var ht: Vector2 = b.head_top
+	var axis: Vector2 = b.axis
+	var hl: float = b.head_len
+	_limb(PackedVector2Array([hb, hb.lerp(ht, 0.5), ht]), 10.0 * lw, 7.0 * lw, SKIN)
+	draw_circle(ht, 3.5 * lw, _col(SKIN))
+	if not silhouette:
+		var perp := axis.orthogonal()
+		var seam := 1.0 + (1.0 if hunting else 0.0)
+		for s: float in [-1.0, 1.0]:
+			draw_line(hb + axis * (hl * 0.12) + perp * s * seam, hb + axis * (hl * 0.70) + perp * s * seam, DARK, 1.0)
+		if hunting:
+			for i in 5:
+				draw_rect(Rect2((hb + axis * (hl * (0.18 + i * 0.1)) + perp * (1.0 if i % 2 else -1.0)).round(), Vector2(1, 1)), BONE)
+		# The eye: pale, warm, with a pupil that follows you.
+		var e: Vector2 = (b.eye as Vector2).round()
+		draw_rect(Rect2(e - Vector2(2, 2), Vector2(5, 5)), DARK)
+		draw_rect(Rect2(e - Vector2(1, 1), Vector2(3, 3)), EYE_WHITE)
+		var look := Vector2.ZERO
+		if GameState.player != null:
+			look = (GameState.player.global_position + Vector2(0, -30) - global_position - e).normalized()
+		draw_rect(Rect2((e + look).round(), Vector2(1, 1)), PUPIL)
+
+
+## Torso half-width (px) down the body, t = 0 at the shoulders, 1 at the pelvis.
+func _torso_half(t: float) -> float:
+	if t < 0.1:
+		return lerpf(6.0, 15.0, smoothstep(0.0, 1.0, t / 0.1))   # traps up into the head-stalk
+	if t < 0.64:
+		# A rounded V: broad ribcage tapering to a waist far too thin.
+		var k := (t - 0.1) / 0.54
+		return 5.0 + 10.0 * pow(cos(k * PI) * 0.5 + 0.5, 0.75)
+	return lerpf(5.0, 9.0, smoothstep(0.0, 1.0, (t - 0.64) / 0.36))   # hips

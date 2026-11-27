@@ -1,6 +1,72 @@
 # Night Shift: progress log
 
-## Test this first: "make it scary" Phase 1 (real audio)
+## Test this first: "make it scary" Phase 2 (the Thing is a threat)
+
+Headphones on. Press **F3** for the debug overlay: it shows the Thing's state and
+WHY it noticed you ("heard", "light", "noise", "touch").
+
+**The basement (your layout fix):**
+1. After the power cut, go through the storeroom and take the stairs down (S).
+   You're now in the gas station's basement. The FUSE BOX sign at the bottom
+   points right ("just follow the signs").
+   - It's a concrete cellar: shelves of stock, the mop ("that wasn't there before"),
+     the red door, a dead strip light, spiders in the vent by the stairs.
+   - At the far right end the tunnels are **boarded up**: hold E, 3 boards, loud.
+   - The panel isn't in the storeroom any more.
+
+**Zone 2 (the Thing is only ever SEEN here):**
+2. **The eye:** right after the boards, point the torch straight down the tight
+   tunnel. Far away, ONE warm pixel looks back ("it can see you"). Keep the light
+   on it or walk towards it: it's gone. Did you even see it?
+3. **The leg:** further in, the "spider" in the vent that doesn't run.
+4. **The silhouette:** walk into the open room. High on the far right there's a
+   working light (relief). A black shape crosses in front of it into the passage.
+   Go there: nothing.
+5. Nothing hunts you in zone 2. The Thing is asleep until zone 3.
+
+**Zone 3a (after your first trip back up and down again):** it lives in the tall
+room after the crouch gap. The crouch gap is safe: it can't fit through.
+6. **Hide:** torch off, crouch, DON'T MOVE, right in its path. It walks over you:
+   the breathing, the taps, its legs around you. Then it carries on.
+   Any movement under it and it notices. Standing up: it notices.
+7. **Hearing:** it hears you by how you move.
+   - crouch-walk: 2 tiles
+   - walk: 6 tiles
+   - run: ~14 tiles
+   - standing still: almost touching
+   - crouched still: nothing at all
+8. **Noticed:**
+   - it freezes for 0.8 s
+   - the sting plays
+   - the screen jolts
+   - its head SNAPS round to you
+   - then it comes, faster than you walk and slower than you run (in normal
+     corridors)
+9. **Light:**
+   - Unaware: the torch on it makes it hold still. Keep it on it 1.5 s and it
+     notices you.
+   - Hunting: the light freezes it 1 s, then it lurches and keeps coming through
+     the light for ~2.5 s.
+10. **Lose it:** run until you're well clear (~13 tiles in a corridor, more in
+    open rooms), torch off, crouch still.
+    - After 3 s it gives up.
+    - It goes to where it lost you and sniffs about for 6 s, maybe right over
+      you. Then it wanders off.
+11. **The director:** stay out of its way and every 1-2 minutes it drifts towards
+    roughly where you are. Never exactly.
+12. **Height still matters:** in tight tunnels it's slow and there's no room to
+    hide under it. In open rooms it's faster than you can run.
+
+**The look:** does it read like your concept now?
+- tall head-stalk with one eye
+- spiked shoulders
+- ribs and gut
+- long blade arms
+- the leg skirt
+
+In normal corridors it's crammed in, head bent against the ceiling.
+
+## Phase 1 checklist (real audio), if you haven't done it yet
 
 Headphones ON. That's not optional: the drone sits at 45-52 Hz and laptop
 speakers won't play it at all.
@@ -485,15 +551,173 @@ and renders of every new area.
     `creature_taps_1..3`, `creature_wheeze`, `wail_deep_slow`,
     `wail_through_wall`.
 
+### "Make it scary" Phase 2: the Wedged Thing is a threat
+**The basement (your instruction):** the tunnel entrance is now in the gas
+station's basement.
+- Storeroom: the stairs down are open; the boarded panel is gone from there.
+- Basement (zone 1): a concrete cellar at the bottom of the stairs. Stock,
+  shelves, the mop, the red door, a dead strip light.
+- The boarded-up way into the tunnels is at its far end. Through it is zone 2.
+- Triggers:
+  - "follow the signs" plus a checkpoint at the bottom of the stairs
+  - zone 2 plus a checkpoint just past the boards
+- The CCTV storeroom feed is re-aimed at the top of the basement stairs. The
+  man's "next to the open panel" stage now stands there, facing them.
+
+**Behaviour** (`scenes/creatures/wedged_thing.gd`, rewritten):
+- **States:** DORMANT -> PATROL -> NOTICED -> CHASE -> (FROZEN) -> SEARCH ->
+  PATROL.
+- **The old senses are gone:** the always-knows-within-90-px sense, the constant
+  stalking and the ENRAGED state.
+- **DORMANT until zone 3:** zone 2 never wakes it.
+- **PATROL:**
+  - Wanders between random points in the stretch it can reach (it finds that
+    stretch itself, stopping at walls and gaps it can't fit).
+  - Pauses 1.5-4.5 s at each point.
+  - Doesn't know where you are.
+- **Hearing** (`Player.hearing_radius()`, also used for footstep noise events):
+  - crouch 32 px, walk 96, run 220
+  - standing still 18, crouched and still 0
+  - measured along the floor
+- **Other ways it notices:** noise events (boards, levers), and the torch on it
+  (or pointed at it from up to 230 px) for 1.5 s. While lit and unaware it holds
+  still.
+- **NOTICED:** 0.8 s freeze, the sting (with a hush in the drone), the head snaps
+  round in one frame, and a small screen shake.
+- **CHASE:**
+  - Speed: 75 px/s x the gap rule.
+  - It tracks you while it can hear you or see you (48 px in the dark, 420 px with
+    your torch on).
+  - Lit: FROZEN 1 s, then it lurches (1.7x for 0.45 s) and can't be frozen for
+    2.5 s. Each freeze makes it 6% faster, up to 4 freezes.
+- **Losing it:** 3 s without hearing or seeing you -> SEARCH. It goes to where it
+  lost you and sniffs about for 6 s (by sound only), then back to PATROL.
+- **Director:** every 60-120 s of patrolling, its next point is 120-300 px from
+  where you are.
+- **Catching:** while patrolling or searching only its torso counts, so you can
+  be underneath it. While hunting it reaches down to the floor. Touching it
+  while it's unaware just makes it notice you.
+- **Zone 4 climax:** `relocate(..., chase=true)`: it wakes already hunting.
+- **The ending:** still you-as-the-Thing (puppet mode).
+
+**The look** (redrawn to your concept image, original drawing):
+- A front-on silhouette:
+  - one tall head-stalk with a single eye and a seam of a mouth that splits
+    open with teeth when it hunts
+  - spiked bony shoulders
+  - a broad ribcage tapering to a waist far too thin
+  - a hollow gut with something coiled in it
+  - two long arms splayed out, ending in hooked blades by the floor
+  - a skirt of TEN curved, irregular legs from a lumpy hip ring (4 darker
+    ones behind)
+- It's 132 px tall when free (3x you). In tunnels it's crammed in: shorter,
+  slightly narrower, legs splayed wider, the head bent against the ceiling,
+  shoulder spikes scraping it.
+- Limbs are tapering quad strips with a rim light on the side facing the torch.
+- The palette is brighter than "charcoal" on paper: through the real torch it was
+  invisible past ~90 px. Now it reads as a pale half-lit shape at the edge of the
+  beam.
+- **Animation:**
+  - each leg steps on its own timing, with a beat of hesitation while unaware
+    and fast, messy steps while hunting
+  - tips tremble while frozen
+  - the head sways slowly while patrolling, snaps round when it notices you,
+    and stays locked on you while it hunts
+  - arms swing; the body bobs and leans while hunting
+  - it lurches out of a freeze
+- More of this comes in Phase 4.
+
+**Zone 2 glimpses** (`scenes/creatures/thing_glimpse.gd`): harmless puppets using
+the same body.
+- **"eye":** at the far end of the tight tunnel. It glints back at your torch from
+  up to 340 px. After 1.2 s of being seen, or when you come within 170 px, it
+  pulls back and is gone.
+- **"cross":** a black silhouette (Light Only, drawn black, against a worklight
+  that touches the creature layer). It crosses the open room into the passage
+  when you walk in.
+- A working light in the open room (relief, and the backdrop for that).
+
+**Fixed along the way:**
+- **Worklights downstairs died in the Act 0 power cut.** So the zone 3b
+  "lights out" lever had nothing to switch off. They're on their own supply now.
+- **"Pushed from inside" panels** (zone 3a) start broken open: one board
+  hanging off a bent nail, the rest splintered on your side. Before, that panel
+  was 3 boards right at the exit of the Thing's room. Ripping them meant certain
+  death at 135 px/s.
+
+**Verified:**
+- **A new behaviour test (18 checks, all pass):**
+  - dormant at start
+  - notices at 31 / 94 / 208 px for crouch / walk / run
+  - the 0.80 s notice freeze
+  - chase at 68 px/s in a 64 px corridor (walk 55, run 100)
+  - a 1.00 s light freeze, then it keeps coming through the light
+  - lost after 3.0 s, searched, and gave up without finding me while I was
+    crouched right where it searched
+  - a brief light doesn't make it notice, a held one does
+  - noise makes it notice and head for the sound
+  - walks over a crouched, still player
+  - finds a standing one
+  - the director nudge
+  - patrols on its own
+- **Regression suite:**
+  - the scripted playtest walks the whole new route (basement, panel, zone 2, the
+    lever, the end) with the Thing dormant throughout
+  - death and respawn
+  - Cable
+  - leg tip
+  - arm
+  - the full descent (3 trips, zone 4, the ending)
+- **Renders:**
+  - the Thing in an open room, in corridors and in tight tunnels, under a
+    floodlight and through the real torch
+  - the eye glint down the tunnel
+  - the silhouette crossing and then gone
+  - a scripted notice / chase / freeze / lurch sequence
+  - the ending
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
 - How dark it looks on a real monitor. My renders are software-rendered PNGs.
 
 ## Known bugs / rough edges
+- In 64 px corridors the Thing's head is bent nearly sideways by the ceiling, so
+  the one-eyed head reads less than in open rooms. It's meant to look crammed;
+  tell me if it reads wrong.
+- Zone 2's three Thing moments (eye, leg, silhouette) are close together. Phase 3
+  spreads them out.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Basement layout:** the doc puts the panel behind the storeroom shelving. I
+  followed you: the stairs lead down to the gas station's basement, and the
+  boarded-up entrance to the tunnels is down there.
+- **The teaching Ceiling Arm is still in the basement** (left end), and the doc
+  says arms are zone 2. I'll move it into the tunnels when Phase 3 re-paces the
+  route.
+- **Zone 2 glimpse order:** eye (right through the boards), then leg, then
+  silhouette. The doc says leg first, then eye. The eye down the tunnel works
+  best right as you open the boards. Phase 3 may reorder.
+- **The light while it's unaware** holds it still (the light rule stays
+  consistent), and 1.5 s of it means it notices. The old "notices a beam pointed
+  its way from 230 px" counts as light on it.
+- **Losing it** = 3 s with it neither hearing nor seeing you, which is your
+  rule in practice: get clear, torch off, crouch still. It goes to where it last
+  had you. If it gets there while still hunting, it finds you. If it's already
+  searching, it can walk right over you.
+- **Sight:** 48 px in the dark while it hunts, 420 px if your torch is on (your
+  light gives you away), none while searching in the dark.
+- **normal_gap 72** (was 84), so "75 px/s at normal gap" lands in normal
+  corridors:
+  - tight 48 px: ~50 px/s
+  - corridors 64-96: 67-100 px/s
+  - open rooms: 130+ px/s
+- **Hiding under it** is my addition. It's the doc's "hiding = darkness, stillness
+  and knowing the rules", and it makes the patrol passable in 1-D tunnels (you
+  can't walk round it).
+- **Pushed-from-inside panels are already broken open.** See "Fixed along the
+  way" above.
 - **"tap" = tap_1..6 for every tap** (Thing legs, Arm fingers, Cable tip), as
   asked. `creature_taps_1..3` aren't used yet. They might suit the Thing's
   "testing the floor" taps in Phase 4.

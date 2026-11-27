@@ -10,8 +10,9 @@ var _idle := 0.0
 func _ready() -> void:
 	super._ready()
 	_active = true
-	state = State.HUNT
-	hunt_speed = 58.0
+	state = State.CHASE
+	chase_speed = 58.0
+	puppet = true          # you are it: it doesn't catch or notice anything
 	eye_light = PointLight2D.new()
 	eye_light.texture = LightTextures.cone(150.0, 38.0, 0)
 	eye_light.color = Color(1.0, 0.9, 0.72)              # torchlight, the same warm colour

@@ -113,8 +113,9 @@ func on_event(event_name: String) -> void:
 		"climax":
 			AudioDirector.hush_drone(3.0)
 			# The final chase: it comes from behind, in a space that's closing.
-			thing.relocate(GameState.player.global_position + Vector2(-260, 0), true, 0.5)
-			thing.hunt_speed *= 1.25
+			# It wakes already hunting you.
+			thing.relocate(GameState.player.global_position + Vector2(-260, 0), true, 0.5, true)
+			thing.chase_speed *= 1.25
 		"last_stretch":
 			# Creatures stop chasing you. No explanation. And you start to change.
 			thing.stop_chasing()
