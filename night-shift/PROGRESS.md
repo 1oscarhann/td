@@ -1,6 +1,34 @@
 # Night Shift: progress log
 
-(The "Test this first" checklist goes here at the end of the overnight run.)
+## Test this first
+
+Open `night-shift/project.godot` in Godot 4.4+, F5, headphones on.
+
+1. **Look:** 640x360, finer art, the 44 px worker. Is zoom 1 too wide? (see
+   Decisions to check: one line to change)
+2. **Act 0:** start in the lit shop with no torch. Do the 3 jobs (hold E at the
+   crisp box, the spill, the fridge). The lights stutter after 2. The power dies
+   after 3. Do the lights, fridge hum and forecourt die, with only EXIT left lit?
+3. **CCTV:** hold E at the monitor on the counter. Check once ("see"), close, check
+   again. Is the man at the left edge of CAM1? Then walk to that corner: he must
+   not be there.
+4. **Torch pickup:** "torch is under the counter". Hold E at the till end, then
+   click to toggle. Try the breaker in the storeroom.
+5. **Panel:** 3 boards, torch forced at the floor while you pull.
+6. **Spiders:** at the bottom of the stairs, light the ceiling vent. Tiny things
+   scatter ("they're only spiders").
+7. **Ceiling Arms:** aim left from the bottom of the stairs and wait. An arm
+   reaches down; light it and it snaps back. The real one is in the passage
+   before the crouch gap: walk under it in the dark and it grabs you.
+8. **Wedged Thing:** unchanged rules. Check it still feels the same at the new
+   scale: slow in the tight tunnel, fast in the open room, can't pass the
+   crouch gap (hold Ctrl).
+9. **Sound:** none of it has been heard by a human yet. Fluorescent buzz,
+   fridge hum, clunk, scrape, taps, drips, hiss.
+
+## How to run the art generator
+`python3 tools/gen_tiles.py` (standard library only) rewrites everything in
+`art/`. Godot reimports on focus.
 
 ## How I verified things (all phases)
 

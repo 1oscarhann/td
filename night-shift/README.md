@@ -23,6 +23,10 @@ calls and sounds synthesised at startup, so it runs straight from a clone.
 | E (hold) | Pull boards off the panel (torch is forced at the floor) |
 | F3 | Debug overlay (Thing state, lit time, stamina, narrator cooldown) |
 
+> Current status, what's untested, known bugs and decisions to check: see
+> [PROGRESS.md](PROGRESS.md). Since this README was written, the slice gained
+> an Act 0 shop + power cut, CCTV, spiders, Ceiling Arms and generated pixel art.
+
 ## What's in the slice
 
 The route is storeroom (power's out, red EXIT sign), then the boarded panel (3 boards, hold E), then the
@@ -61,6 +65,8 @@ a 1-tile **crouch gap**, and a dead end where the FUSE BOX sign points into the 
 ## Project layout
 
 ```
+tools/         gen_tiles.py (procedural pixel art -> art/)
+art/           generated PNGs, normal maps, CanvasTextures
 autoload/      GameState (noise, light queries, checkpoint, zone)
                AudioDirector (synth sound library, play_at, reverb bus)
                Narrator (say(), cooldown, queue, no repeats)
