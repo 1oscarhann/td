@@ -35,19 +35,21 @@ const MAP := [
 	"######################################################################################################################################",
 	"#........................##............................###############################################################################",
 	"#........................##............................#......########################################################################",
+	"#........................##............................#......########################################################################",
 	"#......................................................#......########################################################################",
 	"#.............................................................########################################################################",
+	"#.............................................................########################################################################",
 	"#.D...P...6K...R..M9.C.7....X8.....S.....S.....S.....1.B..H...########################################################################",
-	"##########################################################..##########################################################################",
-	"##########################################################..##########################################################################",
-	"##########################################################..##########################################################################",
-	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+	"##########################################################..#########################....................#############################",
+	"##########################################################..#########################....................#############################",
+	"##########################################################..#########################....................#############################",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%,,,,,,,,,,,,%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,,,%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,F,,,,,,,,,,,,,,,,,,,,,%%%,,,,,,,,,,f,%%%",
+	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%,,,,S,,,W,,,,,,,,,,,,,,,,,,,,,2,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,3,,,,,,,,,4,,,,5,,,%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
 	"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
@@ -80,47 +82,47 @@ const TRIGGERS := {
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
 	# Shop (Act 0): fluorescent tubes that work until the power cut, the window.
-	{"type": "light", "cell": Vector2i(5, 4)},
-	{"type": "light", "cell": Vector2i(12, 4)},
-	{"type": "light", "cell": Vector2i(19, 4)},
-	{"type": "window", "cell": Vector2i(6, 4)},
+	{"type": "light", "cell": Vector2i(5, 6)},
+	{"type": "light", "cell": Vector2i(12, 6)},
+	{"type": "light", "cell": Vector2i(19, 6)},
+	{"type": "window", "cell": Vector2i(6, 6)},
 	# Storeroom: dead strip lights, vents, a pipe and a cable along the back wall.
-	{"type": "tube", "cell": Vector2i(33, 4)},
-	{"type": "tube", "cell": Vector2i(44, 4)},
-	{"type": "vent", "cell": Vector2i(38, 4)},
-	{"type": "vent", "cell": Vector2i(50, 4)},
-	{"type": "pipe", "cell": Vector2i(27, 4), "to_x": 55, "below_ceiling": 6},
-	{"type": "cable", "cell": Vector2i(42, 4), "to_x": 53, "below_ceiling": 16, "sag": 7},
+	{"type": "tube", "cell": Vector2i(33, 6)},
+	{"type": "tube", "cell": Vector2i(44, 6)},
+	{"type": "vent", "cell": Vector2i(38, 6)},
+	{"type": "vent", "cell": Vector2i(50, 6)},
+	{"type": "pipe", "cell": Vector2i(27, 6), "to_x": 55, "below_ceiling": 6},
+	{"type": "cable", "cell": Vector2i(42, 6), "to_x": 53, "below_ceiling": 16, "sag": 7},
 	# Tunnel start: pipe run past the stairwell, a sagging cable, a dead light.
-	{"type": "pipe", "cell": Vector2i(32, 16), "to_x": 67, "below_ceiling": 3},
-	{"type": "cable", "cell": Vector2i(46, 16), "to_x": 57, "below_ceiling": 12, "sag": 6},
-	{"type": "tube", "cell": Vector2i(52, 16)},
+	{"type": "pipe", "cell": Vector2i(32, 18), "to_x": 67, "below_ceiling": 3},
+	{"type": "cable", "cell": Vector2i(46, 18), "to_x": 57, "below_ceiling": 12, "sag": 6},
+	{"type": "tube", "cell": Vector2i(52, 18)},
 	# First Ceiling Arm: over ground you never need to cross (left of the stairs).
 	# You see it reach down where you would have walked; light it, it pulls back.
-	{"type": "vent", "cell": Vector2i(48, 16)},
-	{"type": "arm", "cell": Vector2i(48, 16)},
+	{"type": "vent", "cell": Vector2i(48, 18)},
+	{"type": "arm", "cell": Vector2i(48, 18)},
 	# First spiders: right where you step off the stairs. Harmless; teach "look up".
-	{"type": "vent", "cell": Vector2i(61, 16)},
-	{"type": "spiders", "cell": Vector2i(61, 16), "count": 3},
+	{"type": "vent", "cell": Vector2i(61, 18)},
+	{"type": "spiders", "cell": Vector2i(61, 18), "count": 3},
 	# Tight tunnel: a vent right above your head.
-	{"type": "pipe", "cell": Vector2i(67, 17), "to_x": 85, "below_ceiling": 2},
-	{"type": "vent", "cell": Vector2i(73, 17)},
-	{"type": "spiders", "cell": Vector2i(73, 17), "count": 2},
+	{"type": "pipe", "cell": Vector2i(67, 19), "to_x": 85, "below_ceiling": 2},
+	{"type": "vent", "cell": Vector2i(73, 19)},
+	{"type": "spiders", "cell": Vector2i(73, 19), "count": 2},
 	# Open room: high things you only find by looking up.
-	{"type": "tube", "cell": Vector2i(89, 12)},
-	{"type": "vent", "cell": Vector2i(96, 12)},
-	{"type": "spiders", "cell": Vector2i(96, 12), "count": 3},
-	{"type": "tube", "cell": Vector2i(101, 12)},
-	{"type": "pipe", "cell": Vector2i(85, 14), "to_x": 105, "above_floor": 44},
-	{"type": "cable", "cell": Vector2i(86, 12), "to_x": 103, "below_ceiling": 26, "sag": 14},
+	{"type": "tube", "cell": Vector2i(89, 14)},
+	{"type": "vent", "cell": Vector2i(96, 14)},
+	{"type": "spiders", "cell": Vector2i(96, 14), "count": 3},
+	{"type": "tube", "cell": Vector2i(101, 14)},
+	{"type": "pipe", "cell": Vector2i(85, 16), "to_x": 105, "above_floor": 44},
+	{"type": "cable", "cell": Vector2i(86, 14), "to_x": 103, "below_ceiling": 26, "sag": 14},
 	# Passage, past the crouch gap, the dead end.
-	{"type": "cable", "cell": Vector2i(106, 16), "to_x": 115, "below_ceiling": 9, "sag": 4},
+	{"type": "cable", "cell": Vector2i(106, 18), "to_x": 115, "below_ceiling": 9, "sag": 4},
 	# The real one: in the passage before the crouch gap, on the chase route.
-	{"type": "vent", "cell": Vector2i(110, 16)},
-	{"type": "arm", "cell": Vector2i(110, 16)},
-	{"type": "vent", "cell": Vector2i(124, 16)},
-	{"type": "spiders", "cell": Vector2i(124, 16), "count": 2},
-	{"type": "tube", "cell": Vector2i(127, 16)},
+	{"type": "vent", "cell": Vector2i(110, 18)},
+	{"type": "arm", "cell": Vector2i(110, 18)},
+	{"type": "vent", "cell": Vector2i(124, 18)},
+	{"type": "spiders", "cell": Vector2i(124, 18), "count": 2},
+	{"type": "tube", "cell": Vector2i(127, 18)},
 ]
 
 ## Shop with the power on: flat, harsh fluorescent. The boredom is the point.
@@ -211,10 +213,11 @@ func _process(delta: float) -> void:
 ## figure's spot right at the left edge, half out of frame. Easy to miss.
 func cctv_feeds() -> Array:
 	return [
-		{"label": "CAM1 SHOP FLOOR", "pos": Vector2(_door_pos.x + 80.0, _door_pos.y - 36.0), "zoom": 1.0},
-		{"label": "CAM2 TILL", "pos": _counter_pos + Vector2(0, -22), "zoom": 2.0},
-		{"label": "CAM3 FORECOURT", "pos": _window_pos, "zoom": 3.0},
-		{"label": "CAM4 STOREROOM", "pos": panel.global_position + Vector2(-72, -36), "zoom": 1.0},
+		# Each feed is 320x180; zoom 1.67 = a 192x108 slice of the world.
+		{"label": "CAM1 SHOP FLOOR", "pos": Vector2(_door_pos.x + 80.0, _door_pos.y - 52.0), "zoom": 5.0 / 3.0},
+		{"label": "CAM2 TILL", "pos": _counter_pos + Vector2(0, -26), "zoom": 10.0 / 3.0},
+		{"label": "CAM3 FORECOURT", "pos": _window_pos, "zoom": 5.0},
+		{"label": "CAM4 STOREROOM", "pos": panel.global_position + Vector2(-72, -52), "zoom": 5.0 / 3.0},
 	]
 
 
@@ -249,11 +252,11 @@ func _build() -> void:
 				"#", "%":
 					walls.set_cell(cell, 0, _atlas(_solid_tile_for(x, y), cell))
 				".":
-					back_wall.set_cell(cell, 0, _atlas(TileSetBuilder.BACK_CONCRETE, cell))
+					back_wall.set_cell(cell, 0, _atlas(_back_edge(TileSetBuilder.BACK_CONCRETE, cell), cell))
 				",":
-					back_wall.set_cell(cell, 0, _atlas(TileSetBuilder.BACK_BRICK, cell))
+					back_wall.set_cell(cell, 0, _atlas(_back_edge(TileSetBuilder.BACK_BRICK, cell), cell))
 				_:
-					back_wall.set_cell(cell, 0, _atlas(_background_for(row, x), cell))
+					back_wall.set_cell(cell, 0, _atlas(_back_edge(_background_for(row, x), cell), cell))
 					_place_marker(ch, cell)
 	_fill_margin(width)
 	for d: Dictionary in DECOR:
@@ -359,6 +362,17 @@ func _solid_tile_for(x: int, y: int) -> int:
 	return TileSetBuilder.ROCK
 
 
+## Back-wall cells along the floor or ceiling get the grimy edge versions:
+## dirt collects in corners and edges, never across the middle of a wall.
+func _back_edge(back_type: int, cell: Vector2i) -> int:
+	var brick := back_type == TileSetBuilder.BACK_BRICK
+	if not _is_open(cell.x, cell.y + 1):
+		return TileSetBuilder.BACK_BRICK_LOW if brick else TileSetBuilder.BACK_CONCRETE_LOW
+	if not _is_open(cell.x, cell.y - 1):
+		return TileSetBuilder.BACK_BRICK_HIGH if brick else TileSetBuilder.BACK_CONCRETE_HIGH
+	return back_type
+
+
 func _is_open(x: int, y: int) -> bool:
 	if y < 0 or y >= MAP.size():
 		return false
@@ -409,7 +423,7 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			props.add_child(door)
 			_door_pos = floor_point
 			var figure := FIGURE_SCRIPT.new() as CCTVFigure
-			figure.stage_points = [floor_point + Vector2(-13, 0)]   # far corner, half out of frame
+			figure.stage_points = [floor_point + Vector2(-14, 0)]   # far corner, half out of frame
 			props.add_child(figure)
 		"F", "f":
 			var sign_node: Node2D = SIGN_SCENE.instantiate()

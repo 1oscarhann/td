@@ -22,7 +22,7 @@ const PLANK_TEX := preload("res://art/props/plank.tres")
 @export var board_count := 3
 ## Seconds of holding E per board.
 @export var pull_time := 1.3
-@export var opening_size := Vector2(16, 32)
+@export var opening_size := Vector2(16, 48)
 ## How far (px) a board coming free carries. Big on purpose.
 @export var noise_radius := 260.0
 ## Later in the game: boards splintered outward, nails bent the wrong way.

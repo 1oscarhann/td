@@ -35,8 +35,11 @@ extends CharacterBody2D
 @export var crouch_noise := 0.0
 @export var climb_noise := 50.0
 
-const STAND_HAND := Vector2(3, -18)
-const CROUCH_HAND := Vector2(3, -10)
+## Where the torch hand sits (facing right). Matches the 44 px sprite's front
+## shoulder; player_visual.gd draws the arm from the shoulder to here.
+const STAND_HAND := Vector2(7, -27)
+const CROUCH_HAND := Vector2(10, -16)
+const STAND_HEIGHT := 44.0
 ## Standing still underground this long -> "keep moving".
 const IDLE_LINE_TIME := 15.0
 ## World px of floor kept visible under the feet.
@@ -75,7 +78,7 @@ func _ready() -> void:
 	GameState.player = self
 	stamina = stamina_max
 	# Space between the crouched head and the standing head. Must be clear to stand up.
-	_headroom.size = Vector2(8, 12)
+	_headroom.size = Vector2(8, 16)
 	# Dim glow so the player never fully vanishes. Its cull mask excludes the
 	# creature bit, so it can never reveal a creature: only the torch does that.
 	glow.texture = LightTextures.radial(96)
@@ -109,8 +112,7 @@ func _process(delta: float) -> void:
 	_update_camera(delta)
 
 
-## Camera framing. The camera runs at an integer 2x zoom (crisp pixels) and is
-## framed on the ROOM, not just the player: it aims at the middle between the
+## Camera framing (zoom 1 at 640x360). Framed on the ROOM, not just the player: it aims at the middle between the
 ## floor and ceiling you're standing in, clamped so your feet and head always
 ## stay on screen. Rooms fill the view instead of leaving big rock bands.
 ## It also leans a little towards the mouse so aiming into the dark shows you
@@ -122,7 +124,7 @@ func _update_camera(delta: float) -> void:
 	var feet := global_position.y
 	var target_y := clampf(_room_mid_y,
 			feet + CAMERA_FLOOR_MARGIN - view.y * 0.5,   # floor stays in view
-			feet - 38.0 + view.y * 0.5)                  # head stays in view
+			feet - STAND_HEIGHT - 10.0 + view.y * 0.5)   # head stays in view
 	var target := Vector2(m.x * camera_lead, target_y - feet)
 	camera.position = camera.position.lerp(target, clampf(delta * 4.0, 0.0, 1.0))
 
@@ -168,7 +170,8 @@ func snap_camera() -> void:
 	_measure_room()
 	var view := get_viewport().get_visible_rect().size / camera.zoom
 	var feet := global_position.y
-	var y := clampf(_room_mid_y, feet + CAMERA_FLOOR_MARGIN - view.y * 0.5, feet - 38.0 + view.y * 0.5)
+	var y := clampf(_room_mid_y, feet + CAMERA_FLOOR_MARGIN - view.y * 0.5,
+			feet - STAND_HEIGHT - 10.0 + view.y * 0.5)
 	camera.position = Vector2(0, y - feet)
 	camera.reset_smoothing()
 
@@ -268,7 +271,7 @@ func _set_crouch(on: bool) -> void:
 func _has_headroom() -> bool:
 	var query := PhysicsShapeQueryParameters2D.new()
 	query.shape = _headroom
-	query.transform = Transform2D(0.0, global_position + Vector2(0, -21))
+	query.transform = Transform2D(0.0, global_position + Vector2(0, -33))
 	query.collision_mask = GameState.LAYER_WORLD
 	return get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
 

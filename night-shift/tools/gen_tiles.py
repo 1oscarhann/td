@@ -27,7 +27,8 @@ VARIANTS = 3  # rows in the tile atlas
 
 # ----------------------------------------------------------------------- palette
 # 0-9: dark teal/grey ramp, darkest to lightest. 10-11: accents (signs, crisps,
-# wood, rust). Keep it at 12: changing the palette changes the whole game's look.
+# wood, rust). The environment uses only these 12. 12-15 are reserved for the
+# player character (skin, hair, a dulled hi-vis stripe).
 PALETTE = [
     (11, 16, 19),     # 0  near black
     (19, 28, 32),     # 1
@@ -41,6 +42,11 @@ PALETTE = [
     (180, 194, 184),  # 9  pale (paper, highlights)
     (107, 90, 58),    # 10 dirty ochre (wood, cardboard, packets)
     (110, 58, 50),    # 11 rust red (packets, rust)
+    # 12-15: character-only colours (the player), muted to sit in the palette.
+    (150, 121, 101),  # 12 skin
+    (112, 88, 75),    # 13 skin shadow
+    (45, 36, 33),     # 14 hair
+    (150, 152, 80),   # 15 hi-vis stripe (dulled)
 ]
 
 BAYER4 = [
@@ -215,10 +221,7 @@ def crack(img, rng, ox, oy, w, h, steps, dark, light=None):
 
 def material(img, ox, oy, w, h, ramp, seed, base=0.5, low=0.25, fine=0.12,
              grime=0.0, value_fn=None):
-    """Fill a box with a dithered noisy material on `ramp`.
-    Variant 2 of every tile (seed >= 200 above its base) is extra grimy."""
-    if (seed // 100) % 10 == 2:
-        grime *= 1.8
+    """Fill a box with a dithered noisy material on `ramp`."""
     n_low = Noise(seed, 4, 16)
     n_grime = Noise(seed + 7, 3, 16)
     rng = random.Random(seed + 13)
@@ -235,91 +238,99 @@ def material(img, ox, oy, w, h, ramp, seed, base=0.5, low=0.25, fine=0.12,
 
 
 # ------------------------------------------------------------------------- tiles
-# Atlas order MUST match TileSetBuilder constants:
-# ROCK, BACK_CONCRETE, BACK_BRICK, FLOOR, CEILING, SIDE
-def tile_rock(img, ox, oy, var):
-    material(img, ox, oy, T, T, [0, 1, 2], seed=11 + var * 100, base=0.42, low=0.5, fine=0.25, grime=1.0)
+# Atlas columns MUST match TileSetBuilder constants:
+#   0 ROCK  1 BACK_CONCRETE  2 BACK_BRICK  3 FLOOR  4 CEILING  5 SIDE
+#   6 BACK_CONCRETE_LOW  7 BACK_BRICK_LOW    (wall cells sitting on the floor)
+#   8 BACK_CONCRETE_HIGH 9 BACK_BRICK_HIGH   (wall cells under the ceiling)
+# Rows are variants: 0 plain, 1 hairline crack / chip, 2 faint stain.
+#
+# Subtle on purpose: small, low-contrast noise on 2-3 step ramps. Grime lives
+# only where it would collect (the LOW/HIGH edge tiles, and the decal under
+# props), never across the middle of a wall. Floors are darker than walls.
+
+def grime_edge(where):
+    """Value offset for edge grime: darkens towards the floor or ceiling edge."""
+    def fn(x, y, v):
+        if where == "low":
+            d = (y - 9) / 7.0                     # bottom 7 rows
+        elif where == "high":
+            d = (5 - y) / 5.0                     # top 5 rows
+        else:
+            return v
+        return v - max(0.0, d) * 0.55
+    return fn
 
 
-def tile_concrete_wall(img, ox, oy, var):
-    def streaks(x, y, v):
-        if x == 0:
-            return v - 0.35                       # panel seam
-        if x in (5, 11) and y < 10:               # water stains running down
-            return v - 0.18 * (1 - y / 10)
+def chain(*fns):
+    def fn(x, y, v):
+        for f in fns:
+            if f:
+                v = f(x, y, v)
         return v
-    material(img, ox, oy, T, T, [3, 4, 5, 6], seed=21 + var * 100, base=0.5, low=0.35, grime=1.4, value_fn=streaks)
-    rng = random.Random(22 + var)
-    for _ in range(5):                            # pits
-        img.set(ox + rng.randrange(1, T), oy + rng.randrange(T), 1)
+    return fn
+
+
+def tile_rock(img, ox, oy, var):
+    material(img, ox, oy, T, T, [0, 1], seed=11 + var * 100, base=0.35, low=0.25, fine=0.1)
+
+
+def tile_concrete_wall(img, ox, oy, var, edge=None):
+    def seam(x, y, v):
+        if x == 0:
+            return v - 0.45                       # panel seam, one step darker
+        if var == 2 and x in (6, 7) and y < 9:
+            return v - 0.25 * (1 - y / 9)         # faint water stain
+        return v
+    material(img, ox, oy, T, T, [3, 4, 5], seed=21 + var * 100, base=0.6, low=0.16,
+             fine=0.08, value_fn=chain(seam, grime_edge(edge)))
     if var == 1:
-        crack(img, rng, ox + 2, oy, 12, T, 9, 1, 5)
+        crack(img, random.Random(22), ox + 4, oy + 2, 8, 10, 5, 3)
 
 
-def tile_brick_wall(img, ox, oy, var):
+def tile_brick_wall(img, ox, oy, var, edge=None):
     rng = random.Random(31 + var)
     bricks = {}
 
-    def brick_value(x, y, v):
+    def brick(x, y, v):
         row = y // 4
         offset = 4 if row % 2 else 0
         if y % 4 == 3 or (x + offset) % 8 == 7:
-            return 0.05                           # mortar
+            return 0.1                            # mortar
         key = (row, (x + offset) // 8)
         if key not in bricks:
-            bricks[key] = rng.uniform(-0.15, 0.15)  # each brick its own shade
+            bricks[key] = rng.uniform(-0.06, 0.06)
         v += bricks[key]
         if y % 4 == 0:
-            v += 0.12                             # top edge catches light
+            v += 0.08                             # top edge catches light
         return v
-    material(img, ox, oy, T, T, [1, 2, 3, 4, 5, 6], seed=32 + var * 100, base=0.55, low=0.25,
-             fine=0.16, grime=1.2, value_fn=brick_value)
-    if var == 1:                                  # a chipped corner + hairline crack
-        img.set(ox + 9, oy + 4, 1)
-        img.set(ox + 10, oy + 4, 1)
-        img.set(ox + 9, oy + 5, 2)
-        crack(img, rng, ox + 1, oy + 8, 6, 8, 6, 1)
+    material(img, ox, oy, T, T, [3, 4, 5, 6], seed=32 + var * 100, base=0.55, low=0.12,
+             fine=0.08, value_fn=chain(brick, grime_edge(edge)))
+    if var == 1:                                  # one chipped corner
+        img.set(ox + 9, oy + 4, 3)
+        img.set(ox + 10, oy + 4, 3)
 
 
 def tile_concrete_floor(img, ox, oy, var):
     def worn_top(x, y, v):
         if y == 0:
-            return 0.95                           # walking surface edge
-        if y == 1:
-            return v + 0.2
-        if y == 2:
-            return v + 0.08
-        return v - y * 0.012                      # darker deeper down
-    material(img, ox, oy, T, T, [3, 4, 5, 6, 7, 8], seed=41 + var * 100, base=0.5, low=0.3,
-             grime=1.0, value_fn=worn_top)
-    rng = random.Random(42 + var)
-    for _ in range(4):                            # grit on the surface
-        img.set(ox + rng.randrange(T), oy, 6)
+            return 0.95                           # walking edge, one step lighter
+        return v - y * 0.015
+    material(img, ox, oy, T, T, [1, 2, 3], seed=41 + var * 100, base=0.55, low=0.18,
+             fine=0.08, value_fn=worn_top)
+    img.rect(ox, oy, T, 1, 4)                     # crisp top edge so the floor line reads
     if var == 1:
-        crack(img, rng, ox + 3, oy + 3, 10, 13, 8, 2, 6)
+        crack(img, random.Random(42), ox + 3, oy + 3, 10, 10, 6, 1)
 
 
 def tile_ceiling(img, ox, oy, var):
     def lip(x, y, v):
-        if y == T - 1:
-            return 0.0                            # dark lip on the underside
-        if y == T - 2:
-            return v - 0.2
-        return v
-    material(img, ox, oy, T, T, [1, 2, 3, 4], seed=51 + var * 100, base=0.5, low=0.3, grime=1.2, value_fn=lip)
-    rng = random.Random(52 + var)
-    img.set(ox + rng.randrange(T), oy + T - 1, 3)  # drip spots hanging off the lip
-    if var == 1:
-        img.set(ox + rng.randrange(T), oy + T - 1, 3)
-        crack(img, rng, ox + 2, oy, 12, 12, 7, 0)
+        return 0.0 if y == T - 1 else v
+    material(img, ox, oy, T, T, [1, 2, 3], seed=51 + var * 100, base=0.45, low=0.15,
+             fine=0.08, value_fn=lip)
 
 
 def tile_side_wall(img, ox, oy, var):
-    def vertical(x, y, v):
-        return v + (0.12 if x % 5 == 0 else 0.0) - (0.1 if x % 7 == 3 else 0.0)
-    material(img, ox, oy, T, T, [2, 3, 4, 5, 6], seed=61 + var * 100, base=0.5, low=0.3, grime=1.0, value_fn=vertical)
-    if var == 1:
-        crack(img, random.Random(62), ox + 4, oy + 2, 8, 14, 10, 1)
+    material(img, ox, oy, T, T, [2, 3, 4], seed=61 + var * 100, base=0.5, low=0.15, fine=0.08)
 
 
 # ------------------------------------------------------------------------- props
@@ -400,8 +411,8 @@ def prop_cable():
 
 
 def prop_panel_hole():
-    """The opening behind the boards, 16x32: a frame and the first steps down."""
-    w, h = 16, 32
+    """The opening behind the boards, 16x48: a frame and the first steps down."""
+    w, h = 16, 48
     img = Img(w, h)
     for y in range(h):
         for x in range(w):
@@ -409,8 +420,8 @@ def prop_panel_hole():
                 img.set(x, y, quantise(0.5 + bayer(x, y) * 0.4, [2, 3, 4], x, y))
             else:
                 img.set(x, y, 0 if (x + y) % 7 else 1)
-    for i in range(4):                            # steps going down, barely there
-        img.rect(3 + i * 3, 18 + i * 3, 4, 1, 2)
+    for i in range(5):                            # steps going down, barely there
+        img.rect(2 + i * 3, 30 + i * 3, 4, 1, 2)
     save(img, "props/panel_hole")
 
 
@@ -461,8 +472,8 @@ def prop_tube():
 
 # ---------------------------------------------------------------- Act 0: the shop
 def prop_fridge():
-    """Drinks fridge, 20x40: steel frame, glass door, rows of bottles."""
-    w, h = 20, 40
+    """Drinks fridge, 22x50: steel frame, glass door, rows of bottles."""
+    w, h = 22, 50
     img = Img(w, h)
     rng = random.Random(91)
     for y in range(h):
@@ -471,7 +482,7 @@ def prop_fridge():
                 img.set(x, y, quantise(0.6 + (rng.random() - 0.5) * 0.3, [5, 6, 7], x, y))
             else:
                 img.set(x, y, quantise(0.3 + bayer(x, y) * 0.2, [1, 2, 3], x, y))  # glass
-    for sy in (12, 22, 32):
+    for sy in (14, 26, 38):
         img.rect(2, sy, w - 4, 1, 6)                # wire shelves
         x = 3
         while x < w - 3:
@@ -480,7 +491,7 @@ def prop_fridge():
             img.rect(x, sy - bh, 2, bh, col)
             img.set(x, sy - bh, 9)                  # cap
             x += 3
-    img.rect(w - 3, 14, 1, 10, 8)                   # handle
+    img.rect(w - 3, 18, 1, 12, 8)                   # handle
     img.rect(2, 3, w - 4, 2, 9)                     # lit header strip
     save(img, "props/fridge")
 
@@ -593,12 +604,173 @@ def prop_box():
     save(img, "props/box")
 
 
+# ------------------------------------------------------------------ door, grime
+def prop_door():
+    """Shop front door, 24x52: frame, leaf, wired glass pane, push bar, handle."""
+    w, h = 24, 52
+    img = Img(w, h)
+    for y in range(h):
+        for x in range(w):
+            if x < 2 or x >= w - 2 or y < 2:      # frame: lit on the left/top
+                img.set(x, y, 6 if (x == 0 or y == 0) else 5)
+            else:
+                img.set(x, y, quantise(0.55 + bayer(x, y) * 0.18 - (x - 2) * 0.008, [3, 4], x, y))
+    img.rect(2, 2, 1, h - 2, 2)                   # shadow inside the frame
+    for y in range(8, 20):                        # wired glass pane
+        for x in range(6, 18):
+            img.set(x, y, 1 if (x + y) % 4 else 2)
+    img.rect(6, 8, 12, 1, 4)
+    img.set(7, 9, 7)                              # glare
+    img.set(8, 10, 6)
+    img.rect(4, 28, 16, 2, 7)                     # push bar
+    img.rect(4, 30, 16, 1, 3)
+    img.rect(4, 27, 1, 4, 5)                      # bar mounts
+    img.rect(19, 27, 1, 4, 5)
+    img.rect(17, 33, 3, 2, 8)                     # handle + lock
+    img.set(18, 35, 1)
+    img.rect(3, 44, 18, 6, 5)                     # kick plate
+    img.rect(3, 44, 18, 1, 6)
+    img.rect(0, h - 1, w, 1, 2)                   # threshold
+    save(img, "props/door")
+
+
+def prop_grime():
+    """Soft dithered dirt decal, 40x10, for the wall under props. Transparent edges."""
+    w, h = 40, 10
+    img = Img(w, h)
+    for y in range(h):
+        for x in range(w):
+            across = 1.0 - abs(x - (w - 1) / 2) / (w / 2)
+            down = (y + 1) / h
+            density = (across ** 1.2) * (down ** 1.5) * 0.8
+            if bayer(x, y) + 0.5 < density:
+                img.set(x, y, 1 if density > 0.45 else 2)
+    save(img, "props/grime")
+
+
+# ------------------------------------------------------------------------ player
+# The night-shift worker, ~44 px tall, facing right. 32x48 frames, feet on the
+# bottom row, body centred on x = 16. The TORCH ARM is not in the sprite: the
+# game draws it so it can point at the mouse whatever way he faces.
+# Frames: 0-1 idle (breathing), 2-5 walk, 6-7 crouch (still / creeping).
+PLAYER_FRAME = (32, 48)
+SKIN, SKIN_D, HAIR, HIVIS = 12, 13, 14, 15
+POLO, POLO_D, POLO_L = 4, 3, 5
+TROUSER, TROUSER_D = 2, 1
+
+
+def draw_person(img, ox, bob=0, back_leg=0, front_leg=0, arm=0):
+    """Standing / walking pose. bob shifts everything above the hips."""
+    def p(x, y, c):
+        img.set(ox + x, y, c)
+
+    def r(x, y, w, h, c):
+        img.rect(ox + x, y, w, h, c)
+
+    t = bob  # torso/head y offset
+    # Legs: hips at y 31, shoes at 45-47. Lower legs swing from the knee (y 37).
+    for leg_x, off, col in ((13, back_leg, TROUSER_D), (17, front_leg, TROUSER)):
+        r(leg_x, 31, 4, 6, col)                   # thigh
+        r(leg_x + off, 37, 4, 8, col)             # shin, swung
+        p(leg_x + off + (3 if col == TROUSER else 0), 38, TROUSER_D if col == TROUSER else 0)
+        r(leg_x + off, 45, 6, 2, 0)               # shoe, toe forward
+        r(leg_x + off, 47, 6, 1, 1)               # sole
+    # Back arm (far side, darker), swinging opposite the back leg.
+    r(11, 18 + t, 2, 4, POLO_D)                   # sleeve
+    r(11 - arm // 2, 22 + t, 2, 6, SKIN_D)        # forearm
+    r(11 - arm, 28 + t, 2, 2, SKIN_D)             # hand
+    # Torso: work polo with shading, collar, hi-vis stripe, name badge, belt.
+    r(12, 17 + t, 10, 14 - t, POLO)
+    r(12, 17 + t, 2, 14 - t, POLO_D)
+    r(20, 18 + t, 2, 12 - t, POLO_L)
+    r(15, 17 + t, 5, 1, POLO_L)                   # collar
+    p(17, 18 + t, SKIN_D)                         # open neck
+    r(12, 24 + t, 10, 1, HIVIS)                   # small hi-vis stripe
+    r(19, 20 + t, 2, 2, 9)                        # name badge
+    r(12, 30, 10, 1, 1)                           # belt
+    # Neck and head.
+    r(16, 15 + t, 3, 2, SKIN_D)
+    r(14, 5 + t, 7, 10, SKIN)                     # face/skull
+    r(14, 5 + t, 2, 9, SKIN_D)                    # back of head in shade
+    r(14, 14 + t, 6, 1, SKIN_D)                   # jaw
+    p(16, 9 + t, SKIN_D)                          # ear
+    p(19, 9 + t, 0)                               # eye
+    p(19, 8 + t, HAIR)                            # brow
+    p(21, 10 + t, SKIN)                           # nose
+    p(19, 12 + t, SKIN_D)                         # mouth
+    r(13, 3 + t, 8, 3, HAIR)                      # hair
+    r(13, 6 + t, 2, 5, HAIR)                      # back of the hair
+    p(20, 6 + t, HAIR)                            # fringe
+    p(16, 3 + t, 3)                               # a little highlight in the hair
+
+
+def draw_crouch(img, ox, step=0):
+    """Crouched, leaning forward. ~31 px tall so it fits under a 2-tile gap."""
+    def p(x, y, c):
+        img.set(ox + x, y, c)
+
+    def r(x, y, w, h, c):
+        img.rect(ox + x, y, w, h, c)
+
+    # Legs folded: thighs forward, shins down, shoes.
+    r(12, 38, 10, 4, TROUSER_D)                   # back thigh
+    r(14, 38, 10, 3, TROUSER)                     # front thigh
+    r(21 - step, 40, 4, 5, TROUSER)               # front shin
+    r(12 + step, 41, 4, 4, TROUSER_D)             # back shin
+    r(20 - step, 45, 6, 2, 0)
+    r(11 + step, 45, 6, 2, 0)
+    r(11, 47, 15, 1, 1)
+    # Back arm resting on the knee.
+    r(13, 30, 2, 4, POLO_D)
+    r(14, 34, 2, 4, SKIN_D)
+    # Hunched torso.
+    r(13, 28, 10, 10, POLO)
+    r(13, 28, 2, 10, POLO_D)
+    r(21, 29, 2, 8, POLO_L)
+    r(13, 33, 10, 1, HIVIS)
+    r(19, 30, 2, 2, 9)
+    # Head, pushed forward and down (top of the hair at y 17: 31 px tall).
+    r(17, 27, 3, 1, SKIN_D)
+    r(16, 19, 7, 9, SKIN)
+    r(16, 19, 2, 8, SKIN_D)
+    r(16, 27, 6, 1, SKIN_D)
+    p(18, 23, SKIN_D)
+    p(21, 23, 0)
+    p(21, 22, HAIR)
+    p(23, 24, SKIN)
+    p(21, 26, SKIN_D)
+    r(15, 17, 8, 3, HAIR)
+    r(15, 20, 2, 4, HAIR)
+    p(22, 20, HAIR)
+
+
+def player_sheet():
+    fw, fh = PLAYER_FRAME
+    img = Img(fw * 8, fh)
+    draw_person(img, 0 * fw)                                  # idle
+    draw_person(img, 1 * fw, bob=1)                           # idle, breath out
+    draw_person(img, 2 * fw, back_leg=-3, front_leg=3, arm=2)  # walk: contact
+    draw_person(img, 3 * fw, bob=-1)                          # walk: passing
+    draw_person(img, 4 * fw, back_leg=3, front_leg=-3, arm=-2)  # walk: other contact
+    draw_person(img, 5 * fw, bob=-1)                          # walk: passing
+    draw_crouch(img, 6 * fw)                                  # crouch
+    draw_crouch(img, 7 * fw, step=1)                          # crouch, creeping
+    save(img, "player/player")
+
+
 def main():
     # Columns = tile type, rows = variants (0 plain, 1 cracked/chipped, 2 grimy).
     # The level picks a variant per cell so the repeat isn't obvious.
-    tiles = Img(T * 6, T * VARIANTS)
-    for i, fn in enumerate([tile_rock, tile_concrete_wall, tile_brick_wall,
-                            tile_concrete_floor, tile_ceiling, tile_side_wall]):
+    columns = [
+        tile_rock, tile_concrete_wall, tile_brick_wall, tile_concrete_floor, tile_ceiling,
+        tile_side_wall,
+        lambda img, ox, oy, var: tile_concrete_wall(img, ox, oy, var, "low"),
+        lambda img, ox, oy, var: tile_brick_wall(img, ox, oy, var, "low"),
+        lambda img, ox, oy, var: tile_concrete_wall(img, ox, oy, var, "high"),
+        lambda img, ox, oy, var: tile_brick_wall(img, ox, oy, var, "high"),
+    ]
+    tiles = Img(T * len(columns), T * VARIANTS)
+    for i, fn in enumerate(columns):
         for var in range(VARIANTS):
             fn(tiles, i * T, var * T, var)
     save(tiles, "tiles/tiles", tile_wrap=T)
@@ -617,6 +789,9 @@ def main():
     prop_window(False)
     prop_breaker()
     prop_box()
+    prop_door()
+    prop_grime()
+    player_sheet()
 
 
 if __name__ == "__main__":

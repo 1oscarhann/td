@@ -5,6 +5,8 @@ extends Node2D
 
 @export var exit_light_energy := 0.7
 
+const DOOR_TEX := preload("res://art/props/door.tres")
+
 
 func _ready() -> void:
 	var light := PointLight2D.new()
@@ -13,19 +15,15 @@ func _ready() -> void:
 	light.energy = exit_light_energy
 	light.range_item_cull_mask = GameState.LIGHT_ENV
 	light.height = 20.0
-	light.position = Vector2(0, -40)
+	light.position = Vector2(0, -59)
 	add_child(light)
 	queue_redraw()
 
 
 func _draw() -> void:
-	# Door + frame.
-	draw_rect(Rect2(-9, -32, 18, 32), Color8(29, 40, 45))
-	draw_rect(Rect2(-8, -31, 16, 31), Color8(51, 69, 74))
-	draw_rect(Rect2(4, -17, 2, 2), Color8(142, 161, 155))
-	# Push bar.
-	draw_rect(Rect2(-6, -16, 12, 1), Color8(111, 133, 130))
-	# EXIT sign.
-	draw_rect(Rect2(-12, -46, 24, 10), Color(0.85, 0.18, 0.15))
-	draw_string(ThemeDB.fallback_font, Vector2(-12, -38), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, 24, 8,
+	# The door itself: generated art with a frame, glass pane, push bar and handle.
+	draw_texture(DOOR_TEX, Vector2(-12, -52))
+	# EXIT sign above it.
+	draw_rect(Rect2(-12, -64, 24, 10), Color(0.85, 0.18, 0.15))
+	draw_string(ThemeDB.fallback_font, Vector2(-12, -56), "EXIT", HORIZONTAL_ALIGNMENT_CENTER, 24, 8,
 			Color(1, 0.92, 0.9))

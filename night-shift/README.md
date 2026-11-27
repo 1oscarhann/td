@@ -30,8 +30,9 @@ stairs down, then the tunnel. The tunnel has a left dead end where the Thing sle
 to a familiar shelf of crisps, then a **tight** 2-tile tunnel, an **open** 8-tile room,
 a 1-tile **crouch gap**, and a dead end where the FUSE BOX sign points into the wall.
 
-- **Low-res pipeline:** 384x216 viewport, stretch mode `viewport`, aspect `keep`,
+- **Low-res pipeline:** 640x360 viewport, stretch mode `viewport`, aspect `keep`,
   integer scaling, nearest filtering, 2D transform/vertex pixel snapping.
+  Art comes from `tools/gen_tiles.py` (re-run it after editing; Godot reimports).
 - **Torch:** `PointLight2D` with a procedurally generated, banded cone texture
   (40°, 120 px). Shadows are on, and tiles cast them through TileSet occlusion polygons.
   A dim, shadowless glow keeps the player from vanishing.

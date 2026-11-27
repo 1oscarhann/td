@@ -1,7 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Texture2D" path="res://art/props/shelf.tres" id="1_tex"]
+[ext_resource type="Texture2D" path="res://art/props/grime.tres" id="9_grime"]
 
 [node name="Shelf" type="Sprite2D"]
 texture = ExtResource("1_tex")
 offset = Vector2(0, -20)
+
+[node name="Grime" type="Sprite2D" parent="."]
+show_behind_parent = true
+texture = ExtResource("9_grime")
+position = Vector2(0, -5)

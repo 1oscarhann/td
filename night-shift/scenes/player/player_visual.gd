@@ -1,36 +1,61 @@
 extends Node2D
-## Placeholder player art: coloured rectangles drawn in code.
-## Faces the movement direction. The arm points along the torch, so you can see
-## when you're walking one way and shining the other.
+## The player's look: a 44 px pixel-art sprite (art/player/player.png, made by
+## tools/gen_tiles.py) plus the torch arm, drawn here so it can point at the
+## mouse whichever way he faces. Facing follows MOVEMENT, never the torch.
+##
+## Sheet frames: 0-1 idle (breathing), 2-5 walk, 6-7 crouch (still / creeping).
+
+const IDLE := [0, 1]
+const WALK := [2, 3, 4, 5]
+const CROUCH := [6, 7]
+## Front shoulder (facing right), matching the sprite.
+const STAND_SHOULDER := Vector2(3, -30)
+const CROUCH_SHOULDER := Vector2(5, -18)
+
+const SLEEVE := Color8(51, 69, 74)
+const SLEEVE_DARK := Color8(39, 54, 59)
+const SKIN := Color8(150, 121, 101)
+const TORCH_BODY := Color8(19, 28, 32)
+const TORCH_RIM := Color8(111, 133, 130)
+const LENS := Color8(180, 194, 184)
 
 @onready var player: Player = get_parent()
+@onready var body: Sprite2D = $Body
+
+var _t := 0.0
+var _walk_dist := 0.0
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_t += delta
+	var moving := absf(player.velocity.x) > 4.0 and player.is_on_floor()
+	if moving:
+		_walk_dist += absf(player.velocity.x) * delta
+	body.flip_h = player.facing < 0
+	if player.crouching:
+		body.frame = CROUCH[int(_walk_dist / 10.0) % 2] if moving else CROUCH[0]
+	elif moving:
+		body.frame = WALK[int(_walk_dist / 9.0) % 4]
+	else:
+		body.frame = IDLE[int(_t / 1.2) % 2]   # slow breathing
 	queue_redraw()
 
 
+## The torch arm: sleeve to the elbow, forearm to the hand, then the torch,
+## pointing wherever the beam points.
 func _draw() -> void:
 	var f := float(player.facing)
-	var h := 15.0 if player.crouching else 28.0
-	var legs := Color(0.17, 0.19, 0.25)
-	var uniform := Color(0.30, 0.35, 0.44)
-	var stripe := Color(0.85, 0.80, 0.30)   # hi-vis strip on the uniform
-	var skin := Color(0.78, 0.66, 0.56)
-
-	# Legs, torso, hi-vis stripe.
-	draw_rect(Rect2(-4, -h * 0.38, 8, h * 0.38), legs)
-	draw_rect(Rect2(-5, -h * 0.80, 10, h * 0.44), uniform)
-	draw_rect(Rect2(-5, -h * 0.62, 10, 1), stripe)
-	# Head + a one-pixel nose so facing reads at 384x216.
-	var head_h := maxf(4.0, h * 0.2)
-	draw_rect(Rect2(-3 + f, -h, 6, head_h), skin)
-	draw_rect(Rect2(3.0 if f > 0.0 else -4.0, -h + 2.0, 1, 2), skin)
-
-	# Arm towards the torch (the torch node is positioned at the hand).
-	var shoulder := Vector2(f * 2.0, -h * 0.72)
-	var hand := player.torch.position
-	draw_line(shoulder, hand, skin, 1.0)
-	# The torch body itself: a small dark tube along the beam direction.
-	var aim := player.torch.get_aim_direction()
-	draw_line(hand - aim * 2.0, hand + aim * 3.0, Color(0.12, 0.12, 0.14), 2.0)
+	var s := CROUCH_SHOULDER if player.crouching else STAND_SHOULDER
+	var shoulder := Vector2(s.x * f, s.y)
+	var hand: Vector2 = player.torch.position
+	var aim: Vector2 = player.torch.get_aim_direction()
+	# Elbow: halfway, dropped a little so the arm bends naturally.
+	var elbow := (shoulder + hand) * 0.5 + Vector2(-2.0 * f, 3.0)
+	draw_line(shoulder, elbow, SLEEVE, 3.0)
+	draw_line(shoulder + Vector2(0, 1), elbow + Vector2(0, 1), SLEEVE_DARK, 1.0)
+	draw_line(elbow, hand, SKIN, 2.0)
+	draw_rect(Rect2(hand.round() - Vector2(1, 1), Vector2(3, 3)), SKIN)
+	# Torch: dark tube along the aim, light rim, pale lens at the front.
+	draw_line(hand - aim * 3.0, hand + aim * 5.0, TORCH_BODY, 3.0)
+	draw_line(hand + aim * 4.0, hand + aim * 5.0, TORCH_RIM, 3.0)
+	draw_rect(Rect2((hand + aim * 6.0).round(), Vector2(1, 1)), LENS)

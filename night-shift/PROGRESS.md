@@ -132,6 +132,37 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
   so it no longer reports a 128 px gap in a 48 px tunnel.
 - Verified headless: grabbed in the dark (~2 s), retracts when lit.
 
+### Visual pass (your request while I worked): resolution, art, player
+- **640x360 internal resolution**, integer scaling (window 1280x720), camera
+  zoom 1 (the 2x zoom is gone).
+- **Subtler tiles:** small, low-contrast noise on 2-3 step ramps. No grime across
+  the middle of walls. Grime only where it collects: new LOW/HIGH edge tiles where
+  the wall meets the floor or ceiling, plus a dithered `grime` decal under the shelf,
+  fridge, counter and mop. Cracks are one shade darker, not black.
+- **Floor is clearly darker than the wall**, with a crisp lighter top edge so the
+  floor line reads.
+- **New player sprite, ~44 px:** hair, simple face (eye, brow, nose, mouth, ear),
+  work polo with collar, a small dulled hi-vis stripe, name badge, belt, trousers,
+  shoes, and the far arm. Frames: 2 idle (breathing), 4 walk, 2 crouch (still / creeping),
+  in `art/player/player.png` (8 frames of 32x48). The torch arm is drawn in code
+  (sleeve, forearm, hand, torch) so it points at the mouse whichever way he faces.
+- **Door** is now generated art with a frame, wired glass pane, push bar, handle,
+  lock and kick plate. The EXIT sign sits above it.
+- Re-checked at the new resolution (renders + headless):
+  - torch beam, spill and occluder shadows line up
+  - bottom text is bigger and higher (font 14)
+  - CCTV feeds are 320x180 each, filling the screen 2x2, with the same framing
+  - debug overlay is wider
+- **To fit a 44 px player I had to make the rooms taller** (see Decisions to check):
+  - shop/storeroom 5 -> 7 tiles, tunnel 3 -> 4, tight tunnel 2 -> 3 (48 px)
+  - open room 8 -> 11, crouch gap 1 -> 2 tiles (32 px), panel opening 2 -> 3 tiles
+  - collider 28 -> 42 (crouch 14 -> 24)
+  - the Thing's height-based numbers scaled by the same 1.5x
+    (`normal_gap` 84, `min_squeeze` 40, `max_gap` 176), so its slow-in-tight /
+    fast-in-open behaviour and the crouch-gap escape work as before
+  - horizontal layout, speeds, timings and every rule are unchanged
+- Verified headless: the full route from Act 0 to the ending, and death/respawn.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -141,6 +172,19 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Zoom 1 at 640x360 brings back the rock bands.** The camera now shows ~40x22
+  tiles, so a 7-tile room fills about a third of the screen height. That's the
+  direct result of "zoom 1" and contradicts the earlier "rooms fill the screen"
+  ask. Pick one:
+  - (a) keep it (more context, smaller pixels)
+  - (b) taller rooms
+  - (c) `zoom = Vector2(2, 2)` on the player Camera2D (crisper than before,
+    since the art is now finer)
+- **Rooms got taller to fit the 44 px player** (numbers above). The alternative,
+  a 44 px sprite on a 28 px collider, would have drawn your head through every
+  tunnel ceiling.
+- **The player uses 4 extra colours** (skin, skin shadow, hair, dulled hi-vis),
+  indices 12-15. The environment still uses only the 12-colour palette.
 - **Palette has 2 non-teal accents** (ochre, rust) inside the 12 colours, for
   wood, crisp packets and signs. Without them, boards and packets read as grey mush.
 - **Extra tile types:** rock and side wall, on top of the 4 you listed. The level

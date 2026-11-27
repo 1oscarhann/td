@@ -11,7 +11,7 @@ extends CanvasLayer
 
 signal closed(check_count: int)
 
-const FEED_SIZE := Vector2i(192, 108)
+const FEED_SIZE := Vector2i(320, 180)
 const SHADER := preload("res://scenes/ui/cctv.gdshader")
 
 var is_open := false
@@ -43,6 +43,7 @@ func setup(feeds: Array) -> void:
 	_root.add_child(bg)
 	var mat := ShaderMaterial.new()
 	mat.shader = SHADER
+	mat.set_shader_parameter("resolution", Vector2(FEED_SIZE))
 	for i in mini(feeds.size(), 4):
 		var feed: Dictionary = feeds[i]
 		var rect := TextureRect.new()
@@ -70,8 +71,8 @@ func setup(feeds: Array) -> void:
 		_root.add_child(rect)
 		var label := Label.new()
 		label.text = "%s\n02:%02d" % [feed.label, 14 + i * 3]
-		label.position = rect.position + Vector2(4, 3)
-		label.add_theme_font_size_override("font_size", 8)
+		label.position = rect.position + Vector2(6, 4)
+		label.add_theme_font_size_override("font_size", 12)
 		label.add_theme_color_override("font_color", Color(0.85, 0.95, 0.88, 0.8))
 		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_root.add_child(label)

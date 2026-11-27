@@ -4,7 +4,7 @@ shader_type canvas_item;
 
 uniform float gain = 1.7;
 uniform float grain = 0.14;
-uniform vec2 resolution = vec2(192.0, 108.0);
+uniform vec2 resolution = vec2(320.0, 180.0);
 
 float rand(vec2 co) {
 	return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453);

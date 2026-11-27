@@ -1,21 +1,22 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scenes/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scenes/player/player_visual.gd" id="2_visual"]
 [ext_resource type="Script" path="res://scenes/player/torch.gd" id="3_torch"]
 [ext_resource type="Script" path="res://scenes/player/interact_prompt.gd" id="4_prompt"]
+[ext_resource type="Texture2D" path="res://art/player/player.tres" id="5_sheet"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_stand"]
-size = Vector2(10, 28)
+size = Vector2(10, 42)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_crouch"]
-size = Vector2(10, 14)
+size = Vector2(10, 24)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_climb"]
 size = Vector2(6, 6)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_interact"]
-size = Vector2(30, 26)
+size = Vector2(30, 40)
 
 [node name="Player" type="CharacterBody2D"]
 z_index = 5
@@ -27,17 +28,23 @@ script = ExtResource("1_player")
 [node name="Visual" type="Node2D" parent="."]
 script = ExtResource("2_visual")
 
+[node name="Body" type="Sprite2D" parent="Visual"]
+show_behind_parent = true
+texture = ExtResource("5_sheet")
+offset = Vector2(0, -24)
+hframes = 8
+
 [node name="StandShape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -14)
+position = Vector2(0, -21)
 shape = SubResource("RectangleShape2D_stand")
 
 [node name="CrouchShape" type="CollisionShape2D" parent="."]
-position = Vector2(0, -7)
+position = Vector2(0, -12)
 shape = SubResource("RectangleShape2D_crouch")
 disabled = true
 
 [node name="Torch" type="Node2D" parent="."]
-position = Vector2(3, -18)
+position = Vector2(7, -27)
 script = ExtResource("3_torch")
 
 [node name="Light" type="PointLight2D" parent="Torch"]
@@ -57,7 +64,7 @@ monitorable = false
 polygon = PackedVector2Array(0, 0, 113, -41, 120, 0, 113, 41)
 
 [node name="Glow" type="PointLight2D" parent="."]
-position = Vector2(0, -14)
+position = Vector2(0, -22)
 energy = 0.45
 range_item_cull_mask = 1
 texture_scale = 1.0
@@ -78,13 +85,12 @@ collision_mask = 16
 monitorable = false
 
 [node name="Shape" type="CollisionShape2D" parent="InteractArea"]
-position = Vector2(0, -14)
+position = Vector2(0, -22)
 shape = SubResource("RectangleShape2D_interact")
 
 [node name="InteractPrompt" type="Node2D" parent="."]
 script = ExtResource("4_prompt")
 
 [node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(2, 2)
 position_smoothing_enabled = true
 position_smoothing_speed = 6.0

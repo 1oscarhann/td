@@ -5,7 +5,7 @@ extends RefCounted
 ## normal map, both made by tools/gen_tiles.py).
 ##
 ## Atlas layout: columns are tile TYPES (constants below), rows are VARIANTS
-## (0 plain, 1 cracked/chipped, 2 grimy). The level picks a variant per cell.
+## (0 plain, 1 hairline crack / chip, 2 faint stain). The level picks a variant per cell.
 ##
 ## Solid tiles get:
 ##   - a full-square collision polygon (physics layer 0 -> world layer)
@@ -33,6 +33,11 @@ const BACK_BRICK := 2
 const FLOOR := 3
 const CEILING := 4
 const SIDE := 5
+## Back-wall edge versions with grime where it collects (floor / ceiling edge).
+const BACK_CONCRETE_LOW := 6
+const BACK_BRICK_LOW := 7
+const BACK_CONCRETE_HIGH := 8
+const BACK_BRICK_HIGH := 9
 const SOLID_TILES := [ROCK, FLOOR, CEILING, SIDE]
 
 

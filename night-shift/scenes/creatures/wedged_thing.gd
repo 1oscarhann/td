@@ -31,11 +31,11 @@ enum State { DORMANT, STALK, HUNT, FROZEN, ENRAGED }
 @export var hunt_speed := 38.0
 @export var enrage_multiplier := 1.8
 ## Floor-to-ceiling gap (px) at which speed is exactly 1x. Smaller = slower.
-@export var normal_gap := 56.0
-## Can't fit through gaps lower than this. Crouch gaps (16 px) are safe.
-@export var min_squeeze := 24.0
+@export var normal_gap := 84.0
+## Can't fit through gaps lower than this. Crouch gaps (32 px) are safe.
+@export var min_squeeze := 40.0
 ## Never stretches taller than this, even in a shaft.
-@export var max_gap := 128.0
+@export var max_gap := 176.0
 
 @export_group("Light")
 @export var freeze_time := 2.0

@@ -32,9 +32,9 @@ func on_check(check_count: int) -> void:
 
 func _draw() -> void:
 	var c := Color8(87, 109, 109)
-	draw_rect(Rect2(-3, -27, 6, 6), c)      # head, no face
-	draw_rect(Rect2(-5, -21, 10, 11), c)    # shoulders, torso
-	draw_rect(Rect2(-6, -20, 1, 9), c)      # arms hanging, too straight
-	draw_rect(Rect2(5, -20, 1, 9), c)
-	draw_rect(Rect2(-4, -10, 3, 10), c)     # legs
-	draw_rect(Rect2(1, -10, 3, 10), c)
+	draw_rect(Rect2(-4, -44, 8, 9), c)      # head, no face
+	draw_rect(Rect2(-7, -34, 14, 16), c)    # shoulders, torso
+	draw_rect(Rect2(-9, -33, 2, 15), c)     # arms hanging, too straight
+	draw_rect(Rect2(7, -33, 2, 15), c)
+	draw_rect(Rect2(-6, -18, 5, 18), c)     # legs
+	draw_rect(Rect2(1, -18, 5, 18), c)
