@@ -166,6 +166,10 @@ func _physics_process(delta: float) -> void:
 	_hunt_left = maxf(0.0, _hunt_left - delta)
 	if GameState.player == null:
 		return
+	if state == State.DORMANT and not _moving:
+		# Tile collision may not exist on the spawn frame; keep measuring the
+		# tunnel while it waits so it's drawn the right height if you light it.
+		_refresh_space()
 	var player_pos: Vector2 = GameState.player.global_position
 
 	match state:

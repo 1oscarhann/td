@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/creatures/ceiling_arm.gd" id="1_arm"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_lightonly"]
+light_mode = 2
+
+[node name="CeilingArm" type="Area2D"]
+light_mask = 2
+material = SubResource("CanvasItemMaterial_lightonly")
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("1_arm")
+
+[node name="Tip" type="CollisionShape2D" parent="."]
+disabled = true
+
+[node name="Scratch" type="AudioStreamPlayer2D" parent="."]
+max_distance = 360.0
+attenuation = 1.6

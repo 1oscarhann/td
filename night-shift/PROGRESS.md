@@ -116,6 +116,22 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - Verified with renders: feeds show the live world, the figure is on camera on
   check 2, and he's absent from the real shop.
 
+#### M2.4: Ceiling Arms
+- `scenes/creatures/ceiling_arm.tscn/.gd`: lives in a vent. Long pale arm, 8
+  joints, swaying, steering towards you, twitching fingers. Light Only on the
+  creature layer.
+- Rule: player near and arm in the dark -> scratching in the duct (1.3 s), then it
+  reaches down. A grab at the tip = caught (same death/respawn as the Thing). Lit while
+  scratching or reaching -> fast retract, then 3 s in the vent.
+- "don't stand under it" on its first scratch.
+- Teaching arm left of the stairs, over ground you never need to cross. The real
+  one is in the passage before the crouch gap, on the chase route.
+- `reset_creatures()` now resets every creature with a `reset()` method.
+- Fixed: tile collision isn't in the physics space for a frame or two. The arm now
+  retries its floor raycast, and the dormant Thing keeps re-measuring the tunnel,
+  so it no longer reports a 128 px gap in a 48 px tunnel.
+- Verified headless: grabbed in the dark (~2 s), retracts when lit.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.

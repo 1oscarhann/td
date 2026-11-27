@@ -76,6 +76,7 @@ const TRIGGERS := {
 ##   pipe / cable: a run from "cell" to column "to_x", placed "below_ceiling" px
 ##                 under the ceiling or "above_floor" px over the floor
 ##   spiders:      "count" little spiders crawling on the ceiling around "cell"
+##   arm:          a Ceiling Arm living in the vent above "cell" (place a vent too)
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
 	# Shop (Act 0): fluorescent tubes that work until the power cut, the window.
@@ -94,6 +95,10 @@ const DECOR := [
 	{"type": "pipe", "cell": Vector2i(32, 16), "to_x": 67, "below_ceiling": 3},
 	{"type": "cable", "cell": Vector2i(46, 16), "to_x": 57, "below_ceiling": 12, "sag": 6},
 	{"type": "tube", "cell": Vector2i(52, 16)},
+	# First Ceiling Arm: over ground you never need to cross (left of the stairs).
+	# You see it reach down where you would have walked; light it, it pulls back.
+	{"type": "vent", "cell": Vector2i(48, 16)},
+	{"type": "arm", "cell": Vector2i(48, 16)},
 	# First spiders: right where you step off the stairs. Harmless; teach "look up".
 	{"type": "vent", "cell": Vector2i(61, 16)},
 	{"type": "spiders", "cell": Vector2i(61, 16), "count": 3},
@@ -110,6 +115,9 @@ const DECOR := [
 	{"type": "cable", "cell": Vector2i(86, 12), "to_x": 103, "below_ceiling": 26, "sag": 14},
 	# Passage, past the crouch gap, the dead end.
 	{"type": "cable", "cell": Vector2i(106, 16), "to_x": 115, "below_ceiling": 9, "sag": 4},
+	# The real one: in the passage before the crouch gap, on the chase route.
+	{"type": "vent", "cell": Vector2i(110, 16)},
+	{"type": "arm", "cell": Vector2i(110, 16)},
 	{"type": "vent", "cell": Vector2i(124, 16)},
 	{"type": "spiders", "cell": Vector2i(124, 16), "count": 2},
 	{"type": "tube", "cell": Vector2i(127, 16)},
@@ -140,6 +148,7 @@ const TUBE_SCENE := preload("res://scenes/props/tube.tscn")
 const PIPE_SCENE := preload("res://scenes/props/pipe.tscn")
 const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
 const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
+const ARM_SCENE := preload("res://scenes/creatures/ceiling_arm.tscn")
 const LIGHT_SCENE := preload("res://scenes/props/shop_light.tscn")
 const WINDOW_SCENE := preload("res://scenes/props/shop_window.tscn")
 const FRIDGE_SCENE := preload("res://scenes/props/fridge.tscn")
@@ -218,8 +227,9 @@ func apply_camera_limits(cam: Camera2D) -> void:
 
 ## After the player is caught: creatures go back to where they started.
 func reset_creatures() -> void:
-	if thing != null:
-		thing.reset()
+	for c in creatures.get_children():
+		if c.has_method("reset"):
+			c.reset()
 
 
 # -------------------------------------------------------------------- building
@@ -291,6 +301,10 @@ func _place_decor(d: Dictionary) -> void:
 				var spider: Spider = SPIDER_SCENE.instantiate()
 				spider.position = Vector2(x + TILE * 0.5 + randf_range(-20.0, 20.0), ceil_y)
 				creatures.add_child(spider)
+		"arm":
+			var arm: CeilingArm = ARM_SCENE.instantiate()
+			arm.position = Vector2(x + TILE * 0.5, ceil_y + 4.0)   # just under the vent grille
+			creatures.add_child(arm)
 		_:
 			push_warning("TestLevel: unknown decor type '%s'" % d.type)
 
