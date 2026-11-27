@@ -23,7 +23,15 @@ Open `night-shift/project.godot` in Godot 4.4+, F5, headphones on.
 8. **Wedged Thing:** unchanged rules. Check it still feels the same at the new
    scale: slow in the tight tunnel, fast in the open room, can't pass the
    crouch gap (hold Ctrl).
-9. **Sound:** none of it has been heard by a human yet. Fluorescent buzz,
+9. **Lever + Cables:** in the open room, pull the lever on the left (hold E,
+   torch forced down, loud). The door in the passage grinds open. Stay by the
+   lever: the low cable to its left (droops slightly more) slithers over and grabs
+   your leg. Hold the beam on it to make it let go.
+10. **Upstairs, down here:** go left from the bottom of the stairs into the dead
+   end. The mop and bucket are next to the crisps shelf ("that wasn't there before").
+11. **The spider that isn't:** in the tight tunnel, hold the beam on the vent.
+   One "spider" doesn't run.
+12. **Sound:** none of it has been heard by a human yet. Fluorescent buzz,
    fridge hum, clunk, scrape, taps, drips, hiss.
 
 ## How to run the art generator
@@ -230,6 +238,15 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
   crisps shelf (where the Thing sleeps). The mop is also still upstairs. Never explained.
 - "that wasn't there before" via a new `DECOR` "line" trigger. `DECOR` also gained "mop".
 - Verified headless: two mops in the level, and the line plays.
+
+#### M2.8: the spider that isn't
+- `leg_tip.tscn/.gd`: in the tight-tunnel vent, among real spiders, a speck that
+  looks like one. Hold the beam on it for 0.6 s: it doesn't scatter. It slides out
+  as a long jointed leg (the Wedged Thing's colour), then pulls back slowly into
+  the vent and is gone for good.
+- The voice repeats "they're only spiders" (`only_spiders_lie`), now a lie. It's
+  the one sanctioned repeat in the doc.
+- Verified headless: wait -> reveal -> slow retract -> removed.
 
 ## Untested
 - Audio, by ear (no sound card here).

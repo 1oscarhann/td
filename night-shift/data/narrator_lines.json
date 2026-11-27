@@ -18,6 +18,7 @@
 	"switch_is_loud": { "text": "the switch is loud", "priority": 2, "max_wait": 10 },
 	"they_heard_that": { "text": "they heard that", "priority": 3, "min_gap": 8, "max_wait": 10 },
 	"wasnt_there_before": { "text": "that wasn't there before", "priority": 2, "max_wait": 15 },
+	"only_spiders_lie": { "text": "they're only spiders", "priority": 3, "min_gap": 6, "max_wait": 12 },
 	"stay_low": { "text": "stay low", "priority": 1 },
 	"doing_so_well": { "text": "you're doing so well", "priority": 2 },
 	"keep_moving": { "text": "keep moving", "priority": 0 },

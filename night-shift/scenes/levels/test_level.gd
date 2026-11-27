@@ -83,6 +83,7 @@ const TRIGGERS := {
 ##   door:         a heavy door filling floor-to-ceiling at "cell", opened by "id"
 ##   mop:          the shop's mop and bucket (things from upstairs, down here)
 ##   line:         a one-shot narrator trigger for line "id" at "cell"
+##   leg:          the "spider" in the vent above "cell" that's really a leg tip
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
 	# Shop (Act 0): fluorescent tubes that work until the power cut, the window.
@@ -117,6 +118,8 @@ const DECOR := [
 	{"type": "pipe", "cell": Vector2i(67, 19), "to_x": 85, "below_ceiling": 2},
 	{"type": "vent", "cell": Vector2i(73, 19)},
 	{"type": "spiders", "cell": Vector2i(73, 19), "count": 2},
+	# ...and one of them is not a spider (the payoff: a leg tip in the vent).
+	{"type": "leg", "cell": Vector2i(73, 19)},
 	# Open room: high things you only find by looking up.
 	{"type": "tube", "cell": Vector2i(89, 14)},
 	{"type": "vent", "cell": Vector2i(96, 14)},
@@ -171,6 +174,7 @@ const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
 const CABLE_CREATURE_SCENE := preload("res://scenes/creatures/cable_creature.tscn")
 const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
 const ARM_SCENE := preload("res://scenes/creatures/ceiling_arm.tscn")
+const LEG_SCENE := preload("res://scenes/creatures/leg_tip.tscn")
 const SWITCH_SCENE := preload("res://scenes/props/lever_switch.tscn")
 const DOOR2_SCENE := preload("res://scenes/props/heavy_door.tscn")
 const LIGHT_SCENE := preload("res://scenes/props/shop_light.tscn")
@@ -337,6 +341,10 @@ func _place_decor(d: Dictionary) -> void:
 			var arm: CeilingArm = ARM_SCENE.instantiate()
 			arm.position = Vector2(x + TILE * 0.5, ceil_y + 4.0)   # just under the vent grille
 			creatures.add_child(arm)
+		"leg":
+			var leg: LegTip = LEG_SCENE.instantiate()
+			leg.position = Vector2(x + TILE * 0.5 + 3.0, ceil_y + 7.0)   # at the vent's lip
+			creatures.add_child(leg)
 		"mop":
 			var mop: Node2D = MOP_SCENE.instantiate()
 			mop.position = Vector2(x + TILE * 0.5, floor_y)
