@@ -112,6 +112,7 @@ func _build_library() -> void:
 	_streams["drip"] = _to_wav(_synth_drip())
 	_streams["buzz"] = _to_wav(_synth_buzz(), true)
 	_streams["clunk"] = _to_wav(_synth_clunk())
+	_streams["crackle"] = _to_wav(_synth_crackle(), true)
 
 
 # --------------------------------------------------------------------- synthesis
@@ -279,6 +280,20 @@ func _synth_clunk() -> PackedFloat32Array:
 		var t := float(i) / RATE
 		lp += (_noise() - lp) * 0.12
 		s[i] = (sin(TAU * 60.0 * t) * exp(-t * 14.0) + lp * exp(-t * 30.0) * 1.5) * 0.8
+	return s
+
+
+## Electrical crackle: the Cables' signature. 1.2 s loop of sparse sharp pops
+## over a thin buzz.
+func _synth_crackle() -> PackedFloat32Array:
+	var s := _buffer(1.2)
+	var pop := 0.0
+	for i in s.size():
+		var t := float(i) / RATE
+		if _rng.randf() < 0.0015:
+			pop = _rng.randf_range(0.5, 1.0) * (1.0 if _rng.randf() < 0.5 else -1.0)
+		pop *= 0.93
+		s[i] = pop * 0.8 + sin(TAU * 120.0 * t) * 0.05 + _noise() * pop * 0.3
 	return s
 
 

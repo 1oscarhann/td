@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scenes/props/lever_switch.gd" id="1_lever"]
+
+[node name="LeverSwitch" type="Node2D"]
+script = ExtResource("1_lever")

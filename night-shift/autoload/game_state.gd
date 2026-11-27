@@ -10,6 +10,8 @@ extends Node
 ## Something made a sound. `radius` is how far (px) it carries.
 ## Creatures within the radius may react.
 signal noise_made(origin: Vector2, radius: float)
+## A switch sent power through the walls at `origin`. The Cables move towards it.
+signal switch_flipped(origin: Vector2)
 ## A creature reached the player.
 signal player_caught(by: Node)
 ## The player crossed into a new depth zone (0 = shop, 1..4 = basement zones).

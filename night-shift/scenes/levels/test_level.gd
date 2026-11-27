@@ -79,6 +79,8 @@ const TRIGGERS := {
 ##                 under the ceiling or "above_floor" px over the floor
 ##   spiders:      "count" little spiders crawling on the ceiling around "cell"
 ##   arm:          a Ceiling Arm living in the vent above "cell" (place a vent too)
+##   switch:       a heavy lever on the wall at "cell" that powers door "id"
+##   door:         a heavy door filling floor-to-ceiling at "cell", opened by "id"
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
 	# Shop (Act 0): fluorescent tubes that work until the power cut, the window.
@@ -117,6 +119,11 @@ const DECOR := [
 	{"type": "cable", "cell": Vector2i(86, 14), "to_x": 103, "below_ceiling": 26, "sag": 14},
 	# Passage, past the crouch gap, the dead end.
 	{"type": "cable", "cell": Vector2i(106, 18), "to_x": 115, "below_ceiling": 9, "sag": 4},
+	# First switch: a lever in the open room powers the door in the passage.
+	# Loud (the Thing hears it), two hands (torch at the floor), and it puts
+	# power in the walls (the Cables come).
+	{"type": "switch", "cell": Vector2i(91, 18), "id": "passage_door"},
+	{"type": "door", "cell": Vector2i(113, 18), "id": "passage_door"},
 	# The real one: in the passage before the crouch gap, on the chase route.
 	{"type": "vent", "cell": Vector2i(110, 18)},
 	{"type": "arm", "cell": Vector2i(110, 18)},
@@ -151,6 +158,8 @@ const PIPE_SCENE := preload("res://scenes/props/pipe.tscn")
 const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
 const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
 const ARM_SCENE := preload("res://scenes/creatures/ceiling_arm.tscn")
+const SWITCH_SCENE := preload("res://scenes/props/lever_switch.tscn")
+const DOOR2_SCENE := preload("res://scenes/props/heavy_door.tscn")
 const LIGHT_SCENE := preload("res://scenes/props/shop_light.tscn")
 const WINDOW_SCENE := preload("res://scenes/props/shop_window.tscn")
 const FRIDGE_SCENE := preload("res://scenes/props/fridge.tscn")
@@ -171,6 +180,7 @@ var _after_power: Array = []
 var _door_pos := Vector2.ZERO
 var _counter_pos := Vector2.ZERO
 var _window_pos := Vector2.ZERO
+var _doors: Dictionary = {}   # door id -> HeavyDoor
 var _variants := 1
 
 @onready var darkness: CanvasModulate = $Darkness
@@ -308,6 +318,19 @@ func _place_decor(d: Dictionary) -> void:
 			var arm: CeilingArm = ARM_SCENE.instantiate()
 			arm.position = Vector2(x + TILE * 0.5, ceil_y + 4.0)   # just under the vent grille
 			creatures.add_child(arm)
+		"switch":
+			var lever: LeverSwitch = SWITCH_SCENE.instantiate()
+			lever.position = Vector2(x + TILE * 0.5, floor_y)
+			lever.switch_id = d.id
+			lever.flipped.connect(_on_switch_flipped)
+			props.add_child(lever)
+		"door":
+			var door: HeavyDoor = DOOR2_SCENE.instantiate()
+			door.position = Vector2(x + TILE * 0.5, floor_y)
+			door.door_id = d.id
+			door.height = floor_y - ceil_y
+			props.add_child(door)
+			_doors[d.id] = door
 		_:
 			push_warning("TestLevel: unknown decor type '%s'" % d.type)
 
@@ -515,6 +538,11 @@ func _on_trigger(t: LevelTrigger) -> void:
 				thing.activate()
 		"end":
 			ending_reached.emit()
+
+
+func _on_switch_flipped(switch_id: String) -> void:
+	if _doors.has(switch_id):
+		_doors[switch_id].open()
 
 
 func _on_board_ripped(remaining: int) -> void:

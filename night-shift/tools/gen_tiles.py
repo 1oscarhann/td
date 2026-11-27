@@ -758,6 +758,47 @@ def player_sheet():
     save(img, "player/player")
 
 
+# ------------------------------------------------------- switches and heavy doors
+def prop_lever(on):
+    """Heavy two-handed lever on a junction box, 16x24. Handle up = off, down = on."""
+    w, h = 16, 24
+    img = Img(w, h)
+    for y in range(8, h):                         # junction box
+        for x in range(1, w - 1):
+            edge = x in (1, w - 2) or y in (8, h - 1)
+            img.set(x, y, 6 if edge else quantise(0.5 + bayer(x, y) * 0.25, [3, 4, 5], x, y))
+    img.rect(3, 18, 10, 3, 10)                    # hazard label
+    img.rect(4, 19, 8, 1, 1)
+    img.rect(7, 11, 2, 2, 1)                      # pivot
+    if on:
+        for i in range(7):                        # handle thrown down to the right
+            img.set(8 + i // 2, 12 + i, 7)
+        img.rect(10, 18, 4, 2, 11)                # grip
+    else:
+        for i in range(8):                        # handle up
+            img.set(8, 11 - i, 7)
+        img.rect(7, 1, 3, 3, 11)                  # grip
+    save(img, "props/lever_on" if on else "props/lever_off")
+
+
+def prop_heavy_door():
+    """Heavy metal service door, 14x64: riveted plate, warning stripe at the foot."""
+    w, h = 14, 64
+    img = Img(w, h)
+    for y in range(h):
+        for x in range(w):
+            edge = x in (0, w - 1)
+            v = 0.5 + bayer(x, y) * 0.2 - (0.15 if y % 16 == 15 else 0.0)
+            img.set(x, y, 6 if edge else quantise(v, [3, 4, 5], x, y))
+    for y in range(4, h - 8, 16):                 # rivets
+        img.set(3, y, 7)
+        img.set(w - 4, y, 7)
+    for y in range(h - 8, h):                     # hazard stripes
+        for x in range(1, w - 1):
+            img.set(x, y, 10 if (x + y) % 6 < 3 else 1)
+    save(img, "props/heavy_door")
+
+
 def main():
     # Columns = tile type, rows = variants (0 plain, 1 cracked/chipped, 2 grimy).
     # The level picks a variant per cell so the repeat isn't obvious.
@@ -792,6 +833,9 @@ def main():
     prop_door()
     prop_grime()
     player_sheet()
+    prop_lever(False)
+    prop_lever(True)
+    prop_heavy_door()
 
 
 if __name__ == "__main__":

@@ -191,6 +191,21 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
   - horizontal layout, speeds, timings and every rule are unchanged
 - Verified headless: the full route from Act 0 to the ending, and death/respawn.
 
+#### M2.5: switches and a heavy door (progression)
+- `lever_switch.tscn/.gd`: a heavy lever on a junction box. Hold E 1.6 s with two
+  hands, so the torch is forced at the floor. It has the doc's switch costs:
+  - **noise:** a clunk with a 320 px radius, so the Thing comes
+  - **electricity:** emits the new `GameState.switch_flipped(origin)`, which the Cables use
+  - Lines: "the switch is loud" (in reach), "they heard that" (2 s after).
+- `heavy_door.tscn/.gd`: fills the tunnel floor-to-ceiling and blocks movement and
+  light. Powered, it grinds up into the ceiling and stays open.
+- Placed by `DECOR` "switch"/"door" with a shared id: a lever on the left of the
+  open room opens a door in the passage before the crouch gap. You now have to
+  work a loud switch in the room where the Thing is fastest.
+- New art (lever off/on, heavy door) and a looping electrical crackle sound.
+- Verified headless: the door blocks the passage, the lever opens it, the full route
+  reaches the ending.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -200,6 +215,9 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **The passage door is new progression I added** (doc: switches open doors).
+  It makes the open room more dangerous (you must pull a loud lever there).
+  Remove the two "switch"/"door" lines in `DECOR` to undo it.
 - **Zoom 1 at 640x360 brings back the rock bands.** The camera now shows ~40x22
   tiles, so a 7-tile room fills about a third of the screen height. That's the
   direct result of "zoom 1" and contradicts the earlier "rooms fill the screen"
