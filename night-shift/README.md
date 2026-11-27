@@ -65,7 +65,7 @@ a 1-tile **crouch gap**, and a dead end where the FUSE BOX sign points into the 
 ## Project layout
 
 ```
-tools/         gen_tiles.py (procedural pixel art -> art/)
+tools/         gen_tiles.py + art/ (procedural pixel art -> art/)
 art/           generated PNGs, normal maps, CanvasTextures
 autoload/      GameState (noise, light queries, checkpoint, zone)
                AudioDirector (synth sound library, play_at, reverb bus)

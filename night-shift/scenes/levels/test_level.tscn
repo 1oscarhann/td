@@ -7,7 +7,7 @@
 script = ExtResource("1_level")
 
 [node name="Darkness" type="CanvasModulate" parent="."]
-color = Color(0.40, 0.41, 0.54, 1)
+color = Color(0.30, 0.32, 0.46, 1)
 
 [node name="BackWall" type="TileMapLayer" parent="."]
 z_index = -10

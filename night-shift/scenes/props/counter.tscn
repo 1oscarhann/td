@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Texture2D" path="res://art/props/counter.tres" id="1_tex"]
 [ext_resource type="Texture2D" path="res://art/props/cctv.tres" id="2_cctv"]
+[ext_resource type="Texture2D" path="res://art/props/coffee.tres" id="3_coffee"]
 [ext_resource type="Texture2D" path="res://art/props/grime.tres" id="9_grime"]
 
 [node name="Counter" type="Sprite2D"]
@@ -9,10 +10,14 @@ texture = ExtResource("1_tex")
 offset = Vector2(0, -10)
 
 [node name="CCTV" type="Sprite2D" parent="."]
-position = Vector2(-14, -19)
+position = Vector2(-3, -19)
 texture = ExtResource("2_cctv")
 
 [node name="Grime" type="Sprite2D" parent="."]
 show_behind_parent = true
 texture = ExtResource("9_grime")
 position = Vector2(0, -5)
+
+[node name="Coffee" type="Sprite2D" parent="."]
+position = Vector2(-17, -25)
+texture = ExtResource("3_coffee")

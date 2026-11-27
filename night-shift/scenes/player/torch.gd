@@ -21,7 +21,7 @@ signal lit_changed(target: Node, lit: bool)
 @export var cone_angle_deg := 40.0
 ## Beam length in px (16 px tiles: 120 px = 7.5 tiles).
 @export var cone_length := 120.0
-@export var energy := 1.2
+@export var energy := 1.45
 @export var light_color := Color(1.0, 0.9, 0.72)
 ## Brightness steps in the bright part of the beam (0 = smooth). The far tail
 ## always fades smoothly to nothing.

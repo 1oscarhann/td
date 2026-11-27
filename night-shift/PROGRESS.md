@@ -36,7 +36,7 @@ Open `night-shift/project.godot` in Godot 4.4+, F5, headphones on.
 
 ## How to run the art generator
 `python3 tools/gen_tiles.py` (standard library only) rewrites everything in
-`art/`. Godot reimports on focus.
+`art/`. The code lives in `tools/art/`. Godot reimports on focus.
 
 ## How I verified things (all phases)
 
@@ -248,6 +248,49 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
   the one sanctioned repeat in the doc.
 - Verified headless: wait -> reveal -> slow retract -> removed.
 
+### Art revamp + scare pass
+**Scare (only what the spec asks for):**
+- **Post effects** (`scenes/ui/post_fx.*`, a CanvasLayer under the UI): film grain
+  (stronger in shadows), vignette and desaturation, eased per zone. Chromatic
+  aberration exists but stays 0 until zone 3 ("very slight, later zones").
+- **Darker grading** per the doc's palette table: the shop after the cut is
+  near-black blue with the red EXIT, the storeroom warm grey, the tunnels cold
+  blue-grey. Still readable, never pure black. Torch energy 1.2 -> 1.45 for contrast.
+- **The eye glint:** point the torch at the Wedged Thing's eye from up to 340 px
+  (nearly 3x the beam's reach) with line of sight, and one warm pixel answers back,
+  drawn unshaded so it shows in the dark. Works while it sleeps ("the eye far down
+  a tunnel"). Torch-coloured, not red: the ending-A seed.
+- **Silence before key moments:** the tunnel hum and drips drop out when an
+  active Thing is within 240 px, then creep back.
+
+**Art (generator rewritten as `tools/art/`: core, palette, tiles, props, player):**
+- Real RGB with the doc's per-zone ramps: shop = fluorescent greens and dirty
+  yellows, storeroom = concrete greys with dirty yellow, tunnels = cold blue-grey
+  mortar and brick browns. Normal maps come from real height maps (raised brick
+  faces, recessed mortar and grout, tie holes), not just brightness.
+- Tiles (17 columns x 3 variants):
+  - back walls: ceramic shop tiles, formwork concrete with tie holes, bevelled brick
+  - floors: lino-over-slab, concrete, wet tunnel concrete with puddle glints
+  - concrete and brick ceilings and sides, rock with stones
+  - LOW and HIGH edge versions: rising damp, a dirty-yellow tide line, salt bloom
+    on brick, soot and nicotine
+- Floors and ceilings follow the room's material (map char `:` = shop).
+- Every prop redrawn. New ones from the spec: coffee machine (on the counter),
+  stock boxes (storeroom), junction boxes (tunnel walls). New `DECOR` type "sprite".
+- **Player:** posed skeleton with IK legs, 3-tone shading, selective dark outline,
+  hair, face, polo, stripe, badge, belt, trousers, shoes. 16 frames: idle 4,
+  walk 6, crouch 2, crouch-walk 4.
+- **Wedged Thing:** 8 legs (was 6), tapered with knobbed knees and needle tips, a
+  shaded ribcage body with ribs and spine, an elongated skull with a dark socket
+  around the warm eye. Behaviour untouched.
+- **Ceiling Arm:** tapered, knuckled, long two-jointed curling fingers.
+  **Spiders:** body, abdomen, eight legs.
+- Fixed: the CCTV monitor moved to make room for the coffee machine and its
+  zone overlapped the torch pickup. The player now uses the *nearest* usable
+  interactable, not the first.
+- Verified: renders of every area; headless full route, death/respawn, Cable
+  grab/escape, leg-tip payoff.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -263,6 +306,12 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - **The passage door is new progression I added** (doc: switches open doors).
   It makes the open room more dangerous (you must pull a loud lever there).
   Remove the two "switch"/"door" lines in `DECOR` to undo it.
+- **Per-zone palettes replace the single 12-colour palette** you asked for in
+  phase 2. The spec's palette table (and "look like a Steam game") needed it.
+  Each zone still uses a small set of ramps.
+- **Readability vs scary:** the ambient is tuned so walls stay readable on my
+  software renders. On a real monitor it may want ±10%: `ZONE_DARKNESS` in
+  `test_level.gd`, and grain/vignette in `post_fx.gd`.
 - **Zoom 1 at 640x360 brings back the rock bands.** The camera now shows ~40x22
   tiles, so a 7-tile room fills about a third of the screen height. That's the
   direct result of "zoom 1" and contradicts the earlier "rooms fill the screen"

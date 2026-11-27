@@ -50,6 +50,9 @@ enum State { DORMANT, STALK, HUNT, FROZEN, ENRAGED }
 @export var sense_radius := 90.0
 ## Notices a beam pointed its way from this far, even out of the beam's reach.
 @export var light_sight_range := 230.0
+## The eye catches the torch from this far (well past the 120 px beam) and
+## glints back: "a single bright pixel in the dark is the warning sign".
+@export var glint_range := 340.0
 ## Delay before it moves again after the player respawns.
 @export var respawn_grace := 3.0
 
@@ -81,6 +84,9 @@ var _flickered := false
 var _t := 0.0
 var _legs: Array = []         # [{surface, rest, hip, foot, from, to, t}]
 var _shape := RectangleShape2D.new()
+var _glint: Node2D
+var _glint_on := false
+var _glint_check := 0.0
 
 @onready var scrape: AudioStreamPlayer2D = $Scrape
 
@@ -101,6 +107,15 @@ func _ready() -> void:
 	scrape.bus = AudioDirector.WORLD_BUS
 	scrape.volume_db = -60.0
 	scrape.play()
+	# The glint is drawn UNSHADED (not Light Only): it shows even out of the beam.
+	_glint = Node2D.new()
+	var glint_mat := CanvasItemMaterial.new()
+	glint_mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_glint.material = glint_mat
+	_glint.z_index = 1
+	_glint.visible = false
+	_glint.draw.connect(_draw_glint)
+	add_child(_glint)
 
 
 # --------------------------------------------------------------------------- API
@@ -204,6 +219,7 @@ func _physics_process(delta: float) -> void:
 			_sight_cooldown = 0.2
 			_check_torch_sight()
 
+	_update_glint(delta)
 	_move(delta)
 	_update_legs(delta)
 	_update_shape()
@@ -228,6 +244,43 @@ func _on_noise(origin: Vector2, radius: float) -> void:
 	_hunt_left = hunt_memory
 	if state == State.STALK:
 		_enter(State.HUNT)
+
+
+## The eye glint: when the torch points at the eye from up to `glint_range`
+## away with clear line of sight, one warm pixel answers back. Works even while
+## it sleeps ("the eye far down a tunnel"). The colour is torchlight, not red:
+## a seed for the ending.
+func _update_glint(delta: float) -> void:
+	_glint_check -= delta
+	if _glint_check <= 0.0:
+		_glint_check = 0.08
+		_glint_on = _torch_points_at_eye(glint_range, 0.0)
+	_glint.visible = _glint_on
+	if _glint_on:
+		_glint.position = _body_points().eye
+		_glint.queue_redraw()
+
+
+func _torch_points_at_eye(max_range: float, slack: float) -> bool:
+	var torch = GameState.torch
+	if torch == null or not torch.is_on:
+		return false
+	var from: Vector2 = torch.global_position
+	var eye_local: Vector2 = _body_points().eye
+	var to := global_position + eye_local - from
+	if to.length() > max_range:
+		return false
+	var half := deg_to_rad(float(torch.cone_angle_deg)) * 0.5 + slack
+	if absf(angle_difference(float(torch.global_rotation), to.angle())) > half:
+		return false
+	var query := PhysicsRayQueryParameters2D.create(from, from + to, GameState.LAYER_WORLD)
+	return get_world_2d().direct_space_state.intersect_ray(query).is_empty()
+
+
+func _draw_glint() -> void:
+	var flick := 0.75 + 0.25 * sin(_t * 23.0)
+	_glint.draw_rect(Rect2(-1, -1, 3, 3), Color(1.0, 0.85, 0.55, 0.18 * flick))
+	_glint.draw_rect(Rect2(0, 0, 1, 1), Color(1.0, 0.95, 0.78, flick))
 
 
 ## Some of the danger is looking for the torch: a beam pointed its way is
@@ -370,8 +423,9 @@ func _center() -> Vector2:
 
 func _init_legs() -> void:
 	_legs.clear()
-	var floor_rest := [-16.0, 2.0, 18.0]
-	var ceil_rest := [-12.0, 6.0, 20.0]
+	# Many long legs (design doc): four braced on the floor, four on the ceiling.
+	var floor_rest := [-24.0, -9.0, 7.0, 22.0]
+	var ceil_rest := [-20.0, -5.0, 11.0, 26.0]
 	for r: float in floor_rest:
 		_legs.append(_make_leg(FLOOR, r, 0.38))
 	for r: float in ceil_rest:
@@ -447,43 +501,81 @@ func _body_points() -> Dictionary:
 
 
 # ------------------------------------------------------------------------ drawing
+# Placeholder-free procedural look: tapered bone-white legs with knobbed knees,
+# a pinched ribcage of a body, an elongated skull with one eye. Everything is
+# drawn under the Light Only material, so only what the beam touches exists.
+
+const SKIN := Color(0.80, 0.77, 0.72)
+const SKIN_HI := Color(0.94, 0.91, 0.86)
+const SKIN_SHADE := Color(0.52, 0.49, 0.47)
+const SKIN_DARK := Color(0.27, 0.25, 0.25)
+const EYE := Color(1.0, 0.93, 0.66)
+
+
+## A limb that tapers from w0 to w1 px, with a darker underside.
+func _bone(a: Vector2, b: Vector2, w0: float, w1: float, col: Color) -> void:
+	var steps := 3
+	var side := (b - a).orthogonal().normalized()
+	for i in steps:
+		var p0 := a.lerp(b, float(i) / steps)
+		var p1 := a.lerp(b, float(i + 1) / steps)
+		var w := lerpf(w0, w1, (i + 0.5) / steps)
+		draw_line(p0, p1, col, w)
+		if w >= 2.0:
+			draw_line(p0 + side * (w * 0.5), p1 + side * (w * 0.5), SKIN_SHADE, 1.0)
+
 
 func _draw() -> void:
 	var b := _body_points()
 	var sway: float = b.sway
-	var leg_col := Color(0.56, 0.53, 0.50)
-	var body_col := Color(0.80, 0.77, 0.72)
-	var dark := Color(0.34, 0.32, 0.31)
 	var seg := gap * 0.3 + 8.0
+	var leg_col := SKIN.darkened(0.12)
 
-	# Legs (behind the body).
+	# Legs behind the body: thigh 3 px, shin to a needle tip, knobbed knee.
 	for leg in _legs:
 		var hip := Vector2(sway + (2.0 if float(leg.rest) > 0.0 else -2.0), -gap * float(leg.hip))
 		var foot: Vector2 = leg.foot - global_position
 		var knee := _knee(hip, foot, seg, sway)
 		if state == State.FROZEN and randf() < 0.3:
 			knee += Vector2(randf_range(-1.5, 1.5), randf_range(-1.5, 1.5))   # still twitching
-		draw_line(hip, knee, leg_col, 1.0)
-		draw_line(knee, foot, leg_col, 1.0)
-		draw_rect(Rect2(knee.round() - Vector2(1, 1), Vector2(2, 2)), dark)
+		_bone(hip, knee, 3.0, 2.0, leg_col)
+		_bone(knee, foot, 2.0, 1.0, leg_col)
+		var k := knee.round()
+		draw_rect(Rect2(k - Vector2(1, 1), Vector2(3, 3)), SKIN_SHADE)
+		draw_rect(Rect2(k - Vector2(1, 1), Vector2(1, 1)), SKIN_HI)
+		draw_rect(Rect2(foot.round(), Vector2(1, 1)), SKIN_DARK)   # tip on concrete
 
-	# Thin ribbed torso.
+	# Body: a pinched ribcage, wider at the chest, narrow at the waist.
 	var top: float = b.torso_top
 	var bottom: float = b.torso_bottom
-	draw_rect(Rect2(sway - 3.0, top, 6.0, bottom - top), body_col)
-	var y := top + 2.0
+	var h := bottom - top
+	var y := top
 	while y < bottom:
-		draw_line(Vector2(sway - 3.0, y), Vector2(sway + 3.0, y), dark, 1.0)
-		y += 3.0
+		var k := (y - top) / maxf(h, 1.0)
+		var half := 2.0 + 2.5 * sin(PI * clampf(k * 1.4, 0.0, 1.0))   # ribcage swell, then waist
+		var x0 := sway - half
+		draw_rect(Rect2(x0, y, half * 2.0, 1), SKIN)
+		draw_rect(Rect2(x0, y, 1, 1), SKIN_HI)                       # lit edge
+		draw_rect(Rect2(sway + half - 1.0, y, 1, 1), SKIN_SHADE)     # shadow edge
+		if int(y - top) % 3 == 2 and k < 0.75:
+			draw_rect(Rect2(x0 + 1.0, y, half * 2.0 - 2.0, 1), SKIN_SHADE)   # rib
+		y += 1.0
+	draw_line(Vector2(sway, top + 1.0), Vector2(sway, bottom), SKIN_SHADE, 1.0)  # spine
 
-	# Elongated head leaning the way it travels.
+	# Neck and an elongated skull leaning the way it travels.
 	var neck: Vector2 = b.neck
 	var tip: Vector2 = b.tip
-	# (Thick lines rather than a polygon: never fails to triangulate when squashed.)
-	draw_line(neck, tip, body_col, 3.0)
-	draw_line(neck + Vector2(-2, 1), neck + Vector2(2, 1), body_col, 2.0)
+	draw_line(Vector2(sway, top), neck, SKIN_SHADE, 2.0)
+	for i in 5:
+		var t := float(i) / 4.0
+		var p := neck.lerp(tip, t)
+		var w := lerpf(4.0, 1.5, t)
+		draw_rect(Rect2(p.round() - Vector2(w * 0.5, w * 0.5), Vector2(w, w)), SKIN if i < 4 else SKIN_SHADE)
+	draw_line(neck + Vector2(0, 2), tip + Vector2(0, 1), SKIN_SHADE, 1.0)          # jaw line
 
-	# The eye. Warm and torch-coloured, NOT a red monster eye: seed for ending A
-	# ("the eye was a torch"). A single bright pixel in the dark is the warning.
-	var eye: Vector2 = b.eye
-	draw_rect(Rect2(eye.round() - Vector2(1, 1), Vector2(2, 2)), Color(1.0, 0.93, 0.66))
+	# The eye: a dark socket around one warm, torch-coloured point. NOT a red
+	# monster eye: seed for ending A ("the eye was a torch").
+	var eye: Vector2 = b.eye.round()
+	draw_rect(Rect2(eye - Vector2(2, 1), Vector2(4, 3)), SKIN_DARK)
+	draw_rect(Rect2(eye - Vector2(1, 0), Vector2(2, 1)), EYE)
+	draw_rect(Rect2(eye, Vector2(1, 1)), Color(1, 1, 1))

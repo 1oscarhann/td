@@ -5,7 +5,7 @@ extends RefCounted
 ## normal map, both made by tools/gen_tiles.py).
 ##
 ## Atlas layout: columns are tile TYPES (constants below), rows are VARIANTS
-## (0 plain, 1 hairline crack / chip, 2 faint stain). The level picks a variant per cell.
+## (0 plain, 1 damage, 2 stain). The level picks a variant per cell.
 ##
 ## Solid tiles get:
 ##   - a full-square collision polygon (physics layer 0 -> world layer)
@@ -25,20 +25,25 @@ const ATLAS_PATH := "res://art/tiles/tiles.tres"
 ## Which winding gets culled. Flip to CULL_COUNTER_CLOCKWISE if faces go dark.
 const OCCLUDER_CULL := OccluderPolygon2D.CULL_CLOCKWISE
 
-## Atlas column for each tile type. Solid tiles are picked by the level from
-## their neighbours, so floor, ceiling, side walls and rock never blend together.
+## Atlas column for each tile type (see tools/art/tiles.py). Solid tiles are
+## picked by the level from their neighbours and the material of the room they
+## face, so floor, ceiling, side walls and rock never blend together.
 const ROCK := 0
-const BACK_CONCRETE := 1
-const BACK_BRICK := 2
-const FLOOR := 3
-const CEILING := 4
-const SIDE := 5
-## Back-wall edge versions with grime where it collects (floor / ceiling edge).
-const BACK_CONCRETE_LOW := 6
-const BACK_BRICK_LOW := 7
-const BACK_CONCRETE_HIGH := 8
-const BACK_BRICK_HIGH := 9
-const SOLID_TILES := [ROCK, FLOOR, CEILING, SIDE]
+const WALL_SHOP := 1
+const WALL_CONCRETE := 2
+const WALL_BRICK := 3
+const FLOOR_SHOP := 4
+const FLOOR_CONCRETE := 5
+const FLOOR_TUNNEL := 6
+const CEIL_CONCRETE := 7
+const CEIL_BRICK := 8
+const SIDE_CONCRETE := 9
+const SIDE_BRICK := 10
+## Back-wall edge versions: grime where it collects (+3 per step: SHOP, CONCRETE, BRICK).
+const WALL_LOW_OFFSET := 10    # WALL_SHOP (1) + 10 = 11 ... WALL_BRICK (3) + 10 = 13
+const WALL_HIGH_OFFSET := 13   # 14 .. 16
+const SOLID_TILES := [ROCK, FLOOR_SHOP, FLOOR_CONCRETE, FLOOR_TUNNEL, CEIL_CONCRETE,
+		CEIL_BRICK, SIDE_CONCRETE, SIDE_BRICK]
 
 
 static func build() -> TileSet:

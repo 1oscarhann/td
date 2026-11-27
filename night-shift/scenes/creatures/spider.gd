@@ -90,13 +90,19 @@ func _hide() -> void:
 
 
 func _draw() -> void:
-	var body := Color(0.22, 0.21, 0.21)
-	var legs := Color(0.30, 0.28, 0.27)
+	var body := Color(0.20, 0.19, 0.19)
+	var shell := Color(0.32, 0.30, 0.29)
+	var legs := Color(0.26, 0.25, 0.24)
 	var moving := state == State.FLEE or absf(position.x - _target_x) > 0.5
 	var phase := int(_t * (24.0 if state == State.FLEE else 8.0)) % 2 if moving else 0
-	# Body hugging the ceiling, legs splayed. 5x3 px.
+	# Hugging the ceiling: head, abdomen with a glossy spot, eight bent legs.
 	draw_rect(Rect2(-1, 0, 2, 2), body)
-	draw_rect(Rect2(-2 - phase, 0 + phase, 1, 1), legs)
-	draw_rect(Rect2(1 + phase, 0 + phase, 1, 1), legs)
-	draw_rect(Rect2(-2 + phase, 2 - phase, 1, 1), legs)
-	draw_rect(Rect2(1 - phase, 2 - phase, 1, 1), legs)
+	draw_rect(Rect2(1, 0, 3, 2), body)
+	draw_rect(Rect2(2, 0, 1, 1), shell)
+	for i in 4:
+		var lx := -1 + i
+		var up := (i + phase) % 2
+		draw_rect(Rect2(lx - 2, 1 + up, 1, 1), legs)    # left legs
+		draw_rect(Rect2(lx - 3, 2 + up, 1, 1), legs)
+		draw_rect(Rect2(lx + 3, 1 + up, 1, 1), legs)    # right legs
+		draw_rect(Rect2(lx + 4, 2 + up, 1, 1), legs)

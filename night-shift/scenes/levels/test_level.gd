@@ -4,8 +4,9 @@ extends Node2D
 ## The layout is ASCII so it can be tweaked in a text editor without a tile
 ## editor. Each character is one 16x16 tile:
 ##
-##   #  concrete (solid)          .  concrete back wall (open space)
-##   %  brick (solid)             ,  brick back wall (open space)
+##   #  solid (concrete zone)     .  concrete back wall (storeroom, open space)
+##   %  solid (brick zone)        ,  brick back wall (tunnels, open space)
+##                                :  ceramic-tiled back wall (the shop, open space)
 ##
 ## Markers sit on open space; their background copies the tile to their left.
 ##   P  player start               B  boarded panel (bottom cell of a 1x2 opening)
@@ -33,13 +34,13 @@ const TILE := 16
 const MAP := [
 	"######################################################################################################################################",
 	"######################################################################################################################################",
-	"#........................##............................###############################################################################",
-	"#........................##............................#......########################################################################",
-	"#........................##............................#......########################################################################",
-	"#......................................................#......########################################################################",
-	"#.............................................................########################################################################",
-	"#.............................................................########################################################################",
-	"#.D...P...6K...R..M9.C.7....X8.....S.....S.....S.....1.B..H...########################################################################",
+	"#::::::::::::::::::::::::##............................###############################################################################",
+	"#::::::::::::::::::::::::##............................#......########################################################################",
+	"#::::::::::::::::::::::::##............................#......########################################################################",
+	"#::::::::::::::::::::::::..............................#......########################################################################",
+	"#::::::::::::::::::::::::.....................................########################################################################",
+	"#::::::::::::::::::::::::.....................................########################################################################",
+	"#:D:::P:::6K:::R::M9:C:7:...X8.....S.....S.....S.....1.B..H...########################################################################",
 	"##########################################################..#########################....................#############################",
 	"##########################################################..#########################....................#############################",
 	"##########################################################..#########################....................#############################",
@@ -83,6 +84,7 @@ const TRIGGERS := {
 ##   door:         a heavy door filling floor-to-ceiling at "cell", opened by "id"
 ##   mop:          the shop's mop and bucket (things from upstairs, down here)
 ##   line:         a one-shot narrator trigger for line "id" at "cell"
+##   sprite:       art/props/<name> standing on the floor (or "above_floor" px up the wall)
 ##   leg:          the "spider" in the vent above "cell" that's really a leg tip
 ## Cables are REAL here (scenery). The creature version reuses cable.tscn later.
 const DECOR := [
@@ -102,6 +104,14 @@ const DECOR := [
 	{"type": "pipe", "cell": Vector2i(32, 18), "to_x": 67, "below_ceiling": 3},
 	{"type": "cable", "cell": Vector2i(46, 18), "to_x": 57, "below_ceiling": 12, "sag": 6},
 	{"type": "tube", "cell": Vector2i(52, 18)},
+	# Set dressing from the doc's zone table: stock boxes in the storeroom,
+	# junction boxes on the tunnel walls.
+	{"type": "sprite", "name": "stock_boxes", "cell": Vector2i(31, 8)},
+	{"type": "sprite", "name": "stock_boxes", "cell": Vector2i(45, 8)},
+	{"type": "sprite", "name": "junction", "cell": Vector2i(64, 19), "above_floor": 34},
+	{"type": "sprite", "name": "junction", "cell": Vector2i(78, 19), "above_floor": 24},
+	{"type": "sprite", "name": "junction", "cell": Vector2i(100, 19), "above_floor": 40},
+	{"type": "sprite", "name": "junction", "cell": Vector2i(126, 19), "above_floor": 36},
 	# Things from upstairs, down here: the shop's mop and bucket beside the same
 	# crisps shelf, in the dead end where the Thing sleeps. The mop is ALSO still
 	# upstairs. Never explained.
@@ -152,9 +162,9 @@ const POWER_ON_SHOP := Color(0.86, 0.94, 0.84)
 
 ## CanvasModulate per zone. Dim but readable: the environment is never pure black.
 const ZONE_DARKNESS := {
-	0: Color(0.40, 0.41, 0.54),   # shop after the power cut: near-black blues
-	1: Color(0.40, 0.40, 0.46),   # back room / storeroom: lights long dead
-	2: Color(0.33, 0.38, 0.46),   # service tunnels: cold grey-blue
+	0: Color(0.30, 0.32, 0.46),   # shop after the power cut: near-black blues
+	1: Color(0.40, 0.38, 0.35),   # back room / storeroom: lights long dead, warm grey
+	2: Color(0.36, 0.41, 0.52),   # service tunnels: cold grey-blue
 }
 ## Ambience hum volume (dB) and World-bus reverb [room_size, wet] per zone.
 const ZONE_HUM_DB := {0: -80.0, 1: -32.0, 2: -26.0}
@@ -192,6 +202,10 @@ var panel: BoardedPanel
 var size_tiles := Vector2i.ZERO
 
 var _drip_timer := 3.0
+## "Silence is a tool. Drop the ambience completely before key moments."
+## When the Thing is this close, the hum and drips go: all that's left is it.
+const SILENCE_RADIUS := 240.0
+var _silenced := false
 var _tasks: Array = []
 var _after_power: Array = []
 var _door_pos := Vector2.ZERO
@@ -226,14 +240,28 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if GameState.player == null:
+		return
+	_update_silence(delta)
 	# Random drips somewhere in the dark around you, underground only.
-	if GameState.zone < 1 or GameState.player == null:
+	if GameState.zone < 1 or _silenced:
 		return
 	_drip_timer -= delta
 	if _drip_timer <= 0.0:
 		_drip_timer = randf_range(2.5, 7.0)
 		var p: Vector2 = GameState.player.global_position
 		AudioDirector.play_at("drip", p + Vector2(randf_range(-220, 220), randf_range(-40, 0)), -15.0, 0.15)
+
+
+func _update_silence(delta: float) -> void:
+	var close := thing != null and thing.state != WedgedThing.State.DORMANT \
+			and thing.global_position.distance_to(GameState.player.global_position) < SILENCE_RADIUS
+	_silenced = close
+	var normal: float = ZONE_HUM_DB.get(GameState.zone, -26.0)
+	var target := -80.0 if close else normal
+	# Drop out fast, creep back slowly.
+	var rate := 40.0 if close else 6.0
+	ambience.volume_db = move_toward(ambience.volume_db, target, rate * delta)
 
 
 ## The four CCTV feeds (see CCTVView.setup). Shop floor framing puts the
@@ -278,10 +306,8 @@ func _build() -> void:
 			match ch:
 				"#", "%":
 					walls.set_cell(cell, 0, _atlas(_solid_tile_for(x, y), cell))
-				".":
-					back_wall.set_cell(cell, 0, _atlas(_back_edge(TileSetBuilder.BACK_CONCRETE, cell), cell))
-				",":
-					back_wall.set_cell(cell, 0, _atlas(_back_edge(TileSetBuilder.BACK_BRICK, cell), cell))
+				".", ",", ":":
+					back_wall.set_cell(cell, 0, _atlas(_back_edge(_wall_for_char(ch), cell), cell))
 				_:
 					back_wall.set_cell(cell, 0, _atlas(_back_edge(_background_for(row, x), cell), cell))
 					_place_marker(ch, cell)
@@ -345,6 +371,12 @@ func _place_decor(d: Dictionary) -> void:
 			var leg: LegTip = LEG_SCENE.instantiate()
 			leg.position = Vector2(x + TILE * 0.5 + 3.0, ceil_y + 7.0)   # at the vent's lip
 			creatures.add_child(leg)
+		"sprite":
+			var spr := Sprite2D.new()
+			spr.texture = load("res://art/props/%s.tres" % d.name)
+			spr.offset = Vector2(0, -spr.texture.get_height() * 0.5)
+			spr.position = Vector2(x + TILE * 0.5, floor_y - float(d.get("above_floor", 0)))
+			props.add_child(spr)
 		"mop":
 			var mop: Node2D = MOP_SCENE.instantiate()
 			mop.position = Vector2(x + TILE * 0.5, floor_y)
@@ -406,27 +438,56 @@ func _atlas(tile_type: int, cell: Vector2i) -> Vector2i:
 	return Vector2i(tile_type, mini(variant, _variants - 1))
 
 
-## Which solid tile a cell gets, from its open neighbours:
-## open above = floor, open below = ceiling, open beside = side wall, else rock.
+## Which solid tile a cell gets, from its open neighbours and the material of
+## the room they belong to: open above = that room's floor (lino in the shop,
+## concrete in the storeroom, wet concrete in the tunnels), open below = its
+## ceiling, open beside = a side wall, else rock.
 func _solid_tile_for(x: int, y: int) -> int:
 	if _is_open(x, y - 1):
-		return TileSetBuilder.FLOOR
+		var mat := _material_at(x, y - 1)
+		if mat == TileSetBuilder.WALL_SHOP:
+			return TileSetBuilder.FLOOR_SHOP
+		if mat == TileSetBuilder.WALL_BRICK:
+			return TileSetBuilder.FLOOR_TUNNEL
+		return TileSetBuilder.FLOOR_CONCRETE
 	if _is_open(x, y + 1):
-		return TileSetBuilder.CEILING
-	if _is_open(x - 1, y) or _is_open(x + 1, y):
-		return TileSetBuilder.SIDE
+		if _material_at(x, y + 1) == TileSetBuilder.WALL_BRICK:
+			return TileSetBuilder.CEIL_BRICK
+		return TileSetBuilder.CEIL_CONCRETE
+	for dx in [-1, 1]:
+		if _is_open(x + dx, y):
+			if _material_at(x + dx, y) == TileSetBuilder.WALL_BRICK:
+				return TileSetBuilder.SIDE_BRICK
+			return TileSetBuilder.SIDE_CONCRETE
 	return TileSetBuilder.ROCK
 
 
 ## Back-wall cells along the floor or ceiling get the grimy edge versions:
 ## dirt collects in corners and edges, never across the middle of a wall.
-func _back_edge(back_type: int, cell: Vector2i) -> int:
-	var brick := back_type == TileSetBuilder.BACK_BRICK
+func _back_edge(wall_type: int, cell: Vector2i) -> int:
 	if not _is_open(cell.x, cell.y + 1):
-		return TileSetBuilder.BACK_BRICK_LOW if brick else TileSetBuilder.BACK_CONCRETE_LOW
+		return wall_type + TileSetBuilder.WALL_LOW_OFFSET
 	if not _is_open(cell.x, cell.y - 1):
-		return TileSetBuilder.BACK_BRICK_HIGH if brick else TileSetBuilder.BACK_CONCRETE_HIGH
-	return back_type
+		return wall_type + TileSetBuilder.WALL_HIGH_OFFSET
+	return wall_type
+
+
+## ":" shop (ceramic tiles), "," tunnel (brick), "." storeroom (concrete).
+func _wall_for_char(ch: String) -> int:
+	if ch == ":":
+		return TileSetBuilder.WALL_SHOP
+	if ch == ",":
+		return TileSetBuilder.WALL_BRICK
+	return TileSetBuilder.WALL_CONCRETE
+
+
+## Back-wall material of an open cell (markers inherit from their left).
+func _material_at(x: int, y: int) -> int:
+	var row: String = MAP[y]
+	var ch := row[x]
+	if ch == "." or ch == "," or ch == ":":
+		return _wall_for_char(ch)
+	return _background_for(row, x)
 
 
 func _is_open(x: int, y: int) -> bool:
@@ -441,11 +502,9 @@ func _is_open(x: int, y: int) -> bool:
 ## Markers take the back-wall tile of the nearest open tile to their left.
 func _background_for(row: String, x: int) -> int:
 	for i in range(x - 1, -1, -1):
-		if row[i] == ",":
-			return TileSetBuilder.BACK_BRICK
-		if row[i] == ".":
-			return TileSetBuilder.BACK_CONCRETE
-	return TileSetBuilder.BACK_CONCRETE
+		if row[i] == "." or row[i] == "," or row[i] == ":":
+			return _wall_for_char(row[i])
+	return TileSetBuilder.WALL_CONCRETE
 
 
 func _place_marker(ch: String, cell: Vector2i) -> void:
@@ -506,8 +565,8 @@ func _place_marker(ch: String, cell: Vector2i) -> void:
 			counter.position = floor_point
 			props.add_child(counter)
 			_counter_pos = floor_point
-			_add_task("torch", floor_point + Vector2(12, 0), ShopTask.Kind.NONE, 0.6, Vector2(16, 28))
-			_add_task("cctv", floor_point + Vector2(-14, 0), ShopTask.Kind.NONE, 0.3, Vector2(16, 28), true)
+			_add_task("torch", floor_point + Vector2(17, 0), ShopTask.Kind.NONE, 0.6, Vector2(14, 28))
+			_add_task("cctv", floor_point + Vector2(-3, 0), ShopTask.Kind.NONE, 0.3, Vector2(14, 28), true)
 		"X":
 			var breaker: Node2D = BREAKER_SCENE.instantiate()
 			breaker.position = centre + Vector2(0, -8)
@@ -589,13 +648,10 @@ func _apply_zone(zone: int, instant := false) -> void:
 	var dark: Color = ZONE_DARKNESS.get(zone, ZONE_DARKNESS[2])
 	if zone == 0 and act0.power_on:
 		dark = POWER_ON_SHOP
-	var hum: float = ZONE_HUM_DB.get(zone, -26.0)
+	# (Ambience volume follows the zone in _update_silence.)
 	var verb: Array = ZONE_REVERB.get(zone, ZONE_REVERB[2])
 	AudioDirector.set_reverb(verb[0], verb[1])
 	if instant:
 		darkness.color = dark
-		ambience.volume_db = hum
 		return
-	var tw := create_tween().set_parallel()
-	tw.tween_property(darkness, "color", dark, 2.5)
-	tw.tween_property(ambience, "volume_db", hum, 4.0)
+	create_tween().tween_property(darkness, "color", dark, 2.5)

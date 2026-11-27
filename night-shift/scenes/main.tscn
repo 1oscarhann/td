@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scenes/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/levels/test_level.tscn" id="2_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/ui.tscn" id="4_ui"]
+[ext_resource type="PackedScene" path="res://scenes/ui/post_fx.tscn" id="5_fx"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_main")
@@ -11,5 +12,7 @@ script = ExtResource("1_main")
 [node name="Level" parent="." instance=ExtResource("2_level")]
 
 [node name="Player" parent="." instance=ExtResource("3_player")]
+
+[node name="PostFX" parent="." instance=ExtResource("5_fx")]
 
 [node name="UI" parent="." instance=ExtResource("4_ui")]

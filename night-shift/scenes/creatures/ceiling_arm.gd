@@ -164,12 +164,28 @@ func _draw() -> void:
 	if _points.size() < 2:
 		return
 	var skin := Color(0.84, 0.82, 0.78)
-	var joint := Color(0.62, 0.58, 0.56)
-	for i in range(1, _points.size()):
-		draw_line(_points[i - 1], _points[i], skin, 1.0)
-		draw_rect(Rect2(_points[i].round() - Vector2(1, 1), Vector2(2, 2)), joint)
-	# Fingers: three thin twitching hooks.
-	var tip := _points[_points.size() - 1]
+	var shade := Color(0.55, 0.52, 0.50)
+	var hi := Color(0.95, 0.93, 0.89)
+	var n := _points.size()
+	# Tapered arm: 3 px at the vent, 1 px at the wrist, a knuckle at every joint.
+	for i in range(1, n):
+		var w := lerpf(3.0, 1.0, float(i - 1) / maxf(1.0, float(n - 2)))
+		var a := _points[i - 1]
+		var b := _points[i]
+		draw_line(a, b, skin, w)
+		if w >= 2.0:
+			var side := (b - a).orthogonal().normalized()
+			draw_line(a + side * (w * 0.5), b + side * (w * 0.5), shade, 1.0)
+		if i < n - 1:
+			var k := b.round()
+			draw_rect(Rect2(k - Vector2(1, 1), Vector2(2, 2)), shade)
+			draw_rect(Rect2(k - Vector2(1, 1), Vector2(1, 1)), hi)
+	# A long hand: three fingers, two joints each, curling as they feel around.
+	var tip := _points[n - 1]
 	for f in 3:
-		var a := PI * 0.5 + (f - 1) * 0.6 + sin(_t * 9.0 + f) * 0.25
-		draw_line(tip, tip + Vector2.from_angle(a) * 5.0, skin, 1.0)
+		var a1 := PI * 0.5 + (f - 1) * 0.55 + sin(_t * 7.0 + f * 1.7) * 0.25
+		var mid := tip + Vector2.from_angle(a1) * 4.0
+		var curl := a1 + 0.7 * (1.0 if f > 0 else -1.0) + sin(_t * 9.0 + f) * 0.3
+		draw_line(tip, mid, skin, 1.0)
+		draw_line(mid, mid + Vector2.from_angle(curl) * 4.0, skin, 1.0)
+		draw_rect(Rect2(mid.round(), Vector2(1, 1)), shade)

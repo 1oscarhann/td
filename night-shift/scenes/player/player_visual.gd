@@ -3,11 +3,13 @@ extends Node2D
 ## tools/gen_tiles.py) plus the torch arm, drawn here so it can point at the
 ## mouse whichever way he faces. Facing follows MOVEMENT, never the torch.
 ##
-## Sheet frames: 0-1 idle (breathing), 2-5 walk, 6-7 crouch (still / creeping).
+## Sheet frames (tools/art/player.py): 0-3 idle (breathing), 4-9 walk,
+## 10-11 crouch, 12-15 crouch-walk.
 
-const IDLE := [0, 1]
-const WALK := [2, 3, 4, 5]
-const CROUCH := [6, 7]
+const IDLE := [0, 1, 2, 3]
+const WALK := [4, 5, 6, 7, 8, 9]
+const CROUCH := [10, 11]
+const CROUCH_WALK := [12, 13, 14, 15]
 ## Front shoulder (facing right), matching the sprite.
 const STAND_SHOULDER := Vector2(3, -30)
 const CROUCH_SHOULDER := Vector2(5, -18)
@@ -33,11 +35,14 @@ func _process(delta: float) -> void:
 		_walk_dist += absf(player.velocity.x) * delta
 	body.flip_h = player.facing < 0
 	if player.crouching:
-		body.frame = CROUCH[int(_walk_dist / 10.0) % 2] if moving else CROUCH[0]
+		if moving:
+			body.frame = CROUCH_WALK[int(_walk_dist / 6.0) % 4]
+		else:
+			body.frame = CROUCH[int(_t / 1.4) % 2]
 	elif moving:
-		body.frame = WALK[int(_walk_dist / 9.0) % 4]
+		body.frame = WALK[int(_walk_dist / 7.0) % 6]
 	else:
-		body.frame = IDLE[int(_t / 1.2) % 2]   # slow breathing
+		body.frame = IDLE[int(_t / 0.9) % 4]   # slow breathing
 	queue_redraw()
 
 

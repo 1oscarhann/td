@@ -387,12 +387,20 @@ func _update_interact(delta: float) -> bool:
 	return false
 
 
+## The nearest thing in reach that can be used right now (several can overlap,
+## e.g. the CCTV monitor and the torch under the same counter).
 func _find_interactable():
+	var best = null
+	var best_d := INF
 	for area in interact_area.get_overlapping_areas():
 		var target = area.get_parent()
 		if target.has_method("interact_hold") and target.can_interact():
-			return target
-	return null
+			var p: Vector2 = target.get_interact_point()
+			var d := absf(p.x - global_position.x)
+			if d < best_d:
+				best_d = d
+				best = target
+	return best
 
 
 func _update_prompt() -> void:
