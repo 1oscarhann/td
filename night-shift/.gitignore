@@ -3,3 +3,6 @@
 /android/
 *.translation
 export_presets.cfg
+
+# Python bytecode from tools/
+__pycache__/
