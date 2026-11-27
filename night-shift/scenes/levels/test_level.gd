@@ -124,6 +124,11 @@ const DECOR := [
 	# power in the walls (the Cables come).
 	{"type": "switch", "cell": Vector2i(91, 18), "id": "passage_door"},
 	{"type": "door", "cell": Vector2i(113, 18), "id": "passage_door"},
+	# Low cables either side of the lever. The LEFT one is a Cable: it droops a
+	# bit more, and when the lever powers the walls it comes for you from behind.
+	# First encounter = safe if you move on; it only gets you if you dawdle.
+	{"type": "cable", "cell": Vector2i(85, 18), "to_x": 89, "above_floor": 30, "sag": 5, "creature": true},
+	{"type": "cable", "cell": Vector2i(93, 18), "to_x": 99, "above_floor": 30, "sag": 5},
 	# The real one: in the passage before the crouch gap, on the chase route.
 	{"type": "vent", "cell": Vector2i(110, 18)},
 	{"type": "arm", "cell": Vector2i(110, 18)},
@@ -156,6 +161,7 @@ const VENT_SCENE := preload("res://scenes/props/vent.tscn")
 const TUBE_SCENE := preload("res://scenes/props/tube.tscn")
 const PIPE_SCENE := preload("res://scenes/props/pipe.tscn")
 const CABLE_SCENE := preload("res://scenes/props/cable.tscn")
+const CABLE_CREATURE_SCENE := preload("res://scenes/creatures/cable_creature.tscn")
 const SPIDER_SCENE := preload("res://scenes/creatures/spider.tscn")
 const ARM_SCENE := preload("res://scenes/creatures/ceiling_arm.tscn")
 const SWITCH_SCENE := preload("res://scenes/props/lever_switch.tscn")
@@ -304,11 +310,17 @@ func _place_decor(d: Dictionary) -> void:
 			pipe.region_rect = Rect2(0, 0, (int(d.to_x) - cell.x) * TILE, 6)
 			props.add_child(pipe)
 		"cable":
-			var cable: WallCable = CABLE_SCENE.instantiate()
+			var fake: bool = d.get("creature", false)
+			var cable: WallCable = (CABLE_CREATURE_SCENE if fake else CABLE_SCENE).instantiate()
 			cable.position = Vector2(x, y)
 			cable.end_point = Vector2((int(d.to_x) - cell.x) * TILE, 0)
 			cable.sag = float(d.get("sag", 8))
-			props.add_child(cable)
+			# Fake ones live with the creatures (reset on death) but draw like props.
+			if fake:
+				cable.z_index = -5
+				creatures.add_child(cable)
+			else:
+				props.add_child(cable)
 		"spiders":
 			for i in int(d.get("count", 3)):
 				var spider: Spider = SPIDER_SCENE.instantiate()

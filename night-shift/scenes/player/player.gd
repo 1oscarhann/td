@@ -52,6 +52,10 @@ var climbing := false
 var interacting := false
 ## Set by Main during death / ending sequences.
 var input_locked := false
+## Held by a Cable: can't walk, can still aim and toggle the torch.
+var held := false
+## Speed a Cable drags you at while held.
+var pull_speed := 0.0
 var stamina := 0.0
 var exhausted := false
 var idle_time := 0.0
@@ -96,6 +100,9 @@ func _physics_process(delta: float) -> void:
 		return
 	if Input.is_action_just_pressed("torch_toggle") and not interacting:
 		torch.toggle()
+	if held:
+		_held_move(delta)
+		return
 	if _update_interact(delta):
 		return
 	_update_crouch()
@@ -156,6 +163,8 @@ func respawn(pos: Vector2) -> void:
 	if crouching:
 		_set_crouch(false)
 	interacting = false
+	held = false
+	pull_speed = 0.0
 	_active_interactable = null
 	torch.release_aim()
 	torch.set_on(true, false)
@@ -201,6 +210,13 @@ func _ground_move(delta: float) -> void:
 		if _step_accum >= stride:
 			_step_accum -= stride
 			_footstep()
+
+
+func _held_move(delta: float) -> void:
+	velocity.x = pull_speed
+	velocity.y += gravity * delta
+	move_and_slide()
+	_update_hand()
 
 
 func _locked_move(delta: float) -> void:

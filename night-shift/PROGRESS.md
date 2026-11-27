@@ -206,6 +206,25 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - Verified headless: the door blocks the passage, the lever opens it, the full route
   reaches the ending.
 
+#### M2.6: the Cables
+- `cable_creature.tscn`: an inherited scene of the real `cable.tscn` (same art,
+  same environment layer, always visible), with `cable_creature.gd`
+  (extends WallCable).
+- Rule: drawn to electricity. On `switch_flipped` within 420 px it drops off its
+  fixing and slithers along the floor towards the switch, then towards you.
+  Electrical crackle loop, plus a flickering spark light at the tip
+  (environment mask, so it never reveals creatures).
+- Grab: the tip at your feet wraps your leg. You can't walk and get dragged
+  towards its fixing at 16 px/s, but you can still aim. **Hold the beam on it
+  for 1 s to make it let go**; it retreats back onto the wall. It gives up after 14 s.
+- Tell: 3 px more droop than real cables, and it twitches if lit for 2 s while hanging.
+- Placed left of the lever, among real cables. First encounter is safe if you move
+  on; dawdle at the switch and it gets you.
+- An invisible Area2D on the creature layer lets the torch's is_lit see it. The
+  player got a small `held` / `pull_speed` state (reset on respawn).
+- Verified headless: lever -> slither -> grab -> lit 1 s -> released -> back
+  on the wall. The full route still reaches the ending.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -215,6 +234,9 @@ order: Zone 1 spiders -> Act 0 shop + power cut -> CCTV figure -> Ceiling Arms.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Cable escape = hold the beam on it for 1 s** (doc open question: mash E /
+  light it / no escape). It fits pillar 1. Being held next to the Thing is the real
+  danger; a Cable alone can't kill you.
 - **The passage door is new progression I added** (doc: switches open doors).
   It makes the open room more dangerous (you must pull a loud lever there).
   Remove the two "switch"/"door" lines in `DECOR` to undo it.
