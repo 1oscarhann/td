@@ -144,6 +144,9 @@ var _gurgle_timer := 6.0
 var _notice_cooldown := 0.0
 ## Why it last noticed you (debug overlay): "heard", "light", "noise", "touch"...
 var notice_reason := ""
+## The same, in plain words for the F3 overlay ("heard running", "saw torch"...).
+var notice_why := ""
+var _last_known_age := 0.0
 
 # Senses and memory.
 var _last_known := Vector2.ZERO
@@ -320,6 +323,7 @@ func debug_text() -> String:
 func _physics_process(delta: float) -> void:
 	_t += delta
 	_state_time += delta
+	_last_known_age += delta
 	_immune_left = maxf(0.0, _immune_left - delta)
 	_lurch_left = maxf(0.0, _lurch_left - delta)
 	_notice_cooldown = maxf(0.0, _notice_cooldown - delta)
@@ -341,7 +345,7 @@ func _physics_process(delta: float) -> void:
 			_sense_timer = 0.1
 			_perceived = _hears(player) or _sees(player)
 			if _perceived:
-				_last_known = player.global_position
+				_set_last_known(player.global_position)
 		_beam_timer -= delta
 		if _beam_timer <= 0.0:
 			_beam_timer = 0.15
@@ -408,7 +412,7 @@ func _patrol(delta: float, lit: bool, player: Player) -> void:
 		_light_seen += delta
 		target_x = global_position.x
 		if _light_seen >= light_notice_time:
-			_notice(player.global_position, "light")
+			_notice(player.global_position, "light", "light held on it" if lit else "saw torch")
 		return
 	_light_seen = maxf(0.0, _light_seen - delta * 0.5)
 	# Walking right over you without knowing: that's an encounter too, as far
@@ -456,7 +460,7 @@ func _chase(delta: float, lit: bool) -> void:
 ## Lost you. Goes where it last had you, then sniffs about.
 func _search(delta: float, lit: bool, player: Player) -> void:
 	if lit:
-		_notice(player.global_position, "light")   # the light came from somewhere
+		_notice(player.global_position, "light", "saw torch")   # the light came from somewhere
 		return
 	if _perceived:
 		_notice(player.global_position, "heard")
@@ -478,12 +482,13 @@ func _search(delta: float, lit: bool, player: Player) -> void:
 
 
 ## Something gave you away: freeze, snap the head round, sting, then come.
-func _notice(at: Vector2, reason := "") -> void:
+func _notice(at: Vector2, reason := "", why := "") -> void:
 	if puppet or state == State.NOTICED or state == State.CHASE:
 		return
 	notice_reason = reason
+	notice_why = why if why != "" else _why_for(reason)
 	GameState.mark_encounter("thing", "thing", 15.0)
-	_last_known = at
+	_set_last_known(at)
 	_light_seen = 0.0
 	_enter(State.NOTICED)
 	target_x = global_position.x
@@ -503,6 +508,121 @@ func _notice(at: Vector2, reason := "") -> void:
 		p.shake(2.0, 0.3)
 
 
+func _set_last_known(at: Vector2) -> void:
+	_last_known = at
+	_last_known_age = 0.0
+
+
+## A notice reason in plain words.
+func _why_for(reason: String) -> String:
+	var p = GameState.player
+	match reason:
+		"heard":
+			return "heard running" if p != null and p.running else "heard footsteps"
+		"noise":
+			match GameState.last_noise_kind:
+				"switch":
+					return "heard switch"
+				"boards":
+					return "heard the boards"
+				"running":
+					return "heard running"
+				"climbing":
+					return "heard you on the stairs"
+			return "heard footsteps"
+		"light":
+			return "light held on it"
+		"touch":
+			return "walked into you"
+		"woke hunting":
+			return "woke up hunting you"
+	return reason if reason != "" else "none"
+
+
+## Everything the F3 overlay shows, in plain words.
+func debug_info() -> Dictionary:
+	var p = GameState.player
+	var torch_on: bool = GameState.torch != null and GameState.torch.is_on
+	var words := {State.DORMANT: "Asleep", State.PATROL: "Patrolling", State.NOTICED: "Noticed you",
+			State.CHASE: "Chasing", State.FROZEN: "Frozen (lit)", State.SEARCH: "Searching"}
+	var st: String = words[state]
+	if state == State.CHASE and _anger >= 2:
+		st = "Enraged"
+	var can_see := false
+	var can_hear := false
+	var dist := 0.0
+	if p != null:
+		can_see = state != State.DORMANT and _sees(p)
+		can_hear = state != State.DORMANT and _hears(p)
+		dist = global_position.distance_to(p.global_position)
+	# Does it know where you are? 2 = yes, 1 = last seen / searching, 0 = no.
+	var level := 0
+	match state:
+		State.NOTICED:
+			level = 2
+		State.CHASE, State.FROZEN:
+			level = 2 if _perceived else 1
+		State.SEARCH:
+			level = 1
+	var knows := "NO"
+	if level == 2:
+		knows = "YES"
+	elif level == 1:
+		knows = "LAST SEEN %.1f s ago at (%d, %d)" % [_last_known_age, int(_last_known.x), int(_last_known.y)]
+	var why := "none"
+	if level > 0:
+		why = notice_why if notice_why != "" else _why_for(notice_reason)
+		if (state == State.CHASE or state == State.FROZEN) and _perceived and p != null:
+			if can_see:
+				why = "saw torch" if torch_on else "saw you"
+			elif can_hear:
+				why = "heard running" if p.running else "heard footsteps"
+	elif state == State.PATROL and _light_seen > 0.05:
+		why = "light on it (%.1f of %.1f s)" % [_light_seen, light_notice_time]
+	var next := ""
+	match state:
+		State.DORMANT:
+			if _wake_left > 0.0:
+				next = "waking up in %.1f s%s" % [_wake_left, " - already hunting" if _wake_chase else ""]
+			else:
+				next = "asleep until the level wakes it"
+		State.PATROL:
+			if _light_seen > 0.05:
+				next = "noticing your light in %.1f s" % maxf(0.0, light_notice_time - _light_seen)
+			elif _patrol_pause > 0.0:
+				next = "listening, moving on in %.1f s" % _patrol_pause
+			else:
+				next = "walking to x=%d" % int(_patrol_goal)
+			next += "; director nudging patrol towards you in %d s" % int(ceilf(_nudge_left))
+		State.NOTICED:
+			next = "charging in %.1f s" % maxf(0.0, notice_time - _state_time)
+		State.CHASE:
+			if _lurch_left > 0.0:
+				next = "lurching at you"
+			elif _perceived:
+				next = "running you down (%d px/s)" % int(_current_speed())
+			else:
+				next = "giving up in %.1f s" % maxf(0.0, lose_time - _unseen)
+			if _immune_left > 0.0:
+				next += "; the light won't stop it for %.1f s" % _immune_left
+		State.FROZEN:
+			next = "lurching free in %.1f s" % maxf(0.0, freeze_time - _state_time)
+		State.SEARCH:
+			if not _sniffing:
+				next = "heading to where it lost you (x=%d)" % int(_last_known.x)
+			else:
+				next = "searching your hiding spot, giving up in %.1f s" % maxf(0.0, search_time - _sniff_time)
+	var sight := 0.0
+	if state != State.DORMANT:
+		sight = sight_torch if torch_on else (sight_dark if state == State.CHASE else 0.0)
+	var hearing := 0.0
+	if p != null and state != State.DORMANT:
+		hearing = p.hearing_radius()
+	return {"state": st, "knows": knows, "knows_level": level, "why": why, "can_see": can_see,
+			"can_hear": can_hear, "distance": dist, "next": next, "sight": sight, "hearing": hearing,
+			"eye": global_position + (_body_points().eye as Vector2), "last_known": _last_known}
+
+
 ## Noise system: boards, levers, footsteps.
 func _on_noise(origin: Vector2, radius: float) -> void:
 	if puppet or state == State.DORMANT or state == State.FROZEN or state == State.NOTICED:
@@ -514,7 +634,7 @@ func _on_noise(origin: Vector2, radius: float) -> void:
 			_notice(origin, "noise")
 		State.CHASE:
 			if not _perceived:
-				_last_known = origin
+				_set_last_known(origin)
 				_unseen = 0.0
 
 

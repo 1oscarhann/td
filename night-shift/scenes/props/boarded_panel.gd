@@ -110,7 +110,7 @@ func interact_hold(_by: Node, delta: float) -> void:
 	if not _pulling:
 		_pulling = true
 		AudioDirector.play_at("creak", get_interact_point(), -6.0, 0.15)
-		GameState.make_noise(get_interact_point(), noise_radius * 0.3)
+		GameState.make_noise(get_interact_point(), noise_radius * 0.3, "boards")
 	progress += delta / pull_time
 	if progress >= 1.0:
 		_rip_board()
@@ -131,7 +131,7 @@ func _rip_board() -> void:
 	boards_left -= 1
 	var board: Dictionary = _boards.pop_front()
 	AudioDirector.play_at("crack", get_interact_point(), 0.0, 0.1, 900.0)
-	GameState.make_noise(get_interact_point(), noise_radius)
+	GameState.make_noise(get_interact_point(), noise_radius, "boards")
 	_drop_board(board)
 	board_ripped.emit(boards_left)
 	if boards_left == 0:

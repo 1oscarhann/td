@@ -1,6 +1,73 @@
 # Night Shift: progress log
 
-## Test this first: Phase 5, one full playthrough with headphones
+## Test this first: Round 2, Phase 1 (debug tools)
+
+Start a new game, get down to zone 3 (or anywhere with creatures), then:
+
+**F3: the Thing overlay (top left)**
+1. `THING:` says what it's doing in plain words: Asleep / Patrolling / Noticed
+   you / Chasing / Searching / Frozen (lit) / Enraged (chasing after being lit
+   twice or more).
+2. `KNOWS WHERE YOU ARE:` is coloured:
+   - **green** NO
+   - **yellow** LAST SEEN `<s>` ago at `<x, y>` (it lost track, or it's
+     searching)
+   - **red** YES
+3. `WHY:` says what gave you away:
+   - heard footsteps / heard running / heard switch / heard the boards /
+     heard you on the stairs
+   - saw torch / light held on it / walked into you / none
+   - While it chases, WHY follows what it's tracking you by right now.
+4. `CAN SEE YOU` / `CAN HEAR YOU` / `DISTANCE`. Walk, run, crouch and stand
+   still near it and watch CAN HEAR flip.
+5. `NEXT:` tells you what it's about to do:
+   - "listening, moving on in 2.3 s"
+   - "director nudging patrol towards you in 34 s"
+   - "charging in 0.4 s"
+   - "giving up in 2.1 s"
+   - "searching your hiding spot, giving up in 3.0 s"
+   - "lurching free in 0.6 s"
+6. One grey line for the nearest Ceiling Arm (idle / scratching / reaching /
+   retracting), Cable (disguised / slithering / grabbing / retreating) and Lure
+   (waiting / revealed), with distances.
+7. **World gizmos while F3 is on:**
+   - **cyan circle** round the Thing: how far it can hear you as you're moving
+     right now. It shrinks to nothing when you crouch still, and gets big when
+     you run.
+   - **yellow circle** at its eye: how far it can see you (torch on = 420; in
+     the dark only while it hunts = 48).
+   - **red line** from its eye to you while it can see you.
+   - **orange X** "last known" where it last had you.
+8. **Check that the overlay never lies.** If it says NO and the Thing comes
+   straight at you, or says CAN HEAR: no and it notices your footsteps, tell
+   me the moment.
+
+**F4: the pacing overlay (top right)**
+9. `TENSION` (with a bar, green -> yellow -> red), `SINCE LAST ENCOUNTER`,
+   `NEXT FALSE ALARM` (a countdown, or why it's paused: safe room / silence /
+   just after an encounter / the Thing within 320 px / the shop), `ZONE`.
+
+**Also new since your last build: creatures visible in the dark + the Thing
+re-animated** (your "torch system isn't great" ask, committed just before this
+phase):
+10. **Torch OFF in zone 3: you can see the Thing.** It's a black silhouette with
+    cold edges and a pale eye. Torch on it: the real skin, ribs and gut fade in.
+    Same for the Ceiling Arms, spiders and the leg in the vent.
+11. **Watch the Thing move:**
+    - The legs keep their length (the knees fold up in low tunnels) and step in
+      two alternating groups, placing each foot.
+    - It stops: the body settles with weight, then it LISTENS with its head
+      tilted, usually your way.
+    - It hears you: a jolt upright, then it coils and rears back, blades lifting
+      (the wind-up), then it charges.
+    - Hunting, the head hangs dead still in the air while the body bobs under
+      it.
+    - Lit, it strains on the spot in stop-motion jerks, then lurches out of the
+      freeze.
+    - Searching, it sniffs in quick jerks.
+    - Do the blades swing and drag? Does anything look like rubber?
+
+## Previous checklist: Phase 5, one full playthrough with headphones
 
 Headphones on, lights off, volume where a whisper is audible. Play start to
 finish in one go. My bot took 11.5-13.3 min walking flat out; you'll take
@@ -1218,6 +1285,26 @@ is only how it moves.
 - renders of the Thing and the other creatures with no light at all, and in the
   torch
 
+### Round 2, Phase 1: debug tools
+
+- **F3:** a Thing section at the top in plain words (`WedgedThing.debug_info()`)
+  plus a line for the nearest arm, Cable and Lure. The old one-line state dump
+  stays underneath in grey.
+- **F3 world gizmos** (`scenes/ui/debug_gizmos.gd`, unshaded, drawn over
+  everything):
+  - hearing circle
+  - sight circle
+  - a line to you while it sees you
+  - the last-known X
+- **F4:** a pacing overlay (`main.gd _pacing_text()`). The false-alarm timer
+  mirrors `Pacing._alarm_tick`'s rules, so its pause reason is the real one.
+- **Supporting changes (behaviour unchanged):**
+  - `GameState.make_noise()` now records what made the noise ("footsteps",
+    "running", "climbing", "switch", "boards").
+  - The Thing keeps `notice_why` (plain words) and how long ago it last had
+    you.
+  - The overlays are RichTextLabels in `ui.gd`.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -1250,6 +1337,19 @@ is only how it moves.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Round 2 Phase 8 vs "visible without the torch":** two of the Phase 8 ideas
+  assume the Thing is invisible outside the beam:
+  - "closer when you look back"
+  - "edge of the light: a leg tip at the beam's edge"
+
+  Now it's a silhouette in the dark, so you'd SEE it creep closer, and the edge
+  of the beam reveals detail, not existence. Options when we get there:
+  - (a) it only creeps while it's off-screen or behind you
+  - (b) it creeps in the dark, but in stop-motion jumps only while your beam is
+    off it (you see the result, never the motion)
+  - (c) bring back torch-only visibility for the Thing alone
+
+  My pick is (b). Say before Phase 8.
 - **"The hand thing" = the Ceiling Arm** (and the floor-grate arm, same
   creature). Black with an oily sheen, so it reads in your beam instead of
   vanishing into the brick. Pure flat black was unreadable on my renders.

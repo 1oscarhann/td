@@ -47,17 +47,31 @@ func _ready() -> void:
 	Narrator.say("alone_tonight")
 
 
+const DEBUG_GIZMOS := preload("res://scenes/ui/debug_gizmos.gd")
+var _gizmos: Node2D = null
+var _pacing_debug := false
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key != null and key.pressed and not key.echo:
 		if key.keycode == KEY_F3:
 			GameState.debug = not GameState.debug
 			ui.set_debug(GameState.debug)
+			if GameState.debug and _gizmos == null:
+				_gizmos = DEBUG_GIZMOS.new()
+				_gizmos.level = level
+				level.add_child(_gizmos)
+		elif key.keycode == KEY_F4:
+			_pacing_debug = not _pacing_debug
+			ui.set_pacing_debug(_pacing_debug)
 
 
 func _process(_delta: float) -> void:
 	if GameState.debug:
 		ui.set_debug(true, _debug_text())
+	if _pacing_debug:
+		ui.set_pacing_debug(true, _pacing_text())
 
 
 func _on_player_caught(_by: Node) -> void:
@@ -90,13 +104,86 @@ func _on_ending_reached() -> void:
 
 func _debug_text() -> String:
 	var lines := PackedStringArray()
+	# The Thing first, in plain words.
+	var thing: WedgedThing = level.thing
+	if thing != null and is_instance_valid(thing):
+		var d: Dictionary = thing.debug_info()
+		var st_col := {"Asleep": "#9a9a9a", "Patrolling": "#e8e8e0", "Noticed you": "#ffa040",
+				"Chasing": "#ff4a3a", "Enraged": "#ff2020", "Searching": "#ffd84a", "Frozen (lit)": "#7fd8ff"}
+		var knows_col: String = ["#5dff7a", "#ffd84a", "#ff4a3a"][int(d.knows_level)]
+		lines.append("[b]THING:[/b] [color=%s]%s[/color]" % [st_col.get(d.state, "#ffffff"), d.state])
+		lines.append("[color=%s]KNOWS WHERE YOU ARE: %s[/color]" % [knows_col, d.knows])
+		lines.append("WHY: %s" % d.why)
+		lines.append("CAN SEE YOU: %s   CAN HEAR YOU: %s   DISTANCE: %d px" % [
+				"yes" if d.can_see else "no", "yes" if d.can_hear else "no", int(d.distance)])
+		lines.append("NEXT: %s" % d.next)
+	# One line each for the other creatures (the nearest of each kind).
+	lines.append("[color=#9fb4c8]%s[/color]" % _creature_lines())
 	lines.append("fps %d  zone %d  stamina %.1f%s" % [Engine.get_frames_per_second(), GameState.zone,
 			player.stamina, " EXHAUSTED" if player.exhausted else ""])
 	lines.append("torch %s  narrator cd %.0fs" % ["on" if player.torch.is_on else "off",
 			Narrator.cooldown_left()])
-	var thing: WedgedThing = level.thing
-	if thing != null:
-		lines.append("thing %s  lit %s %.1fs  dist %d" % [thing.debug_text(),
-				GameState.is_lit(thing), GameState.get_lit_time(thing),
-				int(thing.global_position.distance_to(player.global_position))])
+	if thing != null and is_instance_valid(thing):
+		lines.append("[color=#8a8a8a]%s  lit %s %.1fs[/color]" % [thing.debug_text(),
+				GameState.is_lit(thing), GameState.get_lit_time(thing)])
+	return "\n".join(lines)
+
+
+## The nearest Ceiling Arm, Cable and Lure, one short line each.
+func _creature_lines() -> String:
+	var best := {}
+	for c in level.get_node("Creatures").get_children():
+		var kind := ""
+		if c is CeilingArm:
+			kind = "arm"
+		elif c is CableCreature:
+			kind = "cable"
+		elif c is Lure and c.mode != "real":
+			kind = "lure"
+		if kind == "":
+			continue
+		var d: float = (c as Node2D).global_position.distance_to(player.global_position)
+		if not best.has(kind) or d < float(best[kind][1]):
+			best[kind] = [c, d]
+	var out := PackedStringArray()
+	if best.has("arm"):
+		var a: CeilingArm = best.arm[0]
+		var words := ["idle", "scratching", "reaching", "retracting"]
+		out.append("Ceiling Arm: %s%s (%d px)" % [words[a.state], " [floor]" if a.from_floor else "", int(best.arm[1])])
+	if best.has("cable"):
+		var cb: CableCreature = best.cable[0]
+		var words := ["disguised", "slithering", "grabbing", "retreating"]
+		out.append("Cable: %s (%d px)" % [words[cb.state], int(best.cable[1])])
+	if best.has("lure"):
+		var l: Lure = best.lure[0]
+		out.append("Lure: %s [%s] (%d px)" % ["revealed" if l._done else "waiting", l.mode, int(best.lure[1])])
+	return "   ".join(out) if out.size() > 0 else "no other creatures nearby"
+
+
+## F4: the pacing director.
+func _pacing_text() -> String:
+	var pc: Pacing = level.pacing
+	var lines := PackedStringArray()
+	if pc == null:
+		return "no pacing here"
+	var t := pc.tension
+	var bar := "|".repeat(int(round(t * 20.0)))
+	var col := "#5dff7a" if t < 0.35 else ("#ffd84a" if t < 0.7 else "#ff4a3a")
+	lines.append("[b]TENSION:[/b] [color=%s]%.2f %s[/color]" % [col, t, bar])
+	lines.append("SINCE LAST ENCOUNTER: %.0f s" % pc.seconds_since_encounter())
+	var alarm := ""
+	if GameState.zone < 1:
+		alarm = "off (the shop)"
+	elif pc.in_safe:
+		alarm = "paused (safe room)"
+	elif pc.is_silent():
+		alarm = "paused (silence, %.1f s)" % pc._silent_left
+	elif pc.seconds_since_encounter() < pc.quiet_after_encounter:
+		alarm = "paused (just after an encounter, %.1f s)" % (pc.quiet_after_encounter - pc.seconds_since_encounter())
+	elif pc._thing_near(player, 320.0) > 0.0:
+		alarm = "paused (the Thing is within 320 px)"
+	else:
+		alarm = "in %.1f s" % maxf(0.0, pc._alarm_timer)
+	lines.append("NEXT FALSE ALARM: %s" % alarm)
+	lines.append("ZONE: %d" % GameState.zone)
 	return "\n".join(lines)

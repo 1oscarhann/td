@@ -294,7 +294,7 @@ func _footstep() -> void:
 		noise = run_noise
 		vol = -11.0
 	AudioDirector.play_at("step", global_position, vol, 0.12)
-	GameState.make_noise(global_position, noise)
+	GameState.make_noise(global_position, noise, "running" if running and not crouching else "footsteps")
 
 
 func _update_hand() -> void:
@@ -410,7 +410,7 @@ func _climb_move(delta: float) -> void:
 		if _step_accum >= 9.0:
 			_step_accum -= 9.0
 			AudioDirector.play_at("step", global_position, -13.0, 0.1, 600.0, 1.3)
-			GameState.make_noise(global_position, climb_noise)
+			GameState.make_noise(global_position, climb_noise, "climbing")
 
 
 # ---------------------------------------------------------------------- interact

@@ -52,6 +52,9 @@ var debug := false
 ## alarms (sounds and flickers that lead to nothing).
 var encounters: Array = []
 var false_alarms := 0
+## What made the last noise ("footsteps", "running", "switch", "boards", ...):
+## the debug overlay's WHY.
+var last_noise_kind := ""
 ## Dread 0..1, computed by the level's Pacing node (drone, grain, vignette...).
 var tension := 0.0
 var _encounter_last: Dictionary = {}   # key -> time, so one creature counts once per scare
@@ -113,9 +116,10 @@ func mark_false_alarm() -> void:
 
 
 ## Emit a noise. Running, boards and switches all go through here.
-func make_noise(origin: Vector2, radius: float) -> void:
+func make_noise(origin: Vector2, radius: float, kind := "noise") -> void:
 	if radius <= 0.0:
 		return
+	last_noise_kind = kind
 	noise_made.emit(origin, radius)
 
 

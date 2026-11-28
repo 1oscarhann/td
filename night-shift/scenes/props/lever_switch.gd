@@ -82,7 +82,7 @@ func _flip() -> void:
 	progress = 0.0
 	queue_redraw()
 	AudioDirector.play_at("clunk", global_position, 4.0, 0.05, 900.0)
-	GameState.make_noise(global_position, noise_radius)
+	GameState.make_noise(global_position, noise_radius, "switch")
 	GameState.switch_flipped.emit(global_position)
 	flipped.emit(switch_id)
 	await get_tree().create_timer(2.0).timeout
