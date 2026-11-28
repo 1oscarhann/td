@@ -55,6 +55,13 @@ var false_alarms := 0
 ## What made the last noise ("footsteps", "running", "switch", "boards", ...):
 ## the debug overlay's WHY.
 var last_noise_kind := ""
+## The level's pacing director (set by Pacing itself).
+var pacing = null
+
+
+## The encounter gate: may a scripted encounter fire now? (See Pacing.)
+func encounter_ready() -> bool:
+	return pacing == null or pacing.encounter_ready()
 ## Dread 0..1, computed by the level's Pacing node (drone, grain, vignette...).
 var tension := 0.0
 var _encounter_last: Dictionary = {}   # key -> time, so one creature counts once per scare

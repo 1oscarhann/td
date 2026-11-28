@@ -426,14 +426,20 @@ func _patrol(delta: float, lit: bool, player: Player) -> void:
 	# The director: now and then it drifts towards where you roughly are.
 	_nudge_left -= delta
 	if _nudge_left <= 0.0:
-		_nudge_left = randf_range(nudge_min, nudge_max)
-		_pick_patrol_point(true)
+		if GameState.encounter_ready():
+			_nudge_left = randf_range(nudge_min, nudge_max)
+			_pick_patrol_point(true)
+		else:
+			_nudge_left = 5.0                          # the pacing gate: not yet
 	if _patrol_pause > 0.0:
 		_patrol_pause -= delta
 		target_x = global_position.x
 		if _patrol_pause <= 0.0:
 			_pick_patrol_point(false)
 		return
+	if not puppet and not GameState.encounter_ready() and _crosses_player(_patrol_goal, player.global_position.x) \
+			and absf(player.global_position.x - global_position.x) < 320.0:
+		_pick_patrol_point(false)                    # the pacing gate: it turns away
 	target_x = _patrol_goal
 	if absf(_patrol_goal - global_position.x) < 3.0 or (_blocked and _state_time > 0.5):
 		_patrol_pause = randf_range(1.5, 4.5)
@@ -499,6 +505,10 @@ func _notice(at: Vector2, reason := "", why := "") -> void:
 	if _chest_dyn != null:
 		_chest_dyn.kick(Vector2(0, -70.0))   # a jolt through the whole body
 		_pelvis_dyn.kick(Vector2(0, -25.0))
+	# Round 2: in zone 3+ the world goes silent for 3-5 s (hum, drips, false
+	# alarms, drone). All you hear is it coming. Then the sound creeps back.
+	if GameState.zone >= 3 and GameState.pacing != null:
+		GameState.pacing.hush(randf_range(3.0, 5.0), false)
 	if _notice_cooldown <= 0.0:
 		_notice_cooldown = 4.0
 		AudioDirector.hush_drone(0.8)
@@ -593,7 +603,10 @@ func debug_info() -> Dictionary:
 				next = "listening, moving on in %.1f s" % _patrol_pause
 			else:
 				next = "walking to x=%d" % int(_patrol_goal)
-			next += "; director nudging patrol towards you in %d s" % int(ceilf(_nudge_left))
+			if GameState.encounter_ready():
+				next += "; director nudging patrol towards you in %d s" % int(ceilf(_nudge_left))
+			else:
+				next += "; director nudge held by the pacing gate"
 		State.NOTICED:
 			next = "charging in %.1f s" % maxf(0.0, notice_time - _state_time)
 		State.CHASE:
@@ -682,11 +695,24 @@ func _pick_patrol_point(near_player: bool) -> void:
 		if goal < lo or goal > hi:
 			goal = px - side * randf_range(120.0, 300.0)
 	else:
-		for i in 6:
+		var p = GameState.player
+		for i in 10:
 			goal = randf_range(lo, hi)
-			if absf(goal - global_position.x) > 120.0:
-				break
+			if absf(goal - global_position.x) <= 120.0:
+				continue
+			# The pacing gate shut: wander AWAY from you (no surprise visit
+			# right after the last encounter).
+			if p != null and not GameState.encounter_ready() and _crosses_player(goal, p.global_position.x):
+				continue
+			break
 	_patrol_goal = clampf(goal, lo, hi)
+
+
+## Would walking to `goal` take it within 200 px of the player at `px`?
+func _crosses_player(goal: float, px: float) -> bool:
+	var a := minf(global_position.x, goal) - 200.0
+	var b := maxf(global_position.x, goal) + 200.0
+	return px >= a and px <= b
 
 
 ## Where it can get to from here: walk left and right with the same rules as

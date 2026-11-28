@@ -51,13 +51,19 @@ var _lunge := 0.0      # 0..1, how far the head has dropped (bite)
 var _reveal_left := 0.0
 var _retract := 0.0    # 0..1 gone into the dark
 var _flee_dir := -1.0  # which way along the ceiling it scuttles off
+var _told := false         # bite: the tell has played
+var _twitch_left := 0.0
+var _wrong_left := 0.0     # the wrong-coloured flicker
+const TWITCH_TIME := 0.4
+const LIGHT_COLOR := Color(0.82, 0.96, 0.88)
+const WRONG_COLOR := Color(1.0, 0.28, 0.34)
 
 
 func _ready() -> void:
 	add_to_group("creatures")
 	_light = PointLight2D.new()
 	_light.texture = LightTextures.radial(256)
-	_light.color = Color(0.82, 0.96, 0.88)
+	_light.color = LIGHT_COLOR
 	_light.energy = 1.6
 	_light.range_item_cull_mask = GameState.LIGHT_ENV   # never reveals creatures
 	_light.shadow_enabled = true
@@ -96,6 +102,16 @@ func _process(delta: float) -> void:
 		var stutter := fmod(_t, 3.7) < 0.25 and mode != "real"
 		_light.enabled = not (stutter and randf() < 0.5)
 		_light.energy = 1.6 if mode == "real" else randf_range(1.3, 1.7)
+	_twitch_left = maxf(0.0, _twitch_left - delta)
+	if _wrong_left > 0.0:
+		_wrong_left -= delta
+		_light.enabled = true
+		_light.color = WRONG_COLOR
+		_light.energy = 2.2
+		_buzz.pitch_scale = 0.62
+	else:
+		_light.color = LIGHT_COLOR
+		_buzz.pitch_scale = 1.0
 	if _reveal_left > 0.0:
 		_reveal_left -= delta
 		if _reveal_left <= 0.0:
@@ -139,6 +155,10 @@ func _tube_pos() -> Vector2:
 	var sway := 0.0 if taut else sin(_t * 0.8) * 2.0
 	var lift := 0.0 if taut else -_breath() * 2.0
 	var tube := Vector2(sway, cord + lift + _lunge * 40.0)
+	if _twitch_left > 0.0:
+		# The tell: a jerk on the cord, like something up there flinched.
+		var k := _twitch_left / TWITCH_TIME
+		tube += Vector2(sin(_t * 55.0) * 3.5, -absf(sin(_t * 38.0)) * 4.0) * k
 	if taut:
 		tube.y -= 8.0                               # the stalk snaps tight
 	if _retract > 0.0:
@@ -154,6 +174,16 @@ func _check_player() -> void:
 	var p: Vector2 = GameState.player.global_position
 	var d := absf(p.x - global_position.x)
 	_flee_dir = -1.0 if p.x > global_position.x else 1.0
+	# The third Lure's tell (round 2): about 3 s before you'd reach it, the cord
+	# twitches and the light gives one wrong-coloured flicker. Once.
+	if mode == "bite" and not _told:
+		var speed := maxf(absf(GameState.player.velocity.x), 40.0)
+		if d / speed <= 3.0:
+			_told = true
+			_twitch_left = TWITCH_TIME
+			_wrong_left = 0.14
+	if not GameState.encounter_ready():
+		return                                          # the pacing gate: not yet
 	match mode:
 		"vanish":
 			if d < trigger_distance:
@@ -218,6 +248,8 @@ func _draw() -> void:
 	draw_line(top, tube, Color(0.10, 0.10, 0.11), 1.0)
 	var lit := _light.enabled and not (_done and mode != "real")
 	var tint := Color(1.7, 1.8, 1.7) if lit else Color(1, 1, 1)
+	if _wrong_left > 0.0:
+		tint = Color(2.0, 0.55, 0.6)
 	draw_texture(TUBE_TEX, tube - Vector2(16, 0), tint)
 
 

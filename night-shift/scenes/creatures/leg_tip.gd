@@ -41,7 +41,7 @@ func _physics_process(delta: float) -> void:
 		State.WAITING:
 			# Wait for a proper look, not a sweep.
 			_lit_time = _lit_time + delta if GameState.is_lit(self) else 0.0
-			if _lit_time > 0.6:
+			if _lit_time > 0.6 and GameState.encounter_ready():
 				state = State.REVEAL
 				Narrator.say("only_spiders_lie")
 				GameState.mark_encounter("leg", "leg", 1e9)

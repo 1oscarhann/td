@@ -43,7 +43,17 @@ const ALARM_WEIGHTS := {
 ## No false alarms this soon after a real encounter.
 @export var quiet_after_encounter := 6.0
 ## Seconds between false alarms at tension 0 (60% of this at tension 1).
-@export var alarm_interval := Vector2(6.0, 13.0)
+## Round 2: rarer, so each one lands.
+@export var alarm_interval := Vector2(25.0, 60.0)
+
+## THE ENCOUNTER GATE (round 2): scripted encounters (arms, the leg, glimpses,
+## Cables, Lures, the Thing's director nudge) only fire once this long has
+## passed since the last encounter of any kind. Anything that would fire sooner
+## waits (or doesn't happen this time past). Zones 1-2: a fresh random gap after
+## every encounter; zone 3: a 30 s minimum (the Thing's own moments count and
+## reset it); zone 4: no gate.
+const GAP_ZONES_1_2 := Vector2(40.0, 110.0)
+const GAP_ZONE_3 := 30.0
 
 var level = null                 # TestLevel (duck typed: .thing)
 var safe_rooms: Array = []       # [Vector2(x0, x1)] world px
@@ -54,23 +64,51 @@ var _since_encounter := 0.0
 var _silent_left := 0.0
 var _alarm_timer := 8.0
 var _last_alarm := ""
+var _last_sound := ""             # never the same sound twice in a row
+var _gap_roll := randf()          # where in 40-110 s the current gap falls
 var _flicker_in := -1.0           # torch flicker scheduled inside a silence
 
 
 func _ready() -> void:
 	GameState.encounter.connect(_on_encounter)
+	GameState.pacing = self
+
+
+func _exit_tree() -> void:
+	if GameState.pacing == self:
+		GameState.pacing = null
+
+
+## The gap the next scripted encounter must wait for, in the current zone.
+func encounter_gap() -> float:
+	match GameState.zone:
+		1, 2:
+			return lerpf(GAP_ZONES_1_2.x, GAP_ZONES_1_2.y, _gap_roll)
+		3:
+			return GAP_ZONE_3
+	return 0.0
+
+
+func encounter_ready() -> bool:
+	return _since_encounter >= encounter_gap()
+
+
+func gap_left() -> float:
+	return maxf(0.0, encounter_gap() - _since_encounter)
 
 
 func add_safe_room(x0: float, x1: float) -> void:
 	safe_rooms.append(Vector2(x0, x1))
 
 
-## Everything ambient drops out for `seconds`.
-func hush(seconds: float) -> void:
+## Everything ambient drops out for `seconds` (hum bed, drips, false alarms,
+## the drone), then creeps back in.
+func hush(seconds: float, flicker := true) -> void:
 	_silent_left = maxf(_silent_left, seconds)
 	AudioDirector.hush_drone(seconds)
 	# Somewhere in the silence, the torch stutters. Something's coming.
-	_flicker_in = randf_range(1.0, minf(2.5, seconds - 0.5))
+	if flicker:
+		_flicker_in = randf_range(1.0, minf(2.5, seconds - 0.5))
 
 
 func is_silent() -> bool:
@@ -83,6 +121,7 @@ func seconds_since_encounter() -> float:
 
 func _on_encounter(_kind: String) -> void:
 	_since_encounter = 0.0
+	_gap_roll = randf()
 	_alarm_timer = maxf(_alarm_timer, quiet_after_encounter)
 
 
@@ -171,7 +210,10 @@ func _false_alarm(p: Node2D) -> void:
 	var pos: Vector2 = p.global_position
 	match kind:
 		"distant":
-			AudioDirector.play_distant(DISTANT_SOUNDS.pick_random(), pos, -8.0)
+			var options := DISTANT_SOUNDS.filter(func(n): return n != _last_sound)
+			var snd: String = options.pick_random()
+			_last_sound = snd
+			AudioDirector.play_distant(snd, pos, -11.0)
 		"tap_behind":
 			# Something tapping, right behind you. Turn round: nothing.
 			var facing := float(p.get("facing")) if p.get("facing") != null else 1.0
@@ -183,7 +225,7 @@ func _false_alarm(p: Node2D) -> void:
 		"rattle":
 			var vent := _nearest_in_group("vents", pos, 360.0)
 			if vent != null:
-				var r = AudioDirector.play_at("rattle", vent.global_position, -6.0, 0.1, 420.0)
+				var r = AudioDirector.play_at("rattle", vent.global_position, -9.0, 0.1, 420.0)
 				if r != null:
 					get_tree().create_timer(randf_range(1.2, 2.4)).timeout.connect(func():
 						if is_instance_valid(r): r.queue_free())
@@ -204,6 +246,8 @@ func _false_alarm(p: Node2D) -> void:
 				_taps(pos + Vector2(randf_range(-140.0, 140.0), -20.0), 2)
 				kind = "tap_behind"
 	_last_alarm = kind
+	if kind != "distant":
+		_last_sound = kind
 	GameState.mark_false_alarm()
 	if GameState.debug:
 		print("[pacing] false alarm: ", kind, " tension ", snappedf(tension, 0.01))
@@ -213,7 +257,7 @@ func _taps(at: Vector2, count: int) -> void:
 	for i in count:
 		if not is_inside_tree():
 			return                      # the level went away mid-sequence
-		AudioDirector.play_at("tap", at + Vector2(randf_range(-6.0, 6.0), 0), -8.0, 0.2, 320.0)
+		AudioDirector.play_at("tap", at + Vector2(randf_range(-6.0, 6.0), 0), -11.0, 0.2, 320.0)
 		await get_tree().create_timer(randf_range(0.25, 0.6)).timeout
 
 
@@ -221,7 +265,7 @@ func _knocks(at: Vector2, count: int) -> void:
 	for i in count:
 		if not is_inside_tree():
 			return
-		AudioDirector.play_at("knock", at, -4.0, 0.12, 700.0)
+		AudioDirector.play_at("knock", at, -8.0, 0.12, 700.0)
 		await get_tree().create_timer(randf_range(0.35, 0.9)).timeout
 
 

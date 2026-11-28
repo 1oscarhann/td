@@ -20,6 +20,7 @@ extends WedgedThing
 @export var vanish_range := 170.0
 
 var _started := false
+var _armed := false        # eye: placed once the pacing gate opens
 var _leaving := false
 var _glinted := 0.0
 var _leave_time := 0.0
@@ -49,6 +50,14 @@ func _physics_process(delta: float) -> void:
 		return
 	if not _moving:
 		_refresh_space()
+	if mode == "eye" and not _armed:
+		# The pacing gate: it only takes its place once the gap is up, and never
+		# in view (it's already standing there when you first see it).
+		visible = false
+		if GameState.encounter_ready() and absf(p.global_position.x - global_position.x) > 340.0:
+			_armed = true
+			visible = true
+		return
 	if mode == "eye":
 		_eye(delta, p)
 	else:
@@ -85,7 +94,7 @@ func _eye(delta: float, p: Node2D) -> void:
 
 func _cross(p: Node2D) -> void:
 	if not _started:
-		if p.global_position.x > trigger_x:
+		if p.global_position.x > trigger_x and GameState.encounter_ready():
 			_started = true
 			visible = true
 			GameState.mark_encounter("glimpse", "glimpse_cross", 1e9)

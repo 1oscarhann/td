@@ -212,6 +212,8 @@ const DECOR := [
 	{"type": "arrival", "cell": Vector2i(1421, 19), "trip": 3, "zone": 4,
 		"thing": Vector2i(1417, 19), "thing_active": false},
 	{"type": "lure", "cell": Vector2i(1529, 15), "mode": "bite", "cord": 40},
+	# Round 2: die to it and you're back ~10 s of walking before it, not 30.
+	{"type": "checkpoint", "cell": Vector2i(1495, 15)},
 	{"type": "trigger", "cell": Vector2i(1578, 19), "event": "climax", "line": "were_nearly_there"},
 	{"type": "squeeze", "cell": Vector2i(1581, 19), "to_x": 1617},
 	{"type": "line", "cell": Vector2i(1589, 19), "id": "closer_than_last_time"},
@@ -815,6 +817,8 @@ func _place_decor(d: Dictionary) -> void:
 			props.add_child(mop)
 		"line":
 			_place_trigger({"line": d.id}, Vector2(x + TILE * 0.5, floor_y))
+		"checkpoint":
+			_place_trigger({"checkpoint": true}, Vector2(x + TILE * 0.5, floor_y))
 		"switch":
 			var lever: LeverSwitch = SWITCH_SCENE.instantiate()
 			lever.position = Vector2(x + TILE * 0.5, floor_y)

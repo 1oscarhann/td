@@ -34,6 +34,7 @@ enum State { HANGING, SLITHER, GRAB, RETREAT }
 
 var state := State.HANGING
 var _tip := Vector2.ZERO        # free end, local
+var _pending_origin := Vector2.INF   # a switch heard while the pacing gate was shut
 var _floor_local := 0.0
 var _target_x := 0.0
 var _state_time := 0.0
@@ -142,6 +143,26 @@ func _enter(new_state: State) -> void:
 func _on_switch_flipped(origin: Vector2) -> void:
 	if state != State.HANGING or global_position.distance_to(origin) > hearing_range:
 		return
+	if not GameState.encounter_ready():
+		_pending_origin = origin                     # waits for the pacing gate
+		return
+	_start_slither(origin)
+
+
+## The pacing gate held it back: is it time yet?
+func _check_pending() -> void:
+	if _pending_origin == Vector2.INF or state != State.HANGING:
+		return
+	var p = GameState.player
+	if p == null or global_position.distance_to(p.global_position) > hearing_range:
+		return
+	if GameState.encounter_ready():
+		var o := _pending_origin
+		_pending_origin = Vector2.INF
+		_start_slither(o)
+
+
+func _start_slither(origin: Vector2) -> void:
 	_floor_local = _find_floor_local()
 	_target_x = to_local(origin).x
 	_enter(State.SLITHER)
@@ -152,6 +173,7 @@ func _on_switch_flipped(origin: Vector2) -> void:
 func _physics_process(delta: float) -> void:
 	_t += delta
 	_state_time += delta
+	_check_pending()
 	var player = GameState.player
 	match state:
 		State.HANGING:

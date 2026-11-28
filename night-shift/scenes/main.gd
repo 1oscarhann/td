@@ -156,7 +156,8 @@ func _creature_lines() -> String:
 		out.append("Cable: %s (%d px)" % [words[cb.state], int(best.cable[1])])
 	if best.has("lure"):
 		var l: Lure = best.lure[0]
-		out.append("Lure: %s [%s] (%d px)" % ["revealed" if l._done else "waiting", l.mode, int(best.lure[1])])
+		out.append("Lure: %s [%s]%s (%d px)" % ["revealed" if l._done else "waiting", l.mode,
+				" tell shown" if l._told else "", int(best.lure[1])])
 	return "   ".join(out) if out.size() > 0 else "no other creatures nearby"
 
 
@@ -185,5 +186,12 @@ func _pacing_text() -> String:
 	else:
 		alarm = "in %.1f s" % maxf(0.0, pc._alarm_timer)
 	lines.append("NEXT FALSE ALARM: %s" % alarm)
+	var gap := pc.encounter_gap()
+	if gap <= 0.0:
+		lines.append("ENCOUNTER GATE: none in this zone")
+	elif pc.encounter_ready():
+		lines.append("ENCOUNTER GATE: [color=#5dff7a]open[/color] (gap was %.0f s)" % gap)
+	else:
+		lines.append("ENCOUNTER GATE: [color=#ffd84a]shut, %.0f s left[/color] (gap %.0f s)" % [pc.gap_left(), gap])
 	lines.append("ZONE: %d" % GameState.zone)
 	return "\n".join(lines)

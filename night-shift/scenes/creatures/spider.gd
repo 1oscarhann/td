@@ -79,7 +79,8 @@ func on_torch_lit_changed(lit: bool) -> void:
 	_moving = true
 	_timer = randf_range(0.08, 0.2)
 	# A group of spiders scattering = one encounter.
-	GameState.mark_encounter("spiders", "spiders_%d" % int(_home_x / 96.0), 1e9)
+	if GameState.encounter_ready():
+		GameState.mark_encounter("spiders", "spiders_%d" % int(_home_x / 96.0), 1e9)
 	if not _told:
 		_told = true
 		Narrator.say("only_spiders")

@@ -1,6 +1,36 @@
 # Night Shift: progress log
 
-## Test this first: Round 2, Phase 1 (debug tools)
+## Test this first: Round 2, Phase 2 (tuning)
+
+F4 on for all of this.
+1. **False alarms are rare now:** one every 25-60 s of quiet (was 6-13).
+   - They're quieter.
+   - Never the same sound twice in a row (the far-off calls never repeat
+     back to back either).
+   - Does each one make you stop, instead of fading into noise?
+2. **The encounter gate.** F4's `ENCOUNTER GATE` line says shut (with seconds
+   left) or open.
+   - Zones 1-2: after every real encounter, the next scripted one (arm, eye,
+     silhouette, Cable, Lure, the leg) waits a random 40-110 s.
+   - Zone 3: at least 30 s, and the Thing's own moments count.
+   - Walk past an arm's vent while the gate is shut: it stays in. Come back
+     once it's open: it comes out.
+3. **Zone 3, the Thing respects the gap too.** While the gate is shut:
+   - its director nudge towards you waits (F3 NEXT says "held by the pacing
+     gate")
+   - it wanders away from you instead of into you
+   - Once the gate opens, it can come for you again.
+4. **The third Lure (zone 4) has a tell.** About 3 s before you reach it, the
+   cord jerks and the light flickers once, red. Then it bites (so you still die
+   there once, but you could see it coming).
+5. **The checkpoint before the third Lure** is now ~10 s of walking before it
+   (was ~30 s).
+6. **Silence before the Thing (zone 3+).** The moment it notices you, everything
+   ambient drops out for 3-5 s: the hum, the drips, the false alarms, the drone.
+   - All you hear is it coming. Then the sound creeps back.
+   - F4 shows "paused (silence, x s)".
+
+## Previous checklist: Round 2, Phase 1 (debug tools)
 
 Start a new game, get down to zone 3 (or anywhere with creatures), then:
 
@@ -1304,6 +1334,51 @@ is only how it moves.
   - The Thing keeps `notice_why` (plain words) and how long ago it last had
     you.
   - The overlays are RichTextLabels in `ui.gd`.
+
+### Round 2, Phase 2: tuning
+
+- `pacing.gd`:
+  - `alarm_interval` 25-60 s
+  - false alarms 3-4 dB quieter
+  - `_last_sound` means no sound plays twice in a row
+- **The encounter gate** (`Pacing.encounter_ready()`, `GameState.encounter_ready()`):
+  - Zones 1-2: a fresh random gap in 40-110 s after every encounter. Zone 3: a
+    30 s minimum. Zone 4: none.
+  - Gated: Ceiling Arms (come out), the leg (reveal), the eye glimpse (it only
+    takes its place out of view), the crossing silhouette, Cables (a switch
+    heard while shut is remembered, and it comes when the gate opens if you're
+    near), Lures, and the Thing's director nudge.
+  - Spiders still scatter (that's just spiders), but only count as an encounter
+    with the gate open.
+  - The Thing: while the gate is shut, its patrol picks points that don't
+    cross within 200 px of you, and it turns away if it's heading your way.
+    Hearing, sight and light still work exactly as before (the rules you learn
+    never lie).
+- **Lure 3:** `_told`, a 0.4 s cord jerk and a 0.14 s red flicker (buzz pitch
+  drops) when you're 3 s of walking away at your current speed. New
+  `checkpoint` decor ~10 s before it.
+- **The Thing noticing you in zone 3+** calls `pacing.hush(3-5 s)` (no torch
+  flicker). The hum, drips, false alarms and drone drop out and creep back.
+- **Overlays:** F4 shows the gate; F3's Lure line shows the tell; F3 NEXT shows
+  when the nudge is held.
+
+**Measured (full bot run, 2 seeds, old long layout):**
+
+| | seed 11 | seed 29 |
+|---|---|---|
+| Time | 11.6 min | 11.9 min |
+| Average gap | 56 s | 54 s |
+| Zone 3 gaps | 31-65 s | 31-65 s |
+| False alarms | 12 | 12 |
+
+- **Zone 3:** every gap is at least 30 s. The one 29 s gap is the zone 4
+  climax, which isn't gated.
+- **False alarms** were 51-57 before.
+- **Zones 1-2 are still ~60 s apart**, because the long corridors space them
+  anyway. The gate starts doing the work once Phase 3 makes the layout denser.
+- **Seed 29 "ghosted" zone 3a.** The bot waited to be walked over by a Thing
+  that kept turning away from it (the gate). A player would follow it; my bot
+  just waits.
 
 ## Untested
 - Audio, by ear (no sound card here).

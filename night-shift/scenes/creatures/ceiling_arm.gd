@@ -197,7 +197,7 @@ func _physics_process(delta: float) -> void:
 
 	match state:
 		State.HIDDEN:
-			if near and _cooldown <= 0.0:
+			if near and _cooldown <= 0.0 and GameState.encounter_ready():
 				_enter(State.SCRATCH)
 				# Something scratching around inside the duct (a long loop:
 				# start somewhere random in it so it never sounds the same).
