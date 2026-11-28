@@ -25,14 +25,19 @@ extends Node
 ##
 ## SAFE ROOMS: one per zone, a working light, ambience softer, no false
 ## alarms, tension near zero. Relief.
+##
+## Also (scary phase 4):
+##   - the vignette pulses faintly when the Thing is close but you can't see it
+##   - the torch flickers briefly inside every pre-encounter silence, and from
+##     zone 3 on it also flickers now and then for no reason (a false alarm)
 
 const DISTANT_SOUNDS := ["moan_distant", "wail_distant", "growl", "call"]
 ## False alarm weights per zone (zone 1 is the gas station's own basement).
 const ALARM_WEIGHTS := {
 	1: {"tap_behind": 3, "knock": 3, "rattle": 3, "sign": 2, "distant": 1},
 	2: {"tap_behind": 2, "knock": 3, "rattle": 2, "sign": 2, "distant": 3},
-	3: {"tap_behind": 3, "knock": 1, "rattle": 2, "sign": 1, "distant": 4},
-	4: {"tap_behind": 3, "knock": 1, "rattle": 1, "sign": 1, "distant": 4},
+	3: {"tap_behind": 3, "knock": 1, "rattle": 2, "sign": 1, "distant": 4, "torch": 2},
+	4: {"tap_behind": 3, "knock": 1, "rattle": 1, "sign": 1, "distant": 4, "torch": 2},
 }
 
 ## No false alarms this soon after a real encounter.
@@ -49,6 +54,7 @@ var _since_encounter := 0.0
 var _silent_left := 0.0
 var _alarm_timer := 8.0
 var _last_alarm := ""
+var _flicker_in := -1.0           # torch flicker scheduled inside a silence
 
 
 func _ready() -> void:
@@ -63,6 +69,8 @@ func add_safe_room(x0: float, x1: float) -> void:
 func hush(seconds: float) -> void:
 	_silent_left = maxf(_silent_left, seconds)
 	AudioDirector.hush_drone(seconds)
+	# Somewhere in the silence, the torch stutters. Something's coming.
+	_flicker_in = randf_range(1.0, minf(2.5, seconds - 0.5))
 
 
 func is_silent() -> bool:
@@ -92,9 +100,18 @@ func _process(delta: float) -> void:
 	_update_tension(delta, p)
 	if GameState.zone >= 1 and not in_safe and not is_silent():
 		_alarm_tick(delta, p)
+	if _flicker_in > 0.0:
+		_flicker_in -= delta
+		if _flicker_in <= 0.0 and GameState.torch != null:
+			GameState.torch.flicker(randf_range(0.25, 0.45))
 	GameState.tension = tension
 	AudioDirector.tension = tension if GameState.zone >= 1 else 0.0
 	get_tree().call_group("post_fx", "set_tension", tension)
+	# The Thing close, but not in your light: the edges of the screen breathe.
+	var unseen := 0.0
+	if level != null and level.thing != null and not GameState.is_lit(level.thing):
+		unseen = _thing_near(p, 300.0)
+	get_tree().call_group("post_fx", "set_pulse", unseen)
 
 
 func _update_tension(delta: float, p: Node2D) -> void:
@@ -173,6 +190,12 @@ func _false_alarm(p: Node2D) -> void:
 			else:
 				_knocks(pos + Vector2(randf_range(-200.0, 200.0), -40.0), 2)
 				kind = "knock"
+		"torch":
+			if GameState.torch != null and GameState.torch.is_on:
+				GameState.torch.flicker(randf_range(0.15, 0.4))
+			else:
+				_taps(pos + Vector2(randf_range(-140.0, 140.0), -20.0), 2)
+				kind = "tap_behind"
 		"sign":
 			var sign_node := _nearest_in_group("signs", pos, 300.0)
 			if sign_node != null and sign_node.has_method("flicker"):

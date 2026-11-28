@@ -82,8 +82,9 @@ enum State { DORMANT, PATROL, NOTICED, CHASE, FROZEN, SEARCH }
 @export var nudge_min := 60.0
 @export var nudge_max := 120.0
 
-## Its full height when nothing is in the way (3x the player).
-const NATURAL_H := 132.0
+## Its full height when nothing is in the way (3.4x the player): taller than
+## almost every tunnel, so it's nearly always crammed in.
+const NATURAL_H := 150.0
 ## Body proportions as fractions of its current height.
 const PELVIS := 0.42
 const SHOULDER := 0.80
@@ -165,6 +166,11 @@ var _sniff_next := 0.0
 var _head_angle := 0.0        # head-stalk tilt from vertical (rad, + = right)
 var _arm_phase := 0.0
 var _bob_phase := 0.0
+var _lean := 0.0              # body lean towards its target: turns slower than the head
+var _snap_frames := 0         # the head snapping round on notice: 2 frames, no easing
+var _snap_target := 0.0
+var _idle_twitch := 2.0       # seconds to the next sudden leg twitch while still
+var _dust: CPUParticles2D
 
 @onready var scrape: AudioStreamPlayer2D = $Scrape
 
@@ -204,6 +210,26 @@ func _ready() -> void:
 	_glint.visible = false
 	_glint.draw.connect(_draw_glint)
 	add_child(_glint)
+	# Dust off the ceiling where its shoulders scrape: drawn like the environment,
+	# so you see it fall even when you can't see what's doing it.
+	_dust = CPUParticles2D.new()
+	_dust.material = CanvasItemMaterial.new()
+	_dust.local_coords = false
+	_dust.emitting = false
+	_dust.amount = 26
+	_dust.lifetime = 1.4
+	_dust.scale_amount_min = 1.0
+	_dust.scale_amount_max = 2.0
+	_dust.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	_dust.emission_rect_extents = Vector2(14, 1)
+	_dust.direction = Vector2(0, 1)
+	_dust.spread = 25.0
+	_dust.gravity = Vector2(0, 70)
+	_dust.initial_velocity_min = 2.0
+	_dust.initial_velocity_max = 10.0
+	_dust.color = Color(0.78, 0.74, 0.66, 0.95)
+	_dust.texture = CreatureDraw.pixel_texture()
+	add_child(_dust)
 
 
 # --------------------------------------------------------------------------- API
@@ -339,7 +365,7 @@ func _physics_process(delta: float) -> void:
 				# It doesn't ease back in. It lurches.
 				_immune_left = freeze_immunity
 				_lurch_left = lurch_time
-				_kick = 5.0 * float(dir)
+				_kick = 8.0 * float(dir)
 				_enter(State.CHASE)
 				if _anger == 1:
 					Narrator.say("it_likes_the_light")
@@ -454,7 +480,8 @@ func _notice(at: Vector2, reason := "") -> void:
 	target_x = global_position.x
 	if absf(at.x - global_position.x) > 2.0:
 		dir = 1 if at.x > global_position.x else -1
-	_head_angle = _head_target_angle()     # snaps in one go, no easing
+	_snap_target = _head_target_angle()    # snaps round in two frames, no easing
+	_snap_frames = 2
 	if _notice_cooldown <= 0.0:
 		_notice_cooldown = 4.0
 		AudioDirector.hush_drone(0.8)
@@ -611,9 +638,11 @@ func _torch_points_at_eye(max_range: float, slack: float) -> bool:
 
 
 func _draw_glint() -> void:
-	var flick := 0.75 + 0.25 * sin(_t * 23.0)
-	_glint.draw_rect(Rect2(-1, -1, 3, 3), Color(1.0, 0.85, 0.55, 0.18 * flick))
-	_glint.draw_rect(Rect2(0, 0, 1, 1), Color(1.0, 0.95, 0.78, flick))
+	var flick := 0.8 + 0.2 * sin(_t * 23.0)
+	_glint.draw_rect(Rect2(-2, -2, 5, 5), Color(1.0, 0.85, 0.55, 0.12 * flick))
+	_glint.draw_rect(Rect2(-1, 0, 3, 1), Color(1.0, 0.90, 0.65, 0.5 * flick))
+	_glint.draw_rect(Rect2(0, -1, 1, 3), Color(1.0, 0.90, 0.65, 0.5 * flick))
+	_glint.draw_rect(Rect2(0, 0, 1, 1), Color(1.0, 0.97, 0.85, flick))
 
 
 ## A beam pointed its way from well beyond the distance it lights still counts
@@ -731,6 +760,12 @@ func _update_audio(delta: float) -> void:
 	var fade := 30.0 if breath_db > _breath.volume_db else 60.0
 	_breath.volume_db = move_toward(_breath.volume_db, breath_db, fade * delta)
 
+	# Dust off the ceiling while it scrapes along pressed up into it.
+	var crammed := smoothstep(0.15, 0.5, 1.0 - _height() / NATURAL_H)
+	_dust.emitting = _moving and crammed > 0.3 and not silhouette
+	_dust.position = Vector2(_lean, -_height() + 3.0)
+	_dust.emission_rect_extents = Vector2(16.0 * _wscale(), 1)
+
 	# A wet gurgle from the body every 4-10 s while it moves. Quiet.
 	if _moving:
 		_gurgle_timer -= delta
@@ -780,7 +815,7 @@ func _init_legs() -> void:
 		var rest: float = l[0]
 		var foot := Vector2(global_position.x + rest * spread, floor_y)
 		_legs.append({"rest": rest, "back": l[1], "k": l[2], "foot": foot, "from": foot,
-				"to": foot, "t": 1.0, "dur": 0.2, "lift": 6.0, "wait": -1.0})
+				"to": foot, "t": 1.0, "dur": 0.2, "lift": 6.0, "wait": -1.0, "taps": 0, "twitch_left": 0.0})
 
 
 ## Width scale: squashed into a low tunnel it gets a little narrower too (so it
@@ -798,6 +833,8 @@ func _update_legs(delta: float) -> void:
 	_update_pose(delta)
 	var chase := state == State.CHASE
 	var max_stepping := 3 if chase else 2
+	if _lurch_left > 0.0:
+		max_stepping = 6                                  # out of a freeze: a scramble
 	var spread := _spread()
 	var stepping := 0
 	for leg in _legs:
@@ -817,9 +854,21 @@ func _update_legs(delta: float) -> void:
 				leg.foot = leg.to
 				if not bool(leg.back):
 					AudioDirector.play_at("tap", leg.foot, -15.0, 0.2, 380.0)
+				# Testing the floor: tap... tap... then it commits.
+				if int(leg.taps) > 0:
+					leg.taps = int(leg.taps) - 1
+					leg.from = leg.to
+					leg.dur = 0.13
+					leg.lift = randf_range(2.5, 4.0)
+					leg.t = 0.0
 			continue
 		var foot: Vector2 = leg.foot
 		foot.y = floor_y
+		if float(leg.twitch_left) > 0.0:
+			leg.twitch_left = float(leg.twitch_left) - delta
+			foot.y -= 5.0                                 # a sudden twitch: up, and back down
+			if float(leg.twitch_left) <= 0.0 and not bool(leg.back):
+				AudioDirector.play_at("tap", leg.foot, -18.0, 0.2, 300.0)
 		leg.foot = foot
 		if still:
 			continue
@@ -835,11 +884,30 @@ func _update_legs(delta: float) -> void:
 		var ahead := signf(desired.x - foot.x)
 		leg.from = foot
 		leg.to = Vector2(desired.x + ahead * (STEP_DISTANCE * 0.5 + randf_range(0.0, 4.0)), floor_y)
+		if chase:
+			var slam: Vector2 = leg.to
+			slam.x += randf_range(-5.0, 5.0)              # messy: it doesn't place them, it slams them
+			leg.to = slam
 		leg.dur = (0.11 if chase else 0.24) * randf_range(0.75, 1.3)
-		leg.lift = randf_range(5.0, 9.0) * (1.5 if chase else 1.0)
+		leg.lift = randf_range(5.0, 9.0) * (randf_range(1.2, 2.2) if chase else 1.0)
+		leg.taps = randi_range(1, 2) if not chase and randf() < 0.35 else 0
 		leg.t = 0.0
 		leg.wait = -1.0
 		stepping += 1
+
+
+## Standing still it is STILL, except that now and then one or two legs
+## twitch, all at once, for no reason.
+func _update_idle_twitch(delta: float) -> void:
+	if _moving or state == State.FROZEN or state == State.CHASE:
+		return
+	_idle_twitch -= delta
+	if _idle_twitch > 0.0:
+		return
+	_idle_twitch = randf_range(1.8, 6.0)
+	for i in randi_range(1, 2):
+		var leg: Dictionary = _legs[randi() % _legs.size()]
+		leg.twitch_left = randf_range(0.08, 0.18)
 
 
 ## Head, arms and body motion. The head eases slowly while it wanders, snaps
@@ -855,14 +923,21 @@ func _update_pose(delta: float) -> void:
 			target = _head_target_angle()
 			rate = 14.0
 		State.FROZEN:
-			if GameState.torch != null:
-				var to: Vector2 = GameState.torch.global_position - global_position - Vector2(0, -_height() * SHOULDER)
-				target = clampf(atan2(to.x, -to.y), -1.0, 1.0)
-			rate = 0.35       # turns slowly towards the light
+			target = _head_angle
+			rate = 0.0        # everything stops: only the tips tremble
 		State.SEARCH:
 			target = sin(_t * 2.3) * 0.5
 			rate = 2.0
-	_head_angle = move_toward(_head_angle, target, rate * delta)
+	if _snap_frames > 0:
+		_head_angle = lerpf(_head_angle, _snap_target, 0.5 if _snap_frames == 2 else 1.0)
+		_snap_frames -= 1
+	else:
+		_head_angle = move_toward(_head_angle, target, rate * delta)
+	# The body follows the head round, slower.
+	var lean_target := float(dir) * 3.0 if state == State.CHASE else 0.0
+	if state != State.FROZEN:
+		_lean = move_toward(_lean, lean_target, 5.0 * delta)
+	_update_idle_twitch(delta)
 	if state != State.FROZEN and state != State.NOTICED:
 		var moving_rate := 6.0 if state == State.CHASE else (1.4 if _moving else 0.4)
 		_arm_phase += delta * moving_rate
@@ -877,22 +952,33 @@ func _body_points() -> Dictionary:
 	var w := _wscale()
 	var frozen := state == State.FROZEN or state == State.NOTICED
 	var chase := state == State.CHASE
-	var sway := 0.0 if frozen else sin(_t * 1.1) * 1.2
-	var bob := absf(sin(_bob_phase)) * (2.0 if chase else 0.6)
-	var lean := float(dir) * (3.0 if chase else 0.0) + _kick
+	# Still means STILL: no idle sway, only breathing. It sways only on the move.
+	var sway := sin(_t * 1.1) * 1.2 if (_moving or state == State.SEARCH) and not frozen else 0.0
+	var bob := absf(sin(_bob_phase)) * (2.0 if chase else 0.6) if _moving else 0.0
+	var lean := _lean + _kick
 	var breath := sin(_t * (4.0 if chase else 1.8)) * 0.5 + 0.5
+	# Crammed into a low tunnel, it bends forward: shoulders pressed up into the
+	# ceiling, the head hanging down in front of its chest.
+	var fwd := smoothstep(0.15, 0.5, c)
 	var pelvis := Vector2(sway * 0.5 + lean * 0.4, -h * PELVIS + bob * 0.5)
-	var shoulders := Vector2(sway + lean, -h * SHOULDER + bob)
-	var sw := 19.0 * w                                     # shoulder half-width
-	# Head-stalk: tilts by _head_angle, and bends further if the ceiling is in the way.
+	var shoulder_y := lerpf(-h * SHOULDER, -(h - 5.0), fwd)
+	var shoulders := Vector2(sway + lean, shoulder_y + bob)
+	var sw := 16.0 * w                                     # shoulder half-width
+	# Head-stalk. While it hunts, the head stays dead still and locked on you
+	# while the body bobs and lurches underneath it.
 	var head_base := shoulders + Vector2(0, -2)
-	var head_len := h * 0.21
+	if chase:
+		head_base = Vector2(0, shoulder_y - 2.0)
+	var head_len := h * 0.21 + fwd * 6.0
 	var tilt := _head_angle + _twitch
 	var room := maxf(4.0, gap - 3.0 + head_base.y)        # px from the head base to the ceiling
-	if cos(tilt) * head_len > room:
+	if fwd < 0.5 and cos(tilt) * head_len > room:
 		var bend := acos(clampf(room / head_len, 0.0, 1.0))
 		var s := signf(tilt) if absf(tilt) > 0.05 else float(dir)
 		tilt = s * maxf(absf(tilt), bend)
+	if fwd > 0.0:
+		var hang_side := signf(tilt) if absf(tilt) > 0.05 else float(dir)
+		tilt = lerpf(tilt, hang_side * (PI - 0.35) + _head_angle * 0.3, fwd)
 	var axis := Vector2(sin(tilt), -cos(tilt))
 	var head_top := head_base + axis * head_len
 	var eye := head_base + axis * (head_len * 0.82)
@@ -907,7 +993,7 @@ func _body_points() -> Dictionary:
 		if chase:
 			tip.x += float(dir) * 6.0     # blades reach forward while it hunts
 		arms.append({"side": side, "shoulder": sh, "elbow": elbow, "tip": tip})
-	return {"h": h, "c": c, "w": w, "pelvis": pelvis, "shoulders": shoulders, "sw": sw,
+	return {"h": h, "c": c, "w": w, "fwd": fwd, "pelvis": pelvis, "shoulders": shoulders, "sw": sw,
 			"head_base": head_base, "head_top": head_top, "axis": axis, "head_len": head_len,
 			"eye": eye, "arms": arms, "breath": breath}
 
@@ -1003,17 +1089,27 @@ func _draw() -> void:
 			var k: float = leg.k
 			var root := pelvis + Vector2(side * clampf(absf(float(leg.rest)) * 0.22, 3.0, 12.0) * w, 2.0)
 			var reach := foot.x - root.x
-			var arch := h * (0.07 + 0.05 * k)
-			# Out and slightly up from the hips, then a long sweep down to the point.
+			# Crammed, the knees push up harder towards the ceiling.
+			var arch := h * (0.07 + 0.05 * k) + c * 12.0
 			var p1 := root + Vector2(reach * 0.55, -arch)
 			var p2 := Vector2(foot.x + side * 3.0 * w, lerpf(root.y, foot.y, 0.35) - arch * 0.2)
-			var pts := _bez(root, p1, p2, foot, 10)
+			var curve := _bez(root, p1, p2, foot, 12)
+			# Too many joints: five bones, each kinked the other way.
+			var pts := PackedVector2Array([root])
+			for j: int in [2, 4, 7, 9]:
+				var q := curve[j]
+				var nrm := (curve[j + 1] - curve[j - 1]).orthogonal().normalized()
+				var kink := (1.6 + k) * (1.0 if j % 4 == 0 else -1.0)
+				if float(leg.twitch_left) > 0.0:
+					kink *= 2.5                                  # a sudden jerk
+				pts.append(q + nrm * kink)
+			pts.append(foot)
 			if pass_back:
-				_limb(pts, 5.0 * lw, 1.0, SKIN_BACK, SKIN)
+				_limb(pts, 3.6 * lw, 1.0, SKIN_BACK, SKIN)
 			else:
-				_limb(pts, 8.0 * lw, 1.0, SKIN)
+				_limb(pts, 5.6 * lw, 1.0, SKIN)
 				if not silhouette:
-					for j: int in [3, 6]:                       # too many knuckles
+					for j in range(1, pts.size() - 1):          # a knuckle at every joint
 						var kn := pts[j].round()
 						draw_rect(Rect2(kn - Vector2(1, 1), Vector2(2, 2)), SKIN_LIT)
 						draw_rect(Rect2(kn - Vector2(1, 1), Vector2(1, 1)), BONE)
@@ -1089,11 +1185,11 @@ func _draw() -> void:
 		var tip: Vector2 = arm.tip
 		if frozen:
 			tip += Vector2(randf_range(-1, 1), 0).round()
-		_limb(_bez(sh, sh + Vector2(side * 3.0, 4.0), elbow + Vector2(0, -6.0), elbow, 5), 7.0 * lw, 5.0 * lw, SKIN)
+		_limb(_bez(sh, sh + Vector2(side * 3.0, 4.0), elbow + Vector2(0, -6.0), elbow, 5), 5.5 * lw, 4.0 * lw, SKIN)
 		# The forearm bows out, then sweeps back in: a long scythe.
 		var ctrl := elbow.lerp(tip, 0.45) + Vector2(side * (6.0 * w + 3.0 * c), 0)
 		var blade := _bez(elbow, ctrl, tip + Vector2(side * 2.0 * w, -h * 0.12), tip, 10)
-		_limb(blade, 5.0 * lw, 1.0, SKIN, BONE)
+		_limb(blade, 4.0 * lw, 1.0, SKIN, BONE)
 		draw_line(tip, tip + Vector2(-side * 3.0, -2.0), _col(BONE), 1.0)               # the hook
 		draw_line(elbow, elbow + Vector2(side * 4.0, -5.0), _col(SKIN_LIT), 2.0)       # elbow spur
 		if not silhouette:
@@ -1106,8 +1202,8 @@ func _draw() -> void:
 	var ht: Vector2 = b.head_top
 	var axis: Vector2 = b.axis
 	var hl: float = b.head_len
-	_limb(PackedVector2Array([hb, hb.lerp(ht, 0.5), ht]), 10.0 * lw, 7.0 * lw, SKIN)
-	draw_circle(ht, 3.5 * lw, _col(SKIN))
+	_limb(PackedVector2Array([hb, hb.lerp(ht, 0.5), ht]), 9.0 * lw, 6.0 * lw, SKIN)
+	draw_circle(ht, 3.2 * lw, _col(SKIN))
 	if not silhouette:
 		var perp := axis.orthogonal()
 		var seam := 1.0 + (1.0 if hunting else 0.0)
@@ -1129,9 +1225,9 @@ func _draw() -> void:
 ## Torso half-width (px) down the body, t = 0 at the shoulders, 1 at the pelvis.
 func _torso_half(t: float) -> float:
 	if t < 0.1:
-		return lerpf(6.0, 15.0, smoothstep(0.0, 1.0, t / 0.1))   # traps up into the head-stalk
+		return lerpf(5.0, 13.0, smoothstep(0.0, 1.0, t / 0.1))   # traps up into the head-stalk
 	if t < 0.64:
 		# A rounded V: broad ribcage tapering to a waist far too thin.
 		var k := (t - 0.1) / 0.54
-		return 5.0 + 10.0 * pow(cos(k * PI) * 0.5 + 0.5, 0.75)
-	return lerpf(5.0, 9.0, smoothstep(0.0, 1.0, (t - 0.64) / 0.36))   # hips
+		return 4.0 + 9.0 * pow(cos(k * PI) * 0.5 + 0.5, 0.75)
+	return lerpf(4.0, 8.0, smoothstep(0.0, 1.0, (t - 0.64) / 0.36))   # hips

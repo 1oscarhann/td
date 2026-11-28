@@ -2,11 +2,14 @@ extends Node2D
 ## Main: wires the level, the player and the UI together, and runs the
 ## death / respawn and ending sequences.
 ##
-## Death (open question in the doc): checkpoint restart for now. Cut to black,
-## low boom, back at the last checkpoint, creatures reset.
+## Death (open question in the doc): checkpoint restart. Cut to black the
+## instant it has you, the caught sting, then two full seconds of total silence
+## in the black. No gore. Back at the last checkpoint, creatures reset.
 
 const START_LINE_DELAY := 0.8
-const DEATH_BLACK_TIME := 2.5
+## The sting plays out over the black, then this much silence.
+const DEATH_STING_TIME := 2.2
+const DEATH_SILENCE := 2.0
 
 @onready var level = $Level
 @onready var player: Player = $Player
@@ -63,11 +66,13 @@ func _on_player_caught(_by: Node) -> void:
 	_dying = true
 	player.input_locked = true
 	ui.cut_to_black()
+	AudioDirector.set_world_silent(true)
 	AudioDirector.play_ui("caught", -4.0)
-	await get_tree().create_timer(DEATH_BLACK_TIME).timeout
+	await get_tree().create_timer(DEATH_STING_TIME + DEATH_SILENCE).timeout
 	player.respawn(GameState.checkpoint)
 	level.reset_creatures()
 	await get_tree().create_timer(0.4).timeout
+	AudioDirector.set_world_silent(false)
 	ui.fade_to(0.0, 1.5)
 	player.input_locked = false
 	_dying = false

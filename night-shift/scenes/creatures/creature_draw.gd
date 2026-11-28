@@ -8,6 +8,13 @@ class_name CreatureDraw
 ## offset towards the light and a dark crescent away from it.
 
 
+## A tiny white square texture for particles (they draw nothing without one).
+static func pixel_texture(size := 1) -> ImageTexture:
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	return ImageTexture.create_from_image(img)
+
+
 ## Direction (local to `ci`) from a point on the creature towards the torch.
 ## Falls back to "light from above and a bit in front" without a torch.
 static func light_dir(ci: Node2D, local_point: Vector2) -> Vector2:

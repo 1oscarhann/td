@@ -1,6 +1,43 @@
 # Night Shift: progress log
 
-## Test this first: the other creatures, redesigned
+## Test this first: Phase 4 (the Thing's movement, death, visual tension)
+
+Headphones on. Zone 3a is where the Thing lives.
+
+1. **Taller and thinner.** In an open room it stands free: 150 px, 3.4x you.
+   In normal tunnels it's crammed in, bent forward: shoulders pressed up
+   into the ceiling, and its head hanging DOWN in front of its chest with
+   the eye at chest height, looking at you.
+2. **Dust:** as it scrapes along a low ceiling, dust falls. You can see the
+   dust even when you can't see the Thing.
+3. **Legs:**
+   - knuckles at every joint, angled like something broken
+   - each leg steps on its own timing, with a hesitation
+   - now and then a foot tests the floor first: tap... tap... then it commits
+4. **Still is still.**
+   - Patrolling, when it stops, it STOPS: no sway, only the ribcage breathing.
+   - Then one or two legs twitch, suddenly, for no reason.
+5. **It notices you:**
+   - the head snaps round to you in two frames, no easing
+   - the body follows slower
+   - when it hunts, the legs go fast and messy and the body bobs, but the
+     head stays dead still, locked on you
+6. **Lit:**
+   - everything freezes except the tips of its legs and blades trembling
+     (the head doesn't turn any more)
+   - out of the freeze it lurches: a jolt forward and a scramble of legs
+7. **The screen pulses:** when it's close and NOT in your light, the edges of
+   the screen pulse faintly, like a heartbeat. Light it and the pulse stops.
+8. **The torch flickers:**
+   - briefly, inside the silence just before every scripted encounter
+   - from zone 3 on, also now and then for no reason at all (a false alarm)
+9. **Death:** caught = an instant cut to black and the caught sting, then two
+   full seconds of nothing at all. Every sound stops: creatures, hum, drone.
+   Then you're back.
+10. **The eye glint** is a bit brighter: a pixel with a faint cross and a halo,
+    so it survives the vignette at the screen edge.
+
+## Previous checklist: the other creatures, redesigned
 
 Headphones on, torch in hand. Look at each one properly (and then try not to).
 
@@ -910,6 +947,69 @@ All behaviour rules are unchanged; this is how they look and move.
   - the full descent to the ending
   - pacing (unchanged: encounters 61/62/59/61 s apart, 21 false alarms)
 
+### Phase 4: the Thing's movement, death, visual tension
+- **Proportions:**
+  - natural height 132 -> 150 (it almost never fits)
+  - thinner shoulders, torso, arms, legs and head-stalk
+- **Bent forward when crammed** (`fwd` 0..1 from how squashed it is): shoulders
+  go up against the ceiling, the head-stalk swings down to hang in front of
+  the chest (it's leaning towards you), knees lift harder towards the ceiling.
+- **Dust:** particles where the shoulders scrape the ceiling, drawn like the
+  environment (visible out of the beam), only while moving crammed.
+- **Legs:**
+  - The smooth curve is replaced by five bones, each kinked the other way,
+    with a knuckle at every joint.
+  - 35% of patrol steps test the floor 1-2 times before committing (short
+    lifts, each with a tap).
+  - Chase steps land randomly off-target and lift higher (messy).
+  - A lurch out of a freeze lets up to 6 legs step at once.
+- **Idle:**
+  - no sway when it isn't moving (only breathing)
+  - every 1.8-6 s one or two legs twitch up and slap back down
+- **Head:**
+  - On notice, it snaps to you over two frames.
+  - The body's lean eases after it at 5 px/s.
+  - While hunting, the head-stalk is anchored to the un-bobbed shoulder line,
+    so it stays dead still and locked on you while the body bobs and lurches
+    under it.
+  - Frozen, the head no longer turns towards the light.
+- **Lurch:** an 8 px kick (was 5) plus the leg scramble.
+- **Eye glint:** brighter (a cross and a halo).
+- **Visual tension (Pacing / PostFX):**
+  - the vignette pulses on a double heartbeat, scaled by how close the awake
+    Thing is (300 px), only while it isn't lit
+  - every hush schedules a 0.25-0.45 s torch flicker 1-2.5 s into the silence
+  - new zone 3-4 false alarm "torch": a 0.15-0.4 s flicker
+- **Death:** `AudioDirector.set_world_silent()` mutes the World and Distant buses
+  and the drone. The caught sting (UI) plays out, then 2 s of silence, then
+  the respawn and the sound comes back.
+- **Fixed:** particles with no texture draw nothing in Godot. The Thing's dust and
+  the Cables' sparks now have a 1 px texture, so the Cables' sparks finally show.
+- **Fixed:** a false-alarm tap/knock or a sign flicker still running at a scene
+  change threw an error.
+
+**Verified:**
+- **Rebuilt behaviour test (it got lost earlier, now kept outside the repo):**
+  all 18 checks pass with the new movement:
+  - hearing at 31 / 90 / 213 px
+  - the 0.80 s notice freeze
+  - chase at 68 px/s in a 64 px corridor
+  - the 1.00 s light freeze, then it keeps coming
+  - loses you after 3.0 s, searches and gives up while you're crouched right
+    there
+  - walks over you, and finds you standing
+  - the director nudge, and patrolling on its own
+- **New systems test:**
+  - the torch flickers 1.0-1.2 s into a silence
+  - the vignette pulses at 0.53-0.70 with the Thing 90 px away and unseen, and
+    drops to 0 once you light it
+  - death is black with the world muted for the whole 4.2 s, and the sound and
+    controls come back afterwards
+- **Renders:** open room (patrol and chase), corridor (crammed, bent forward,
+  head hanging), walking with dust, through the real torch.
+- **Regressions:** arm, teaching arm, Cable, leg, death, the full descent to the
+  ending.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -919,12 +1019,10 @@ All behaviour rules are unchanged; this is how they look and move.
 - The Cable's coils round your ankle are subtle (a dark rubber cable on dark
   trousers). The drag and the taut, trembling line sell the grab more than the
   coils do.
-- Still to do from your Phase 4 list (not part of this "other creatures"
-  pass):
-  - the Wedged Thing's animation details
-  - the death cut-to-black + 2 s silence
-  - the pulsing vignette when the Thing is close and unseen
-  - the torch flickering before encounters
+- **The Thing's "bent forward" is my take on your "spine pressed against the
+  ceiling":** the game sees it from the front (like your concept art), so
+  leaning forward shows as the head hanging down in front of the chest. Say if
+  you meant something else.
 - Encounter spacing in zones 3 and 4 isn't measured yet (the pacing test stops
   at the end of zone 2). Phase 5's full run will report it.
 - Silences only come before SCRIPTED encounters. The Thing in zone 3 is

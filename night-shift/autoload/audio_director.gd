@@ -112,6 +112,20 @@ func hush_drone(seconds: float) -> void:
 	_drone_hush = maxf(_drone_hush, seconds)
 
 
+## Death: every world sound stops dead (creatures, ambience, far-away calls,
+## the drone). UI sounds (the caught sting, the bottom text) still play.
+func set_world_silent(on: bool) -> void:
+	for bus: StringName in [WORLD_BUS, DISTANT_BUS]:
+		var idx := AudioServer.get_bus_index(bus)
+		if idx != -1:
+			AudioServer.set_bus_mute(idx, on)
+	if on:
+		_drone_hush = 9999.0
+		_drone.volume_db = -80.0
+	else:
+		_drone_hush = 0.0
+
+
 ## A far-away creature sound: off to one side of `listener`, through the
 ## Distant bus (muffled + big reverb). Returns the player, or null.
 func play_distant(sound: String, listener: Vector2, volume_db := -6.0) -> AudioStreamPlayer2D:

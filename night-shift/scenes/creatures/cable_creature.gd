@@ -91,6 +91,7 @@ func _ready() -> void:
 	_sparks.scale_amount_min = 1.0
 	_sparks.scale_amount_max = 1.0
 	_sparks.color = Color(1.0, 0.92, 0.6)
+	_sparks.texture = CreatureDraw.pixel_texture()
 	var spark_mat := CanvasItemMaterial.new()
 	spark_mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
 	_sparks.material = spark_mat

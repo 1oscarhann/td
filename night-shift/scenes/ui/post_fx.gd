@@ -17,6 +17,8 @@ const ZONE_FX := {
 var _grain := 0.07
 var _vignette := 0.6
 var _tension := 0.0
+var _pulse := 0.0
+var _t := 0.0
 
 
 func _ready() -> void:
@@ -40,7 +42,16 @@ func set_tension(t: float) -> void:
 	_tension = t
 
 
-func _process(_delta: float) -> void:
+## 0..1 from Pacing: the Thing is close and you can't see it. The vignette
+## pulses, faintly, like a slow heartbeat.
+func set_pulse(p: float) -> void:
+	_pulse = move_toward(_pulse, p, 0.05)
+
+
+func _process(delta: float) -> void:
+	_t += delta
 	var mat := rect.material as ShaderMaterial
+	var ph := fmod(_t, 1.2)
+	var beat := exp(-ph * ph / 0.006) + 0.6 * exp(-(ph - 0.22) * (ph - 0.22) / 0.006)
 	mat.set_shader_parameter("grain", _grain + 0.06 * _tension)
-	mat.set_shader_parameter("vignette", _vignette + 0.20 * _tension)
+	mat.set_shader_parameter("vignette", _vignette + 0.20 * _tension + _pulse * (0.05 + 0.13 * beat))
