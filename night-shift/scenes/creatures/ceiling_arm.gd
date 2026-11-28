@@ -20,7 +20,8 @@ extends Area2D
 ## the beam it's a black hand against the lit wall. Five fingers far too long,
 ## three joints each, pale yellowed nails.
 ##
-## Creature layer + Light Only material: invisible outside the beam.
+## Creature layer + Light Only material for the torch pass; a night pass (black,
+## cold edges) keeps it visible in the dark.
 ## Root sits on the ceiling at the vent (or the floor at a grate).
 
 enum State { HIDDEN, SCRATCH, REACH, RETRACT }
@@ -82,6 +83,8 @@ var _rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
+	# Always visible: the night pass (CreatureDraw.add_night_pass).
+	_night = CreatureDraw.add_night_pass(self, _paint)
 	add_to_group("creatures")
 	collision_layer = GameState.LAYER_CREATURES
 	collision_mask = GameState.LAYER_PLAYER
@@ -222,7 +225,7 @@ func _physics_process(delta: float) -> void:
 				length = _reach_length()
 				_update_points()
 				$Tip.position = _points[_points.size() - 1]
-				queue_redraw()
+				_redraw()
 				return
 			var speed := retract_speed * (1.8 if _violent else 0.3)
 			_prog = maxf(0.0, _prog - delta * speed / maxf(max_length, 1.0) * float(n))
@@ -235,7 +238,7 @@ func _physics_process(delta: float) -> void:
 	$Tip.position = _points[_points.size() - 1]
 	$Tip.set_deferred("disabled", length < 10.0)
 	_check_grab()
-	queue_redraw()
+	_redraw()
 
 
 ## Joint by joint: a bone swings open, a click, a pause... the last ones fast.
@@ -314,10 +317,24 @@ func _ease_open(t: float) -> float:
 	return 1.0 + (c + 1.0) * u * u * u + c * u * u
 
 
+var _night: Node2D
+
+
+func _redraw() -> void:
+	queue_redraw()
+	if _night != null:
+		_night.queue_redraw()
+
+
 func _draw() -> void:
+	_paint(self)
+
+
+## Shared by the torch pass (self) and the night pass.
+func _paint(ci: CanvasItem) -> void:
 	var ldir := CreatureDraw.light_dir(self, Vector2(0, max_length * 0.5 * (-1.0 if from_floor else 1.0)))
 	# The hole it comes out of.
-	draw_rect(Rect2(-4, -1, 8, 2), DARK)
+	ci.draw_rect(Rect2(-4, -1, 8, 2), DARK)
 	var n := _points.size()
 	if n < 2:
 		return
@@ -330,27 +347,27 @@ func _draw() -> void:
 		var a := _points[i - 1]
 		var b := _points[i]
 		var seg := PackedVector2Array([a, a.lerp(b, 0.5), b])
-		CreatureDraw.limb(self, seg, lerpf(w_root, w_wrist, k0), lerpf(w_root, w_wrist, k1), BASE, RIM, SHADOW, ldir)
+		CreatureDraw.limb(ci, seg, lerpf(w_root, w_wrist, k0), lerpf(w_root, w_wrist, k1), BASE, RIM, SHADOW, ldir)
 		# Black and wet: a thin highlight down the bone, towards the light.
 		var off2 := (b - a).orthogonal().normalized()
 		if off2.dot(ldir) < 0.0:
 			off2 = -off2
-		draw_line(a + off2 * 0.6, b + off2 * 0.6, SHEEN, 1.0)
+		ci.draw_line(a + off2 * 0.6, b + off2 * 0.6, SHEEN, 1.0)
 		# A vein running down the first bones.
 		if i <= 3 and a.distance_to(b) > 4.0:
 			var off := (b - a).orthogonal().normalized() * 0.8
-			draw_line(a + off, a.lerp(b, 0.8) + off, VEIN, 1.0)
+			ci.draw_line(a + off, a.lerp(b, 0.8) + off, VEIN, 1.0)
 		# A bump mid-bone on the long ones: even more joints than joints.
 		if a.distance_to(b) > 9.0:
-			draw_rect(Rect2(a.lerp(b, 0.5).round(), Vector2(1, 1)), SHADOW)
+			ci.draw_rect(Rect2(a.lerp(b, 0.5).round(), Vector2(1, 1)), SHADOW)
 	for i in range(1, n - 1):
 		var w := lerpf(w_root, w_wrist, float(i) / maxf(float(n - 1), 1.0))
-		CreatureDraw.knuckle(self, _points[i], w * 0.62, BASE, RIM, DARK, ldir)
-	_draw_hand(ldir)
+		CreatureDraw.knuckle(ci, _points[i], w * 0.62, BASE, RIM, DARK, ldir)
+	_draw_hand(ci, ldir)
 
 
 ## A narrow palm and five fingers far too long, three joints each.
-func _draw_hand(ldir: Vector2) -> void:
+func _draw_hand(ci: CanvasItem, ldir: Vector2) -> void:
 	var n := _points.size()
 	var wrist := _points[n - 1]
 	var along := (wrist - _points[n - 2]).normalized()
@@ -358,7 +375,7 @@ func _draw_hand(ldir: Vector2) -> void:
 		along = Vector2(0, -1 if from_floor else 1)
 	var side := along.orthogonal()
 	var palm_end := wrist + along * 6.0
-	CreatureDraw.limb(self, PackedVector2Array([wrist, wrist + along * 3.0, palm_end]), 4.0, 5.2, BASE, RIM, SHADOW, ldir)
+	CreatureDraw.limb(ci, PackedVector2Array([wrist, wrist + along * 3.0, palm_end]), 4.0, 5.2, BASE, RIM, SHADOW, ldir)
 	var searching := _searching()
 	var floor_y := max_length + 6.0
 	for f in 5:
@@ -388,7 +405,7 @@ func _draw_hand(ldir: Vector2) -> void:
 			if searching and not from_floor:
 				p.y = minf(p.y, floor_y)              # dragging along the floor
 			pts.append(p)
-		CreatureDraw.limb(self, pts, 2.2, 1.1, BASE, RIM, SHADOW, ldir)
-		draw_rect(Rect2(pts[1].round(), Vector2(1, 1)), SHADOW)   # finger joints
-		draw_rect(Rect2(pts[2].round(), Vector2(1, 1)), SHADOW)
-		draw_rect(Rect2(pts[3].round(), Vector2(1, 1)), NAIL)     # the nail
+		CreatureDraw.limb(ci, pts, 2.2, 1.1, BASE, RIM, SHADOW, ldir)
+		ci.draw_rect(Rect2(pts[1].round(), Vector2(1, 1)), SHADOW)   # finger joints
+		ci.draw_rect(Rect2(pts[2].round(), Vector2(1, 1)), SHADOW)
+		ci.draw_rect(Rect2(pts[3].round(), Vector2(1, 1)), NAIL)     # the nail

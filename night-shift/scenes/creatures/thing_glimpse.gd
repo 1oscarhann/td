@@ -59,7 +59,7 @@ func _physics_process(delta: float) -> void:
 	_move(delta)
 	_update_legs(delta)
 	_update_audio(delta)
-	queue_redraw()
+	_redraw()
 
 
 func _eye(delta: float, p: Node2D) -> void:

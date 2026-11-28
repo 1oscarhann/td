@@ -14,8 +14,8 @@ extends Area2D
 ## thread, hangs there turning, and climbs back up. Lit, it runs in jerky
 ## dash-stop-dash bursts.
 ##
-## Creature layer + Light Only material, like every creature: invisible outside
-## the beam. Root sits on the ceiling line; it hangs upside down from it.
+## Creature layer + Light Only material for the torch pass, plus the night pass
+## (a black spider with cold edges) so you see them in the dark. Root sits on the ceiling line; it hangs upside down from it.
 
 enum State { CRAWL, FLEE, HIDDEN }
 
@@ -50,6 +50,8 @@ var _fled := 0.0
 
 
 func _ready() -> void:
+	# Always visible: the night pass (CreatureDraw.add_night_pass).
+	_night = CreatureDraw.add_night_pass(self, _paint)
 	collision_layer = GameState.LAYER_CREATURES
 	collision_mask = 0
 	light_mask = GameState.LIGHT_CREATURES
@@ -123,7 +125,7 @@ func _physics_process(delta: float) -> void:
 				position.x = _home_x + randf_range(-wander_range, wander_range) * 0.5
 				state = State.CRAWL
 				_timer = randf_range(0.5, 2.0)
-	queue_redraw()
+	_redraw()
 
 
 ## Unhurried, it alternates: a quick burst somewhere, a long dead stop, a leg
@@ -161,11 +163,25 @@ func _hide() -> void:
 	$Shape.set_deferred("disabled", true)
 
 
+var _night: Node2D
+
+
+func _redraw() -> void:
+	queue_redraw()
+	if _night != null:
+		_night.queue_redraw()
+
+
 func _draw() -> void:
+	_paint(self)
+
+
+## Shared by the torch pass (self) and the night pass.
+func _paint(ci: CanvasItem) -> void:
 	if _drop > 0.3:
-		draw_line(Vector2.ZERO, Vector2(0, _drop), Color(0.5, 0.5, 0.48, 0.6), 1.0)   # silk
+		ci.draw_line(Vector2.ZERO, Vector2(0, _drop), Color(0.5, 0.5, 0.48, 0.6), 1.0)   # silk
 	var twitch_leg := _twitch if fmod(_t * 9.0, 1.0) < 0.5 else -1
-	draw_spider(self, Vector2(0, _drop), _gait, _moving, _facing, _size, twitch_leg, _drop > 0.3)
+	draw_spider(ci, Vector2(0, _drop), _gait, _moving, _facing, _size, twitch_leg, _drop > 0.3)
 
 
 ## A spider hanging under a surface at `at` (the surface line), facing `facing`.

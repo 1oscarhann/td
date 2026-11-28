@@ -47,4 +47,4 @@ func _physics_process(delta: float) -> void:
 	var b := _body_points()
 	eye_light.position = b.eye
 	eye_light.rotation = Vector2(dir, 0.25).angle()
-	queue_redraw()
+	_redraw()

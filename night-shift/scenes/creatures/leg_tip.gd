@@ -24,6 +24,8 @@ var _hold := 0.9
 
 
 func _ready() -> void:
+	# Always visible: the night pass (CreatureDraw.add_night_pass).
+	_night = CreatureDraw.add_night_pass(self, _paint)
 	collision_layer = GameState.LAYER_CREATURES
 	collision_mask = 0
 	light_mask = GameState.LIGHT_CREATURES
@@ -56,14 +58,28 @@ func _physics_process(delta: float) -> void:
 			length = move_toward(length, 0.0, reveal_length / retract_time * delta)
 			if length <= 0.0:
 				queue_free()   # gone for good
+	_redraw()
+
+
+var _night: Node2D
+
+
+func _redraw() -> void:
 	queue_redraw()
+	if _night != null:
+		_night.queue_redraw()
 
 
 func _draw() -> void:
+	_paint(self)
+
+
+## Shared by the torch pass (self) and the night pass.
+func _paint(ci: CanvasItem) -> void:
 	if state == State.WAITING:
 		# A spider at the vent... that twitches instead of moving, one leg too long.
 		var twitch := 7 if fmod(_t * 2.3, 1.0) < 0.12 else -1
-		Spider.draw_spider(self, Vector2(0, -1), 0.0, false, 1.0, 1.0, twitch, false, 2)
+		Spider.draw_spider(ci, Vector2(0, -1), 0.0, false, 1.0, 1.0, twitch, false, 2)
 		return
 	# Out of the vent: four bones, knuckles, a hooked point. The Thing's leg.
 	var ldir := CreatureDraw.light_dir(self, Vector2(0, length * 0.5))
@@ -79,9 +95,9 @@ func _draw() -> void:
 			a += tap * 0.12
 		p += Vector2.from_angle(a) * seg
 		pts.append(p)
-	CreatureDraw.limb(self, pts, 4.0, 1.0, WedgedThing.SKIN, WedgedThing.RIM, WedgedThing.DARK, ldir)
+	CreatureDraw.limb(ci, pts, 4.0, 1.0, WedgedThing.SKIN, WedgedThing.RIM, WedgedThing.DARK, ldir)
 	for i in range(1, 4):
-		CreatureDraw.knuckle(self, pts[i], 1.6 - float(i) * 0.3, WedgedThing.SKIN, WedgedThing.BONE, WedgedThing.DARK, ldir)
+		CreatureDraw.knuckle(ci, pts[i], 1.6 - float(i) * 0.3, WedgedThing.SKIN, WedgedThing.BONE, WedgedThing.DARK, ldir)
 	var tip := pts[4]
 	var hook := (tip - pts[3]).normalized().rotated(-1.9) * 3.0
-	draw_line(tip, tip + hook, WedgedThing.BONE, 1.0)
+	ci.draw_line(tip, tip + hook, WedgedThing.BONE, 1.0)

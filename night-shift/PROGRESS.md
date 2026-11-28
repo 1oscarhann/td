@@ -1154,6 +1154,70 @@ from the shift to the ending):
 **Clips:** recorded with Godot's movie writer through the same bot, captioned,
 and brightened for phone screens (the real game is darker).
 
+### Visible in the dark + the Thing re-animated (your "torch system isn't great" ask)
+
+**The rule now: darkness hides DETAIL, not existence.** Every creature is drawn
+twice (`CreatureDraw.add_night_pass`):
+- **The night pass** is always visible: a black silhouette, darker than the
+  walls, with a cold edge where faint light catches it, and a pale eye on the
+  Thing.
+  - Arms, spiders and the leg get it through a shader
+    (`shaders/creature_night.gdshader`). It turns their own drawing into night
+    tones.
+  - The Thing draws its own night colours.
+- **The torch pass** is the old drawing on top. Your beam (and a few worklights)
+  fades in the real skin, bone, ribs and gut.
+- **The Lure is the one exception** while it waits: it IS the light, and what
+  holds it is the secret. When it shows itself (the choice reveal, the bite)
+  the body is drawn unshaded, so you see it torch or not.
+- **Cables were already always visible** (they're disguised as scenery).
+
+**Animation toolkit (`scripts/anim/`):**
+- `Dyn`: second-order springs with a personality: speed, damping, and a
+  response that can anticipate. Gives overshoot, settling and follow-through.
+- `VerletChain`: limbs with inertia that swing, trail and drag, pulled towards
+  a posed shape.
+- `IK.two_bone`: hip -> knee -> foot with fixed bone lengths.
+
+**The Thing, rebuilt on it.** Behaviour, senses and speeds are unchanged; this
+is only how it moves.
+- **Legs:**
+  - IK, so the bones keep their length: knees fold up towards the ceiling
+    instead of legs stretching like rubber.
+  - Feet planted in the world, stepping in two alternating groups (a wave gait).
+  - Wandering, it PLACES each foot (up, a hang, set down) after a beat of
+    hesitation, sometimes testing the floor first.
+  - Hunting, it throws its legs forward and slams them down.
+- **Body:**
+  - The pelvis and chest are springs in world space, so it has weight: starts
+    lag, stops overshoot and settle, and the chest whips after the pelvis.
+  - Every footfall jolts up through it, and lifted legs make it sag.
+- **Head:**
+  - Glances and holds while it wanders, with anticipation (it dips the wrong way
+    for a beat first).
+  - Stopped, it listens, usually tilted your way.
+  - Searching, it sniffs in quick jerks.
+  - Noticing you, it snaps round in 2 frames and wobbles.
+  - Hunting, it hangs dead still in the air, locked on you, while the body bobs
+    under it.
+- **Arms:** verlet chains: the blades hang to the floor and drag, swing when it
+  stops, trail when it lurches.
+- **Acting:**
+  - Asleep, it's hunched.
+  - The wind-up when it notices you: a jolt upright, then it coils, rears back
+    and the blades lift.
+  - Hunting, it's pitched forward and low.
+  - Frozen in your light, it strains on the spot, updating on threes like
+    stop-motion.
+  - A lurch out of the freeze shoves the whole body.
+
+**Verified:**
+- AI test 17/17, systems test 5/5
+- arm, teaching arm, leg, Cable, death
+- the full descent to the ending
+- renders of the Thing and the other creatures with no light at all, and in the
+  torch
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.

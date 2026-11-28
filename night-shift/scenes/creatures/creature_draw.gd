@@ -8,6 +8,38 @@ class_name CreatureDraw
 ## offset towards the light and a dark crescent away from it.
 
 
+const NIGHT_SHADER := preload("res://shaders/creature_night.gdshader")
+
+
+## VISIBILITY RULE: darkness hides DETAIL, not existence. Every creature is drawn
+## twice:
+##   - the night pass (this): always visible, unshaded, behind. With `remap` the
+##     creature's own drawing is turned into night tones by the night shader (a
+##     black silhouette, a cold edge where its highlights were). Without it,
+##     `paint` draws its own night colours.
+##   - the torch pass: the creature node itself, Light Only, on top. Where a light
+##     that reveals creatures falls (your torch, a few worklights), the real
+##     colours and detail fade in over the silhouette.
+## `paint` is called with the night node as the canvas to draw on. Remember to
+## queue_redraw() the returned node whenever the creature redraws.
+static func add_night_pass(owner: CanvasItem, paint: Callable, remap := true) -> Node2D:
+	var n := Node2D.new()
+	n.name = "Night"
+	n.show_behind_parent = true
+	n.light_mask = 0
+	if remap:
+		var sm := ShaderMaterial.new()
+		sm.shader = NIGHT_SHADER
+		n.material = sm
+	else:
+		var cm := CanvasItemMaterial.new()
+		cm.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		n.material = cm
+	n.draw.connect(func(): paint.call(n))
+	owner.add_child(n)
+	return n
+
+
 ## A tiny white square texture for particles (they draw nothing without one).
 static func pixel_texture(size := 1) -> ImageTexture:
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)

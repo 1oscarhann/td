@@ -10,6 +10,9 @@ extends Node2D
 ## ceiling on six long jointed limbs, a pale bloated thing with an eyeless head
 ## that is mostly a vertical mouth of needle teeth. The tube hangs from a fleshy
 ## stalk growing out of its jaw.
+## VISIBILITY: the one creature that stays hidden while it waits (it IS the
+## light; what holds it is the secret). When it shows itself (the choice reveal,
+## the bite) the body is drawn unshaded: you see it, torch or not.
 ## Its signature is the shop's comforting fluorescent buzz, used against you.
 ## Tell: the light rises and falls, gently, like something up there breathing.
 ##
@@ -162,6 +165,7 @@ func _check_player() -> void:
 		"bite":
 			if d < trigger_distance * 0.6 and _lunge == 0.0:
 				_lunge = 0.01
+				_show_body()                  # you SEE what bites you, torch or not
 				GameState.mark_encounter("lure", "lure_%d" % get_instance_id())
 				AudioDirector.play_at("crack", global_position + _tube_pos(), 2.0, 0.1, 700.0, 0.5)
 			if _lunge >= 1.0:
@@ -176,15 +180,20 @@ func _reveal() -> void:
 	GameState.mark_encounter("lure", "lure_%d" % get_instance_id())
 	_reveal_left = 1.3
 	_light.energy = 2.6
-	if _body:
-		var mat := CanvasItemMaterial.new()
-		mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
-		_body.material = mat
+	_show_body()
 	AudioDirector.play_at("creak", global_position, 2.0, 0.0, 700.0, 0.4)
 	AudioDirector.play_at("crack", global_position, -2.0, 0.1, 700.0, 0.6)
 	if GameState.torch != null:
 		GameState.torch.flicker(0.8)
 	revealed.emit()
+
+
+## The body drawn unshaded: visible with or without the torch.
+func _show_body() -> void:
+	if _body:
+		var mat := CanvasItemMaterial.new()
+		mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+		_body.material = mat
 
 
 func _go_dark() -> void:
