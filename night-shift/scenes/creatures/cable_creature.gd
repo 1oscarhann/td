@@ -12,7 +12,12 @@ extends WallCable
 ## still aim the torch: hold the beam on it to make it let go (decision: the doc
 ## leaves the escape open).
 ## TELL: a slightly wrong droop (extra sag), and a twitch if you hold the light
-## on it for a couple of seconds.
+## on it for a couple of seconds. Otherwise, while disguised: NO movement at all.
+## MOVING (scary phase 4): it drops off the wall and comes along the floor in
+## S-curves like a snake, the front end reared up off the floor, swaying,
+## sniffing. Its head is the cut end: the rubber split back, a mouth of bare
+## copper strands opening and closing, sparks spitting, arcs jumping between
+## the strands. It coils twice round your ankle when it has you.
 ## The root stays on the wall fixing; the free end moves.
 
 enum State { HANGING, SLITHER, GRAB, RETREAT }
@@ -40,6 +45,8 @@ var _crackle: AudioStreamPlayer2D
 var _spark: PointLight2D
 var _sparks: CPUParticles2D
 var _tip_draw: Node2D
+var _arc_draw: Node2D        # unshaded: the arcs glow in the dark
+var _arc := PackedVector2Array()
 
 
 func _ready() -> void:
@@ -91,7 +98,21 @@ func _ready() -> void:
 	# The frayed copper end, drawn as part of the cable (environment layer).
 	_tip_draw = Node2D.new()
 	_tip_draw.draw.connect(_draw_tip)
+	# In front of the player: the coils go round your ankle, not behind it.
+	_tip_draw.z_as_relative = false
+	_tip_draw.z_index = 2
 	add_child(_tip_draw)
+	_arc_draw = Node2D.new()
+	var arc_mat := CanvasItemMaterial.new()
+	arc_mat.light_mode = CanvasItemMaterial.LIGHT_MODE_UNSHADED
+	_arc_draw.material = arc_mat
+	_arc_draw.z_as_relative = false
+	_arc_draw.z_index = 2
+	_arc_draw.draw.connect(func():
+		if _arc.size() == 3:
+			_arc_draw.draw_line(_arc[0], _arc[1], Color(0.85, 0.92, 1.0), 1.0)
+			_arc_draw.draw_line(_arc[1], _arc[2], Color(0.85, 0.92, 1.0), 1.0))
+	add_child(_arc_draw)
 
 
 func reset() -> void:
@@ -107,6 +128,8 @@ func get_light_probe_points() -> Array:
 	for i in range(0, points.size(), 3):
 		pts.append(to_global(points[i]))
 	pts.append(to_global(_tip))
+	if points.size() > 0:
+		pts.append(to_global(points[points.size() - 1]))   # the reared head
 	return pts
 
 
@@ -177,13 +200,15 @@ func _physics_process(delta: float) -> void:
 				_enter(State.HANGING)
 	_area.position = _tip
 	var moving := state == State.SLITHER or state == State.GRAB or state == State.RETREAT
-	_spark.position = _tip
+	var head := points[points.size() - 1] if moving and points.size() > 0 else _tip
+	_spark.position = head
 	_spark.energy = randf_range(0.2, 0.9) if moving and randf() < 0.25 else 0.0
-	_sparks.position = _tip
-	if moving and randf() < 0.04:
+	_sparks.position = head
+	if moving and randf() < 0.07:
 		_sparks.restart()
 		_sparks.emitting = true
 	_tip_draw.queue_redraw()
+	_arc_draw.queue_redraw()
 
 
 func _check_grab(player) -> void:
@@ -203,20 +228,39 @@ func _release_player() -> void:
 		player.pull_speed = 0.0
 
 
-## Anchor -> down the wall -> along the floor to the tip, with a slither wave on
-## the floor part. Quadratic curve with its corner under the anchor.
+## Anchor -> down the wall -> along the floor to the tip. On the floor it moves
+## in S-curves: a wave travelling from the head back down the body. The front
+## end rears up off the floor in an S of its own, swaying like a snake's head.
+## While it has you it's pulled taut and trembling, coiled round your ankle.
 func _build_slither() -> void:
 	var pts := PackedVector2Array()
-	var corner := Vector2(0, _tip.y)
-	var n := 16
+	var floor_y := _floor_local
+	var corner := Vector2(0, floor_y)
+	var n := 28
+	var head_dir := signf(_tip.x) if absf(_tip.x) > 0.5 else 1.0
 	for i in n + 1:
 		var t := float(i) / n
-		var a := Vector2.ZERO.lerp(corner, t)
-		var b := corner.lerp(_tip, t)
-		var p := a.lerp(b, t)
-		if state != State.GRAB:
-			p.y -= absf(sin(_t * 9.0 - t * 12.0)) * 2.0 * t   # little humps along the floor
+		var p: Vector2
+		if t < 0.18:
+			# Down the wall, swinging a little.
+			var k := t / 0.18
+			p = Vector2(sin(_t * 3.0) * 2.0 * k * (1.0 - k), lerpf(0.0, floor_y, k))
+		else:
+			var k := (t - 0.18) / 0.82
+			p = corner.lerp(Vector2(_tip.x, floor_y), k)
+			if state == State.GRAB:
+				p.y -= sin(_t * 70.0 + k * 30.0) * 0.7 * k             # taut, trembling
+			else:
+				# The S-wave along the floor, bigger towards the head...
+				p.y -= absf(sin(_t * 7.0 - k * 16.0)) * (1.0 + 3.0 * k)
+				p.x += sin(_t * 7.0 - k * 16.0) * 1.5 * k * head_dir
+				# ...and the head reared up off the floor, swaying.
+				var rear := smoothstep(0.78, 1.0, k)
+				p.y -= rear * (9.0 + sin(_t * 2.3) * 3.0)
+				p.x -= rear * rear * head_dir * (4.0 + sin(_t * 1.7) * 2.0)
 		pts.append(p.round())
+	if state == State.GRAB:
+		pts[pts.size() - 1] = _tip.round()
 	points = pts
 
 
@@ -230,20 +274,66 @@ func _find_floor_local() -> float:
 	return hp.y - global_position.y - 1.0
 
 
-## While it hunts, the free end frays open into a nest of bare copper strands
-## that open and close, as if it's sniffing for you. Hanging, it's just a cable.
+## While it hunts, the free end is a head: the rubber sheath split and peeled
+## back, and a mouth of bare copper strands that opens and closes, sniffing for
+## you, twitching, spitting sparks. Hanging, it's just a cable.
 func _draw_tip() -> void:
-	if state == State.HANGING:
+	if state == State.HANGING or points.size() < 2:
+		_arc = PackedVector2Array()
 		return
 	var copper := Color(0.62, 0.40, 0.22)
-	var bright := Color(0.86, 0.62, 0.36)
-	var open := 0.5 + 0.5 * sin(_t * (14.0 if state == State.GRAB else 7.0))
-	var base := 0.0
-	if points.size() >= 2:
-		base = (points[points.size() - 1] - points[points.size() - 2]).angle()
-	for i in 5:
-		var a := base + (i - 2) * (0.35 + open * 0.3) + sin(_t * 11.0 + i) * 0.15
-		var mid := _tip + Vector2.from_angle(a) * 3.0
-		var end := mid + Vector2.from_angle(a + sin(_t * 8.0 + i * 2.0) * 0.6) * (2.0 + open * 2.0)
-		_tip_draw.draw_line(_tip, mid, copper, 1.0)
+	var bright := Color(0.95, 0.72, 0.42)
+	var rubber := Color(0.08, 0.08, 0.09)
+	var head := points[points.size() - 1]
+	var base := (head - points[points.size() - 2]).angle()
+	# A dull sheen along the body while it moves, so the S-curve reads.
+	var sheen := PackedVector2Array()
+	for i in range(int(points.size() * 0.18), points.size()):
+		sheen.append(points[i] + Vector2(0, -1))
+	if sheen.size() > 1:
+		_tip_draw.draw_polyline(sheen, Color(0.34, 0.34, 0.36), 1.0)
+	if state == State.GRAB:
+		_draw_coils(rubber)
+		head = _tip
+	var open := 0.5 + 0.5 * sin(_t * (14.0 if state == State.GRAB else 6.0))
+	# The split sheath, peeled back in two flaps.
+	for side: float in [-1.0, 1.0]:
+		var flap := head + Vector2.from_angle(base + side * 2.3) * 3.0
+		_tip_draw.draw_line(head, flap, rubber, 2.0)
+	# Seven strands: a mouth that opens, the ends twitching on their own.
+	var ends := []
+	for i in 7:
+		var a := base + (float(i) - 3.0) * (0.22 + open * 0.24) + sin(_t * 23.0 + float(i) * 1.7) * 0.18
+		var mid := head + Vector2.from_angle(a) * (3.0 + float(i % 2))
+		var end := mid + Vector2.from_angle(a + sin(_t * 9.0 + float(i) * 2.0) * 0.7) * (2.0 + open * 3.0)
+		_tip_draw.draw_line(head, mid, copper, 1.0)
 		_tip_draw.draw_line(mid, end, bright if i % 2 == 0 else copper, 1.0)
+		ends.append(end)
+	# Now and then an arc jumps between two strands: a hard white crack.
+	_arc = PackedVector2Array()
+	if randf() < 0.18 and ends.size() > 2:
+		var a0: Vector2 = ends[randi() % ends.size()]
+		var a1: Vector2 = ends[randi() % ends.size()]
+		_arc = PackedVector2Array([a0, (a0 + a1) * 0.5 + Vector2(randf_range(-2, 2), randf_range(-2, 2)), a1])
+
+
+## Two loops of cable round your ankle, squeezing.
+func _draw_coils(rubber: Color) -> void:
+	var p = GameState.player
+	if p == null:
+		return
+	var ankle: Vector2 = to_local(p.global_position + Vector2(0, -5))
+	var squeeze := 0.8 + 0.2 * sin(_t * 9.0)
+	for c in 2:
+		var cy := ankle.y - float(c) * 4.0
+		var rx := 6.0 * squeeze
+		var prev := ankle
+		for s in 13:
+			var ang := TAU * float(s) / 12.0
+			var q := Vector2(ankle.x + cos(ang) * rx, cy + sin(ang) * 1.6)
+			if s > 0:
+				var front := sin(ang) > 0.0
+				_tip_draw.draw_line(prev, q, rubber if front else Color(0.20, 0.20, 0.22), 2.0)
+				if front:
+					_tip_draw.draw_line(prev + Vector2(0, -1), q + Vector2(0, -1), Color(0.40, 0.40, 0.42), 1.0)
+			prev = q

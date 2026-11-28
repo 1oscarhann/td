@@ -1,6 +1,52 @@
 # Night Shift: progress log
 
-## Test this first: "make it scary" Phase 3 (pacing)
+## Test this first: the other creatures, redesigned
+
+Headphones on, torch in hand. Look at each one properly (and then try not to).
+
+1. **Spiders** (bottom of the basement stairs, and in vents):
+   - eight legs and a gait
+   - they move in bursts and stop dead, and a leg twitches
+   - now and then one lowers itself on a thread and climbs back up
+   - lit, they run in jerky dash-stop-dash bursts
+2. **The teaching arm** (zone 2, the small room after the boards), and the
+   real one (zone 3b):
+   - Too many crooked joints, corpse-pale, with a long thin hand.
+   - Watch it come out: one joint jackknifes open with a click, a pause,
+     another... then the last few joints and the hand come all at once.
+   - Fully out, its fingertips drag across the floor and tap one after
+     another.
+   - Light it: it snaps back up violently, much faster than it came down.
+   - The floor-grate one (zone 3a) does the same, upwards.
+3. **The Cables** (the lever room in zone 2, and zone 3b):
+   - Hanging, they're identical to the real ones (only the tell).
+   - Moving, they come along the floor in S-curves with the front end reared
+     up like a snake's head, swaying.
+   - The head is the cut end: the rubber split back, copper strands opening
+     and closing, sparks, arcs jumping between the strands.
+   - If one gets you, it coils round your ankle and the rest goes taut and
+     trembles.
+4. **The Lure** (zone 3a, twice; zone 4 once): shine the torch UP the cord.
+   - A pale, bloated thing upside-down on the ceiling, holding on with six
+     long jointed limbs.
+   - An eyeless head hangs from it: a long skull with pits where the eyes
+     should be, split by a vertical mouth of needle teeth.
+   - The tube hangs from a fleshy, segmented stalk growing out of its jaw,
+     and it rises and falls as the thing breathes.
+   - Pick the wrong light (zone 3a): the stalk snaps taut, the jaw splits
+     open on a red throat, then it scuttles off along the ceiling into the
+     dark, dragging the tube after it.
+   - Zone 4: the head drops on its neck and bites.
+5. **The leg in the vent** (zone 3b):
+   - At first it looks like a spider that twitches wrong, with one leg too long.
+   - Hold the light on it: a long knuckled leg in the Thing's colours jerks out,
+     taps the air, and pulls back slowly.
+6. **The Tunnel** (zone 4): stand still and look up.
+   - The flesh coming down has swollen lobes that pulse on a double heartbeat,
+     veins, pale ridges like gums along its edge, and mucus strands that
+     stretch and drip as it lowers.
+
+## Phase 3 checklist (pacing), if you haven't done it yet
 
 Headphones on. Play it straight through from the start and don't rush: the point
 of this phase is the long, empty stretches.
@@ -787,12 +833,98 @@ the same body.
 - **No decor ended up inside rock.**
 - **Cost:** the level loads in ~1.1 s instead of ~0.6 s; frame time is the same.
 
+### The other creatures, redesigned (scary phase 4, creatures)
+All behaviour rules are unchanged; this is how they look and move.
+- **`CreatureDraw`** (`scenes/creatures/creature_draw.gd`): shared drawing for
+  tapering limbs rim-lit on the torch side, knuckles, shaded lumps, beziers. It's
+  the same technique that made the Wedged Thing read in the beam.
+- **Ceiling Arms:**
+  - 4-14 bones of irregular length, each bending the other way (a broken
+    insect leg), scaled so the hand still reaches the floor.
+  - Knuckles at every joint, extra bumps on long bones, veins.
+  - A narrow hand, five 3-joint fingers 1.0-1.35x too long, dark nails.
+  - Unfolding:
+    - each bone takes 0.18-0.4 s, swinging open from folded with an
+      overshoot, then a click and a 0.12-0.55 s pause
+    - the last 3 bones take ~0.06 s each
+  - Fully out: the hand sweeps side to side and the fingertips drag and tap
+    the floor one by one, with quiet taps.
+  - Lit: it snaps back at 1.8x the retract speed (a twitch and a crack); when
+    it just gives up, it pulls back slowly instead.
+  - It grabs the same way. It takes longer to get halfway out now
+    (4.0 s vs 2.5 s in the test).
+- **Spiders:**
+  - Drawn with 8 legs (a 2-joint gait, front legs reaching forward), a pale
+    mark on the abdomen, eyes that catch the light, and some size variation.
+  - Crawling: bursts at 35-80 px/s, dead stops of 0.6-2.4 s, leg twitches,
+    and 10% drop on a silk thread.
+  - Fleeing: 0.08-0.22 s dashes and 0.04-0.16 s stops.
+  - `Spider.draw_spider()` is shared with the leg.
+- **The leg in the vent:**
+  - While waiting, it's a spider that twitches instead of moving, with one leg
+    too long.
+  - Revealed: four knuckled bones in the Wedged Thing's palette, jerking out to
+    30 px, the hooked tip tapping, then 3.5 s back in.
+- **The Lure:**
+  - The body is rebuilt: a ribbed, bloated sac on the ceiling and six limbs of
+    differing reach, with elbows hanging and fingers dug into the ceiling.
+  - Its head is an eyeless split skull lined with needle teeth.
+  - The lure is a fat, segmented stalk in an S-curve from the jaw to the tube.
+  - The tube rises and falls with its breathing (the tell).
+  - The reveal (stalk taut, jaw splitting on a red throat, scuttling off
+    sideways into the dark with the tube dragged up after it) replaces "sinks
+    into the ceiling".
+- **The Cables:**
+  - The slither is an S-wave travelling from the head down the body, the front
+    end reared ~9-12 px off the floor and swaying, with a faint sheen along the
+    body so the shape reads.
+  - Head:
+    - a split rubber sheath and 7 copper strands that open and close and
+      twitch
+    - arcs jump between strands (unshaded, so they glow)
+    - sparks and the spark light follow the head
+  - Grab: two coils squeezing round your ankle (drawn in front of you), the
+    rest of it taut and trembling.
+- **The Tunnel:**
+  - The underside is two rows of irregular lobes with creases and wet glints,
+    swelling on a double heartbeat (every 1.4 s).
+  - Branching veins that darken on the beat, pale gum-like ridges along its
+    edge.
+  - Mucus strands that stretch as it comes down and drip.
+- **Fixed:** a tap/knock false alarm or a sign flicker still running when the
+  scene changed (the ending) threw an error.
+
+**Verified:**
+- **Gallery renders** (before/after, floodlit and through the real torch) of
+  every state:
+  - the arm reaching, unfolding, and from the floor
+  - the Cable slithering and grabbing
+  - the Lure hanging, revealed and biting
+  - the spiders, the leg, the Tunnel
+- **Regressions pass:**
+  - arm (grabs, and retracts when lit)
+  - teaching arm (never grabs)
+  - Cable (grab/release/return)
+  - leg
+  - death and respawn
+  - the full descent to the ending
+  - pacing (unchanged: encounters 61/62/59/61 s apart, 21 false alarms)
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
 - How dark it looks on a real monitor. My renders are software-rendered PNGs.
 
 ## Known bugs / rough edges
+- The Cable's coils round your ankle are subtle (a dark rubber cable on dark
+  trousers). The drag and the taut, trembling line sell the grab more than the
+  coils do.
+- Still to do from your Phase 4 list (not part of this "other creatures"
+  pass):
+  - the Wedged Thing's animation details
+  - the death cut-to-black + 2 s silence
+  - the pulsing vignette when the Thing is close and unseen
+  - the torch flickering before encounters
 - Encounter spacing in zones 3 and 4 isn't measured yet (the pacing test stops
   at the end of zone 2). Phase 5's full run will report it.
 - Silences only come before SCRIPTED encounters. The Thing in zone 3 is

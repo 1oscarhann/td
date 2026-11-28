@@ -26,6 +26,8 @@ func flicker() -> void:
 	AudioDirector.play_at("crackle", global_position, -14.0, 0.1, 300.0)
 	var seq := [0.9, 0.0, 0.0, 1.1, 0.0, 0.6, 0.0, 0.0, 0.0, 0.8, 0.0]
 	for e: float in seq:
+		if not is_inside_tree():
+			return
 		_flick.energy = e
 		await get_tree().create_timer(randf_range(0.04, 0.12)).timeout
 	_flick.queue_free()

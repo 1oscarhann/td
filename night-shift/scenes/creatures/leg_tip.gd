@@ -1,23 +1,26 @@
 class_name LegTip
 extends Area2D
-## The "spider" that isn't. A few pixels twitching at the lip of a vent, just
-## like the real spiders around it. Lit, it doesn't scatter: it slides out a
-## little further (a long jointed leg, the Wedged Thing's colour) and then pulls
-## back SLOWLY into the vent and is gone for good. The voice repeats "they're
-## only spiders", now a lie. Every spider after this is suspicious.
+## The "spider" that isn't. It sits at the lip of a vent looking exactly like
+## the real spiders around it, except it never quite moves right: it twitches
+## where the others scuttle, and one of its "legs" is a little too long.
+## Lit for a proper look, it doesn't scatter. It slides out: a long jointed leg,
+## the Wedged Thing's colour, knuckles and all, ending in a hooked point that
+## taps the air. Then it pulls back SLOWLY into the vent and is gone for good.
+## The voice repeats "they're only spiders", now a lie. Every spider after this
+## is suspicious.
 ##
 ## Creature layer + Light Only material. Root sits just under the vent.
 
 enum State { WAITING, REVEAL, RETRACT }
 
-@export var reveal_length := 22.0
+@export var reveal_length := 30.0
 @export var retract_time := 3.5
 
 var state := State.WAITING
 var length := 4.0
 var _t := 0.0
 var _lit_time := 0.0
-var _hold := 0.6
+var _hold := 0.9
 
 
 func _ready() -> void:
@@ -27,7 +30,7 @@ func _ready() -> void:
 
 
 func get_light_probe_points() -> Array:
-	return [global_position + Vector2(0, length)]
+	return [global_position + Vector2(0, maxf(length, 3.0))]
 
 
 func _physics_process(delta: float) -> void:
@@ -40,10 +43,13 @@ func _physics_process(delta: float) -> void:
 				state = State.REVEAL
 				Narrator.say("only_spiders_lie")
 				GameState.mark_encounter("leg", "leg", 1e9)
+				AudioDirector.play_at("scrape", global_position, -14.0, 0.05, 260.0, 0.6)
 		State.REVEAL:
-			length = move_toward(length, reveal_length, 26.0 * delta)
+			# Out in little jerks, not a smooth slide.
+			var jerk := 1.0 if fmod(_t, 0.45) < 0.18 else 0.15
+			length = move_toward(length, reveal_length, 48.0 * jerk * delta)
 			if length >= reveal_length:
-				_hold -= delta   # a beat fully out, then it goes
+				_hold -= delta   # a beat fully out, tapping, then it goes
 				if _hold <= 0.0:
 					state = State.RETRACT
 		State.RETRACT:
@@ -54,19 +60,28 @@ func _physics_process(delta: float) -> void:
 
 
 func _draw() -> void:
-	var leg := Color(0.56, 0.53, 0.50)
-	var dark := Color(0.30, 0.29, 0.28)
 	if state == State.WAITING:
-		# Looks like a spider at the vent: a dark speck with twitching "legs".
-		var w := int(_t * 7.0) % 2
-		draw_rect(Rect2(-1, 1, 2, 2), dark)
-		draw_rect(Rect2(-2 - w, 1 + w, 1, 1), dark)
-		draw_rect(Rect2(1 + w, 1 + w, 1, 1), dark)
-		draw_line(Vector2(0, 0), Vector2(0, 1), leg, 1.0)
+		# A spider at the vent... that twitches instead of moving, one leg too long.
+		var twitch := 7 if fmod(_t * 2.3, 1.0) < 0.12 else -1
+		Spider.draw_spider(self, Vector2(0, -1), 0.0, false, 1.0, 1.0, twitch, false, 2)
 		return
-	# A long thin segment, a knee, then the tip: the real thing.
-	var knee := Vector2(2, length * 0.6)
-	var tip := Vector2(-1, length)
-	draw_line(Vector2.ZERO, knee, leg, 1.0)
-	draw_line(knee, tip, leg, 1.0)
-	draw_rect(Rect2(knee - Vector2(1, 1), Vector2(2, 2)), dark)
+	# Out of the vent: four bones, knuckles, a hooked point. The Thing's leg.
+	var ldir := CreatureDraw.light_dir(self, Vector2(0, length * 0.5))
+	var tap := sin(_t * 7.0) * 2.0 if state == State.REVEAL and length >= reveal_length - 0.5 else 0.0
+	var pts := PackedVector2Array([Vector2.ZERO])
+	var a := PI * 0.5 + 0.25
+	var bends := [0.0, -0.55, 0.5, -0.35]
+	var seg := length / 4.0
+	var p := Vector2.ZERO
+	for i in 4:
+		a += float(bends[i])
+		if i == 3:
+			a += tap * 0.12
+		p += Vector2.from_angle(a) * seg
+		pts.append(p)
+	CreatureDraw.limb(self, pts, 4.0, 1.0, WedgedThing.SKIN, WedgedThing.RIM, WedgedThing.DARK, ldir)
+	for i in range(1, 4):
+		CreatureDraw.knuckle(self, pts[i], 1.6 - float(i) * 0.3, WedgedThing.SKIN, WedgedThing.BONE, WedgedThing.DARK, ldir)
+	var tip := pts[4]
+	var hook := (tip - pts[3]).normalized().rotated(-1.9) * 3.0
+	draw_line(tip, tip + hook, WedgedThing.BONE, 1.0)

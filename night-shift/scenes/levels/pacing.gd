@@ -188,12 +188,16 @@ func _false_alarm(p: Node2D) -> void:
 
 func _taps(at: Vector2, count: int) -> void:
 	for i in count:
+		if not is_inside_tree():
+			return                      # the level went away mid-sequence
 		AudioDirector.play_at("tap", at + Vector2(randf_range(-6.0, 6.0), 0), -8.0, 0.2, 320.0)
 		await get_tree().create_timer(randf_range(0.25, 0.6)).timeout
 
 
 func _knocks(at: Vector2, count: int) -> void:
 	for i in count:
+		if not is_inside_tree():
+			return
 		AudioDirector.play_at("knock", at, -4.0, 0.12, 700.0)
 		await get_tree().create_timer(randf_range(0.35, 0.9)).timeout
 
