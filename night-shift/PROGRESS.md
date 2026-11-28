@@ -1,6 +1,54 @@
 # Night Shift: progress log
 
-## Test this first: Round 2, Phase 2 (tuning)
+## Test this first: Round 2, Phase 3 (the level is a network now)
+
+F3 on helps: its SECTION line says where you are and where each door goes.
+
+1. **Back-wall doors:** stand in front of one, a small W appears, press W.
+   - A quick fade, a creak, a clunk, and you're at the door it leads to.
+   - Doors that won't open rattle.
+2. **The basement landing (B1) is the hub.** It has two doors:
+   - a wooden one to the crisps store
+   - a boarded, chained one that rattles: that's the way deeper
+3. **Zone 1:** B2, the crisps store (stacked to the ceiling, a safe room) ->
+   B3, the boiler corridor:
+   - crouch through the low bit
+   - walk down into the dip and back up out of it (new: you can walk up
+     one-tile steps)
+   - the boarded panel at the end
+4. **Zone 2:**
+   - Z2-1 is the tunnel mouth, with the teaching arm. Climb the ladder (W)
+     to the staff room: kettle, mugs, the rota.
+   - Then Z2-3 (the long low tunnel, the eye) -> Z2-4 (the junction, the
+     silhouette).
+   - Z2-6: the passage door is SHUT. Back to Z2-4, into the pump room (Z2-5):
+     pull the lever (the Cables wake), see the cut-open cage.
+   - Back to Z2-6 and up the stairs. **Does the backtrack feel natural or
+     annoying?**
+5. **Return trips:** after the shop, the stairs bring you back to B1, and B1 has
+   changed.
+   - The chair has turned (trip 1), is gone (trip 2), there are two (trip 3).
+   - The bucket moves.
+   - The boarded door now stands ajar: W takes you to the next zone. The
+     door you come out of won't open behind you.
+6. **Zone 3a:** A1 -> A2 (wet dip, floor arm) -> A3, the Thing's room. Up its
+   ladder is A4, the sleeping alcove: a sleeping bag, a torch like yours,
+   batteries. Then A5, the choice.
+7. **Zone 3b:** C1 (the leg) -> C2 (monitor, the real arm) -> C3 (the Thing) ->
+   C4 (timed door).
+8. **Zone 4:** D1 -> D2 (the third Lure, with its tell) -> D3: the climax, and
+   it comes through the door BEHIND you. Run for the far door -> D4, the
+   squeeze, the end.
+9. **Every room should look different:** ceiling heights, a crouch bit, a dip,
+   two ladders, doorways into dark rooms and grates in the back wall, and one
+   or two landmarks each (a trolley, a boiler, a cone, a radio, a stopped
+   clock, a boot, a pallet, a shop mannequin facing the wall, lockers).
+10. **Foreground:** pipes, girders and cables slide past in front of you,
+    faster than the room, and partly hide things.
+11. **How long did it take you?** The bot takes 7.7-8.1 min flat out (it knows
+    the way and never stops to look), so I'd guess 11-14 min for a person.
+
+## Previous checklist: Round 2, Phase 2 (tuning)
 
 F4 on for all of this.
 1. **False alarms are rare now:** one every 25-60 s of quiet (was 6-13).
@@ -1380,6 +1428,78 @@ is only how it moves.
   that kept turning away from it (the gate). A player would follow it; my bot
   just waits.
 
+### Round 2, Phase 3: level structure (a network of short sections)
+
+- **The map is generated** (`tools/gen_network.py`, run from the project folder; it writes
+  `MAP`, `DECOR` and `SECTIONS` in `test_level.gd`).
+  - The shop, storeroom, stairwell and the B1 landing are unchanged.
+  - Everything below is 21 sections of 14-32 tiles, each in its own pocket of
+    rock (22-column separators, so the camera never shows the next one).
+  - The map went from 1623 to 942 columns.
+  - Two sections are stacked over others, reached by ladders: the staff room
+    over Z2-1, the sleeping alcove over A3.
+- **The route** is the one in the header of `test_level.gd`. Every encounter is
+  still there, redistributed:
+  - zone 1: spiders
+  - zone 2: teaching arm, eye, silhouette, lever + Cables
+  - zone 3a: Lure 1, floor arm, spiders, the Thing, Lure 2 / the honest light
+  - zone 3b: leg, real arm, the Thing, timed door + Cable
+  - zone 4: Lure 3, the climax, the squeeze
+- **New props:**
+  - `BackDoor` (W, fade, creak/clunk, rattle when locked; looks: metal, wood,
+    sealed, ajar, arrival). The level keeps the door map: `_back_doors`,
+    `use_door()`.
+  - `Landmark` (12 kinds, with return-trip changes: turned / missing /
+    double / move).
+  - `StoryProp` (crisps stacks, kettle table, rota, stock cage, sleeping bag).
+  - `BackDetail` (doorways into dark rooms, grates).
+  - `foreground.gd`, the parallax layer: 1-2 items per section, 1.35x.
+- **Return trips:** `Descent._on_main_bottom` no longer teleports. The stairs
+  always come down to B1. The sealed "deeper" door (`go_deeper()`) opens after
+  each trip onto that trip's arrival door. `apply_shop_changes` also changes
+  the landmarks.
+- **Player:** walks up one-tile steps (`_step_up`), and the camera doesn't
+  jump.
+- **The climax** now puts the Thing at most 260 px behind you, but never
+  outside the section: it comes through the door behind you. The trigger
+  moved earlier in D3 so the chase has room.
+- **Fixed for the network:**
+  - The crossing silhouette needed only "you're past this x". Now it needs you
+    in its room; before, it fired from zone 3.
+  - The eye glimpse only takes its place while you're on your way to it, and
+    stands down if the gate shuts again first.
+- **F3:** a SECTION line with where each door goes.
+- **Tests:**
+  - The AI test (18/18) now runs in a hidden test arena at the far end of the
+    map (no doors, never visited in play), because its distances need long
+    corridors.
+  - Systems 5/5; arm, teaching arm, Cable, leg, death all pass.
+  - `descent_test.gd` is retired. The full bot now covers all three return
+    trips, B1's changes and the deeper door.
+
+**Full bot run on the network (2 seeds):**
+
+| | seed 11 | seed 29 |
+|---|---|---|
+| Time to the ending | **7.7 min** | 8.1 min |
+| Real encounters | 9 | 10 |
+| **Average gap** | **40 s** | 43 s |
+| False alarms | 6 | 6 |
+| Deaths | 1 (Lure 3) | 1 (Lure 3) |
+| Section changes | 29 | 29 |
+
+- **The old long layout** took 11.6-11.9 min. The bot walks flat out and
+  never explores, so a person should land around 11-14 min.
+- **Zones 1-2 only fire 1-2 encounters for the bot.** It's through zone 2 in
+  ~60-70 s, and the 40-110 s gate holds the rest (eye, silhouette, Cables).
+  They're there for anyone slower, or on the backtrack. Options in Decisions.
+- **Zone 3:** everything gated is 30+ s apart. The Thing noticing you is never
+  delayed (the rules have to stay honest), so a "thing" can land soon after
+  something else (11 s once).
+- **The bot gave up hiding in 3a on seed 29.** With the gate shut, the Thing
+  won't walk over you, and in a 30-tile room it hovers. A person would edge
+  past it. The bot just waits.
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -1412,6 +1532,21 @@ is only how it moves.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **Phase 3 vs Phase 2:** the dense network plus the 40-110 s gate means a fast
+  player sees only 1-2 of zone 2's five encounters. Options:
+  - (a) keep it (rarer = scarier, and slower players get more)
+  - (b) gate zones 1-2 at 25-70 s
+  - (c) more backtracking in zone 2
+
+  Your call.
+- **The "deeper" door on the B1 landing** is how return trips reach the next
+  zone now. It keeps your zone order, and it gives the landing's changes a
+  reason to exist.
+- **Back-wall doors are an escape:** the Thing can't follow you through one.
+  That's how the climax ends (you make the far door, it stops). Elsewhere a
+  door mid-chase also loses it. Say if you want it to follow you through.
+- **The hidden test arena** at the end of the map is test-only (no doors). Delete
+  the TEST section in `tools/gen_network.py` if you'd rather not have it.
 - **Round 2 Phase 8 vs "visible without the torch":** two of the Phase 8 ideas
   assume the Thing is invisible outside the beam:
   - "closer when you look back"

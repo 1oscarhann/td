@@ -244,6 +244,7 @@ func _ground_move(delta: float) -> void:
 	velocity.y += gravity * delta
 	if absf(dir) > 0.1:
 		facing = 1 if dir > 0.0 else -1
+	_step_up(dir, delta)
 	move_and_slide()
 
 	if is_on_floor() and absf(velocity.x) > 4.0:
@@ -252,6 +253,22 @@ func _ground_move(delta: float) -> void:
 		if _step_accum >= stride:
 			_step_accum -= stride
 			_footstep()
+
+
+## Steps (round 2): walk up a ledge of up to one tile without jumping. Only if
+## there's room above it (a real wall stops you as before).
+const STEP_HEIGHT := 17.0
+func _step_up(dir: float, delta: float) -> void:
+	if not is_on_floor() or absf(dir) < 0.1:
+		return
+	var motion := Vector2(signf(dir) * maxf(absf(velocity.x) * delta, 1.0) + signf(dir), 0.0)
+	if not test_move(global_transform, motion):
+		return
+	var up := Vector2(0, -STEP_HEIGHT)
+	if test_move(global_transform, up) or test_move(global_transform.translated(up), motion):
+		return
+	global_position.y -= STEP_HEIGHT
+	camera.position.y += STEP_HEIGHT   # the view doesn't jump with you
 
 
 func _held_move(delta: float) -> void:

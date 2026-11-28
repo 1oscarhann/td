@@ -121,6 +121,17 @@ func _debug_text() -> String:
 	lines.append("[color=#9fb4c8]%s[/color]" % _creature_lines())
 	lines.append("fps %d  zone %d  stamina %.1f%s" % [Engine.get_frames_per_second(), GameState.zone,
 			player.stamina, " EXHAUSTED" if player.exhausted else ""])
+	var sec: Dictionary = level.section_at(player.global_position)
+	if not sec.is_empty():
+		var doors := PackedStringArray()
+		for d: BackDoor in level._back_doors.values():
+			if level.section_at(d.global_position).get("id", "") == sec.id:
+				var to: BackDoor = level.back_door(d.target)
+				var where: String = level.section_at(to.global_position).get("id", "?") if to != null else ("sealed" if d.is_locked() else "?")
+				if d.door_id == "deeper":
+					where = "next zone" if level.descent.can_go_deeper() else "sealed"
+				doors.append("%s -> %s" % [d.door_id, where])
+		lines.append("SECTION %s (zone %d)  doors: %s" % [sec.id, int(sec.zone), ", ".join(doors) if doors.size() > 0 else "none"])
 	lines.append("torch %s  narrator cd %.0fs" % ["on" if player.torch.is_on else "off",
 			Narrator.cooldown_left()])
 	if thing != null and is_instance_valid(thing):

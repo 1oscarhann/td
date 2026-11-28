@@ -50,11 +50,16 @@ func _physics_process(delta: float) -> void:
 		return
 	if not _moving:
 		_refresh_space()
+	var dist := absf(p.global_position.x - global_position.x)
+	if mode == "eye" and _armed and not _leaving and not GameState.encounter_ready() and dist > 340.0 and _glinted == 0.0:
+		_armed = false                      # the gate shut again before you saw it: it stands down
 	if mode == "eye" and not _armed:
-		# The pacing gate: it only takes its place once the gap is up, and never
-		# in view (it's already standing there when you first see it).
+		# The pacing gate: it only takes its place once the gap is up, while
+		# you're on your way (but never in view: it's already standing there
+		# when you first see it).
 		visible = false
-		if GameState.encounter_ready() and absf(p.global_position.x - global_position.x) > 340.0:
+		if GameState.encounter_ready() and dist > 340.0 and dist < 760.0 \
+				and absf(p.global_position.y - global_position.y) < 120.0:
 			_armed = true
 			visible = true
 		return
@@ -94,7 +99,9 @@ func _eye(delta: float, p: Node2D) -> void:
 
 func _cross(p: Node2D) -> void:
 	if not _started:
-		if p.global_position.x > trigger_x and GameState.encounter_ready():
+		# (Only from inside its room: the map is a network of sections now.)
+		if p.global_position.x > trigger_x and absf(p.global_position.x - global_position.x) < 420.0 \
+				and absf(p.global_position.y - global_position.y) < 120.0 and GameState.encounter_ready():
 			_started = true
 			visible = true
 			GameState.mark_encounter("glimpse", "glimpse_cross", 1e9)

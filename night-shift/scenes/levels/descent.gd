@@ -7,8 +7,9 @@ extends Node
 ## sometimes comes back up, and the shop is slightly different each time"):
 ##   an up-stair deeper down -> you come out at the top of the storeroom stairs
 ##   -> the shop has changed, the CCTV man has moved -> back down the main
-##   stairs (longer every time) -> they open onto the NEXT section, not where
-##   you left. Endless is a feeling, not a system.
+##   stairs (longer every time) to the basement landing, which has changed too
+##   -> the door there that was sealed now stands ajar ("deeper"), onto the
+##   NEXT section, not where you left. Endless is a feeling, not a system.
 ## Three trips (open question: 2, 3 or 4 -> 3): after zone 2, mid zone 3, end
 ## of zone 3. Then zone 4 and the ending.
 
@@ -81,9 +82,19 @@ func _on_exited_up(s: Stairs) -> void:
 func _on_main_bottom(_s: Stairs) -> void:
 	if _pending < 0 and GameState.trips == 0:
 		Narrator.say("mind_the_step")   # true, a small kindness
-	if _busy or _pending < 0 or not resume_points.has(_pending):
+
+
+## Through the "deeper" door on the basement landing: it rattles (sealed)
+## until a return trip has opened it, then it leads out onto that trip's section.
+func can_go_deeper() -> bool:
+	return not _busy and _pending >= 0 and resume_points.has(_pending)
+
+
+func go_deeper() -> void:
+	if not can_go_deeper():
 		return
 	_busy = true
+	AudioDirector.play_at("creak", GameState.player.global_position, -8.0, 0.1, 420.0, 0.85)
 	var r: Dictionary = resume_points[_pending]
 	_pending = -1
 	var ui = level.get_tree().current_scene.get_node("UI")
@@ -114,7 +125,13 @@ func on_event(event_name: String) -> void:
 			AudioDirector.hush_drone(3.0)
 			# The final chase: it comes from behind, in a space that's closing.
 			# It wakes already hunting you.
-			thing.relocate(GameState.player.global_position + Vector2(-260, 0), true, 0.5, true)
+			# It comes through the door behind you (never into the rock).
+			var pp: Vector2 = GameState.player.global_position
+			var sec: Dictionary = level.section_at(pp)
+			var sx := pp.x - 260.0
+			if not sec.is_empty():
+				sx = maxf(sx, float(sec.x0) * 16.0 + 24.0)
+			thing.relocate(Vector2(sx, pp.y), true, 0.5, true)
 			thing.chase_speed *= 1.25
 		"last_stretch":
 			# Creatures stop chasing you. No explanation. And you start to change.
