@@ -13,6 +13,11 @@ extends Node2D
 ##
 ## Costs come from the world, not a battery: creatures react to the beam, and
 ## two-handed interactions force it to point at the floor (force_aim()).
+##
+## Scary phase 5: a cheap, dirty torch. A narrow hot spot inside a dim spill,
+## lens dirt in the light, dust drifting through the beam, the odd brownout.
+## It's heavy in the hand: the beam trails the mouse slightly and shakes more
+## the more scared you are (tension). The gameplay cone is unchanged.
 
 signal toggled(on: bool)
 ## Emitted when a target enters or leaves the beam (with line of sight).
@@ -21,8 +26,10 @@ signal lit_changed(target: Node, lit: bool)
 @export var cone_angle_deg := 40.0
 ## Beam length in px (16 px tiles: 120 px = 7.5 tiles).
 @export var cone_length := 120.0
-@export var energy := 1.45
-@export var light_color := Color(1.0, 0.9, 0.72)
+@export var energy := 2.7
+@export var light_color := Color(1.0, 0.88, 0.68)
+## The beam follows the mouse this fast (higher = snappier). Weight in the hand.
+@export var aim_follow := 16.0
 ## Brightness steps in the bright part of the beam (0 = smooth). The far tail
 ## always fades smoothly to nothing.
 @export var falloff_bands := 0
@@ -48,6 +55,10 @@ var _flicker_left := 0.0
 var _still_time := 0.0
 var _last_rot := 0.0
 var _spill: PointLight2D
+var _motes: CPUParticles2D
+var _brownout := 0.0          # seconds left of a battery dip
+var _next_brownout := 6.0
+var _t := 0.0
 
 @onready var light: PointLight2D = $Light
 @onready var cone: Area2D = $Cone
@@ -56,7 +67,9 @@ var _spill: PointLight2D
 
 func _ready() -> void:
 	GameState.torch = self
-	light.texture = LightTextures.cone(cone_length, cone_angle_deg, falloff_bands)
+	# The visible beam: a dirty torch (hot spot ~24 deg inside a dim spill a bit
+	# wider than the gameplay cone).
+	light.texture = LightTextures.torch_beam(cone_length * 1.08, cone_angle_deg + 6.0, 24.0)
 	light.color = light_color
 	light.energy = energy
 	# The visibility rule: the torch lights the environment AND the creature layer.
@@ -68,12 +81,15 @@ func _ready() -> void:
 	cone.monitorable = false
 	cone_shape.polygon = _cone_polygon()
 	_make_spill()
+	_make_motes()
 	set_on(start_on, false)
 
 
 func _physics_process(delta: float) -> void:
-	_aim()
+	_t += delta
+	_aim(delta)
 	_update_flicker(delta)
+	_update_brownout(delta)
 	_update_spill()
 	_update_lit(delta)
 	_update_hold_still(delta)
@@ -140,18 +156,23 @@ func get_aim_direction() -> Vector2:
 
 # ---------------------------------------------------------------------- internals
 
-func _aim() -> void:
+func _aim(delta: float) -> void:
 	var dir := _forced_dir
 	if dir == Vector2.ZERO:
 		dir = get_global_mouse_position() - global_position
 	if dir.length_squared() < 0.01:
 		return
+	var want := dir.angle()
+	# Your hand isn't steady down here, and it gets worse the more scared you are.
+	var shake := 0.006 + 0.03 * GameState.tension
+	want += (sin(_t * 7.3) * 0.6 + sin(_t * 13.1 + 1.3) * 0.4) * shake
 	if _forced_dir != Vector2.ZERO:
 		# Swing down to the floor rather than snapping: it should feel like your
 		# hands are busy, not like the game took the mouse away.
-		global_rotation = lerp_angle(global_rotation, dir.angle(), 0.25)
+		global_rotation = lerp_angle(global_rotation, want, 0.25)
 	else:
-		global_rotation = dir.angle()
+		# Heavy: the beam trails the mouse a little.
+		global_rotation = lerp_angle(global_rotation, want, 1.0 - exp(-aim_follow * delta))
 
 
 func _update_flicker(delta: float) -> void:
@@ -170,6 +191,47 @@ func _update_flicker(delta: float) -> void:
 		light.energy = energy * randf_range(0.4, 1.0)
 
 
+## Battery dips: now and then the beam sags for a moment (never fully off:
+## that's for scripted flickers). More often deeper down.
+func _update_brownout(delta: float) -> void:
+	if not is_on or _flicker_left > 0.0:
+		return
+	if _brownout > 0.0:
+		_brownout -= delta
+		light.energy = energy * 0.55 if _brownout > 0.0 else energy
+		return
+	_next_brownout -= delta * (1.0 + 0.25 * float(GameState.zone))
+	if _next_brownout <= 0.0:
+		_next_brownout = randf_range(5.0, 14.0)
+		_brownout = randf_range(0.04, 0.12)
+
+
+## Dust hanging in the air, only visible where light falls on it (Light Only on
+## the environment mask): in your beam it drifts and glitters.
+func _make_motes() -> void:
+	_motes = CPUParticles2D.new()
+	_motes.name = "Motes"
+	var mat := CanvasItemMaterial.new()
+	mat.light_mode = CanvasItemMaterial.LIGHT_MODE_LIGHT_ONLY
+	_motes.material = mat
+	_motes.light_mask = GameState.LIGHT_ENV
+	_motes.texture = CreatureDraw.pixel_texture()
+	_motes.local_coords = false
+	_motes.amount = 46
+	_motes.lifetime = 5.0
+	_motes.preprocess = 5.0
+	_motes.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE
+	_motes.emission_sphere_radius = 110.0
+	_motes.direction = Vector2(1, 0)
+	_motes.spread = 180.0
+	_motes.gravity = Vector2(0, 1.5)
+	_motes.initial_velocity_min = 0.5
+	_motes.initial_velocity_max = 3.0
+	_motes.color = Color(0.85, 0.82, 0.74, 0.55)
+	_motes.top_level = true
+	add_child(_motes)
+
+
 func _make_spill() -> void:
 	_spill = PointLight2D.new()
 	_spill.name = "Spill"
@@ -185,6 +247,8 @@ func _make_spill() -> void:
 ## The pool slides along the floor towards where you aim and gets stronger the
 ## more the beam points down. Pointing up still leaks a little from the hand.
 func _update_spill() -> void:
+	if _motes != null:
+		_motes.global_position = global_position + get_aim_direction() * 50.0
 	var aim := get_aim_direction()
 	var feet := global_position
 	var body := get_parent() as Node2D

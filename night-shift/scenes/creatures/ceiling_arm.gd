@@ -3,8 +3,9 @@ extends Area2D
 ## Ceiling Arm. A long, thin, grey-pale arm with far too many joints, living in
 ## a vent (or under a floor grate).
 ##
-## LIGHT RULE: lit -> it snaps back into the vent, violently, much faster than it
-## came out, and stays there a while. In the dark it reaches down, feels around,
+## LIGHT RULE: lit -> it's caught: frozen for a heartbeat in your beam, fingers
+## splayed and trembling (a black hand, right there), then it snaps back into
+## the vent, violently, much faster than it came out, and stays there a while. In the dark it reaches down, feels around,
 ## and grabs you if you're underneath.
 ## SOUND FIRST: scratching inside the duct before it appears.
 ##
@@ -14,9 +15,10 @@ extends Area2D
 ## Fully out, the hand drags its fingertips across the floor and taps, one
 ## finger after another, feeling for you.
 ##
-## LOOK: 5-14 bones of irregular length, each joint a swollen knuckle; corpse-
-## pale skin, faint veins, a narrow hand with five fingers far too long, three
-## joints each, dark nails.
+## LOOK: 5-14 bones of irregular length, each joint a swollen knuckle; skin
+## BLACK, with a wet grey sheen only on the edges that catch your light, so in
+## the beam it's a black hand against the lit wall. Five fingers far too long,
+## three joints each, pale yellowed nails.
 ##
 ## Creature layer + Light Only material: invisible outside the beam.
 ## Root sits on the ceiling at the vent (or the floor at a grate).
@@ -43,12 +45,13 @@ enum State { HIDDEN, SCRATCH, REACH, RETRACT }
 ## but it can't grab. Taught safely first, then used for real.
 @export var harmless := false
 
-const BASE := Color(0.56, 0.57, 0.54)
-const RIM := Color(0.84, 0.83, 0.78)
-const SHADOW := Color(0.30, 0.31, 0.30)
-const DARK := Color(0.12, 0.12, 0.12)
-const NAIL := Color(0.58, 0.52, 0.34)
-const VEIN := Color(0.40, 0.46, 0.52)
+const BASE := Color(0.05, 0.05, 0.06)
+const RIM := Color(0.58, 0.59, 0.62)       # a wet, oily sheen where the light catches it
+const SHEEN := Color(0.22, 0.23, 0.26)     # the highlight running down each bone
+const SHADOW := Color(0.015, 0.015, 0.02)
+const DARK := Color(0.0, 0.0, 0.0)
+const NAIL := Color(0.66, 0.62, 0.50)
+const VEIN := Color(0.12, 0.13, 0.15)
 
 var state := State.HIDDEN
 var length := 0.0         # current reach in px (for the grab)
@@ -67,6 +70,8 @@ var _dur := PackedFloat32Array()     # seconds each bone takes to unfold
 var _prog := 0.0                     # bones out (0..N, fractional)
 var _pause := 0.0
 var _violent := false
+## Caught in the light: seconds it stays frozen before it whips back.
+var _held_in_light := 0.0
 var _shake := 0.0
 var _full_time := 0.0
 var _finger_len := PackedFloat32Array()
@@ -159,6 +164,7 @@ func on_torch_lit_changed(lit: bool) -> void:
 	if lit and (state == State.REACH or state == State.SCRATCH):
 		_enter(State.RETRACT)
 		_violent = true
+		_held_in_light = 0.35 if length > 12.0 else 0.0
 		_shake = 1.0
 		AudioDirector.play_at("tap", global_position, -8.0, 0.3, 300.0, 0.6)
 		AudioDirector.play_at("crack", global_position, -16.0, 0.2, 300.0, 1.6)
@@ -211,6 +217,13 @@ func _physics_process(delta: float) -> void:
 					_violent = false
 		State.RETRACT:
 			scratch.stop()
+			if _held_in_light > 0.0:
+				_held_in_light -= delta        # a heartbeat, frozen in the light
+				length = _reach_length()
+				_update_points()
+				$Tip.position = _points[_points.size() - 1]
+				queue_redraw()
+				return
 			var speed := retract_speed * (1.8 if _violent else 0.3)
 			_prog = maxf(0.0, _prog - delta * speed / maxf(max_length, 1.0) * float(n))
 			if _prog <= 0.0:
@@ -308,8 +321,8 @@ func _draw() -> void:
 	var n := _points.size()
 	if n < 2:
 		return
-	var w_root := 4.2 if not from_floor else 3.6
-	var w_wrist := 2.2 if not from_floor else 2.0
+	var w_root := 6.0 if not from_floor else 5.0
+	var w_wrist := 3.2 if not from_floor else 2.8
 	# Bones, each its own tapering segment.
 	for i in range(1, n):
 		var k0 := float(i - 1) / maxf(float(n - 1), 1.0)
@@ -318,6 +331,11 @@ func _draw() -> void:
 		var b := _points[i]
 		var seg := PackedVector2Array([a, a.lerp(b, 0.5), b])
 		CreatureDraw.limb(self, seg, lerpf(w_root, w_wrist, k0), lerpf(w_root, w_wrist, k1), BASE, RIM, SHADOW, ldir)
+		# Black and wet: a thin highlight down the bone, towards the light.
+		var off2 := (b - a).orthogonal().normalized()
+		if off2.dot(ldir) < 0.0:
+			off2 = -off2
+		draw_line(a + off2 * 0.6, b + off2 * 0.6, SHEEN, 1.0)
 		# A vein running down the first bones.
 		if i <= 3 and a.distance_to(b) > 4.0:
 			var off := (b - a).orthogonal().normalized() * 0.8
@@ -340,7 +358,7 @@ func _draw_hand(ldir: Vector2) -> void:
 		along = Vector2(0, -1 if from_floor else 1)
 	var side := along.orthogonal()
 	var palm_end := wrist + along * 6.0
-	CreatureDraw.limb(self, PackedVector2Array([wrist, wrist + along * 3.0, palm_end]), 3.4, 4.4, BASE, RIM, SHADOW, ldir)
+	CreatureDraw.limb(self, PackedVector2Array([wrist, wrist + along * 3.0, palm_end]), 4.0, 5.2, BASE, RIM, SHADOW, ldir)
 	var searching := _searching()
 	var floor_y := max_length + 6.0
 	for f in 5:
@@ -355,6 +373,8 @@ func _draw_hand(ldir: Vector2) -> void:
 			if tap > 0.95 and _t - _last_tap > 0.3 and not from_floor:
 				_last_tap = _t
 				AudioDirector.play_at("tap", global_position + root, -22.0, 0.3, 240.0, 1.2)
+		elif state == State.RETRACT and _held_in_light > 0.0:
+			curl = -0.3 + randf_range(-0.12, 0.12)    # caught: splayed open, trembling
 		elif state == State.RETRACT:
 			curl = 1.2                                # clenched as it snaps back
 		elif randf() < 0.02:
@@ -368,7 +388,7 @@ func _draw_hand(ldir: Vector2) -> void:
 			if searching and not from_floor:
 				p.y = minf(p.y, floor_y)              # dragging along the floor
 			pts.append(p)
-		CreatureDraw.limb(self, pts, 1.8, 1.0, BASE, RIM, SHADOW, ldir)
+		CreatureDraw.limb(self, pts, 2.2, 1.1, BASE, RIM, SHADOW, ldir)
 		draw_rect(Rect2(pts[1].round(), Vector2(1, 1)), SHADOW)   # finger joints
 		draw_rect(Rect2(pts[2].round(), Vector2(1, 1)), SHADOW)
 		draw_rect(Rect2(pts[3].round(), Vector2(1, 1)), NAIL)     # the nail

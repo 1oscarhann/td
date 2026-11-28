@@ -1,6 +1,63 @@
 # Night Shift: progress log
 
-## Test this first: Phase 4 (the Thing's movement, death, visual tension)
+## Test this first: Phase 5, one full playthrough with headphones
+
+Headphones on, lights off, volume where a whisper is audible. Play start to
+finish in one go. My bot took 11.5-13.3 min walking flat out; you'll take
+longer, which is fine. The times in brackets are roughly when the bot got
+there, so you can tell if something's missing.
+
+**The shop (0:00-1:30)**
+1. Fridge hum, tube buzz, the shop feels safe. Do the three jobs.
+2. The power cut: flicker, clunk, the hum dies. Silence should feel LOUD.
+3. Torch under the counter. Turn it on and look at the beam:
+   - a hot centre, a soft dirty spill round it, a darker ring, smudges in it
+   - dust drifting in the light
+   - it lags your mouse very slightly and shakes a little
+   - every 5-14 s it browns out for a blink (more often deeper down)
+   - Does it feel weak and cheap, like a torch you'd find under a counter? Good.
+
+**The basement and zone 2 (1:30-5:50)**
+4. Spiders on the stairs scatter when lit (1:30).
+5. The boards come off, one at a time, loud.
+6. The teaching arm (2:30): you hear scratching in a vent first. In the dark
+   it reaches down until its hand hangs right over your head. Look up: a
+   BLACK hand, long fingers, wet glints where your light hits it.
+   - It freezes in the beam for a heartbeat, then whips back into the duct.
+   - This one can't hurt you.
+7. Real scares come about once a minute here (every 59-62 s for the bot), with
+   fake ones in between: a tap right behind you, knocking in the pipes, a vent
+   rattle, a sign flickering, something calling far away. Each fake one should
+   make you stop for a second, then nothing. Tell me if they get annoying.
+8. Silence before every scripted scare: the hum drops out for a few seconds and
+   the torch stutters. Does the silence make you expect something?
+9. The eye down the tunnel (3:30): point the torch ahead, a warm pixel answers
+   far away and pulls back. The silhouette crossing a lit room (4:30).
+10. The safe rooms (worklight on): tension drops, ambience softens. Relief?
+
+**Zone 3 (6:00-9:40): the Thing**
+11. You hear it before you see it: wet breathing, legs tapping.
+12. When it's close and you can't see it, the screen edges pulse like a heartbeat.
+13. Torch off, crouch, stay still: it walks right over you. That's the scariest
+    moment in the game. You can flash the light on its back for a second
+    as it goes; hold it longer and it notices.
+14. If it notices: the head snaps to you, a sting, it comes fast. Light it:
+    it freezes, then lurches. Run, then go dark and still.
+15. The floor grate arm in 3a, the real arm in 3b (this one grabs). The 3b arm
+    sits in the Thing's patrol: don't hide under it.
+16. The Lure: three of them, one honest. The timed door + the Cable that grabs
+    your ankle (hold the light on its head to get free).
+
+**Zone 4 and the ending (9:40-12:00)**
+17. The third Lure bites. You WILL die the first time (see Decisions). Death =
+    instant black, the sting, then two full seconds of nothing at all.
+18. The climax: it wakes hunting behind you. Freeze it with the light once,
+    then run through the squeeze. The ending.
+
+**Tell me:** where you got bored, where you jumped, whether any fake scare made
+you laugh instead, and how long it took you.
+
+## Previous checklist: Phase 4 (the Thing's movement, death, visual tension)
 
 Headphones on. Zone 3a is where the Thing lives.
 
@@ -1010,6 +1067,93 @@ All behaviour rules are unchanged; this is how they look and move.
 - **Regressions:** arm, teaching arm, Cable, leg, death, the full descent to the
   ending.
 
+### Phase 5: the full run (plus the black arm and the scarier torch)
+
+**Black arm** (`ceiling_arm.gd`, both the ceiling and floor-grate arms):
+- near-black skin (0.05) with a dark edge
+- an oily sheen on the edge facing your torch, and a highlight down each bone,
+  so it still reads against dark brick
+- thicker bones (6 px at the root, 3.2 at the wrist), a wider palm and
+  fingers; yellowed nails
+- **Caught in the light:**
+  - Lit, it now freezes for 0.35 s (fingers splayed, trembling), THEN whips
+    back.
+  - Before, it vanished in 2 frames, so a black arm was basically never seen.
+  - It can't grab during the freeze.
+
+**Scarier torch** (`torch.gd`, `light_textures.gd`). The gameplay cone is
+unchanged (40 degrees, 120 px):
+- a new beam texture: a tight hot centre (24 degrees) with a faint ring at its edge,
+  a dim dirty spill around it, smudges and two dark streaks (lens dirt)
+- warmer, dirtier colour; brighter centre (energy 2.7) so the edges fall off
+  harder
+- the aim lags your mouse a hair and shakes more as tension rises
+- brownouts: a 0.04-0.12 s dip to 55% every 5-14 s, more often per zone
+- dust motes drifting in the beam
+- the glow round the player is dimmer (0.45 -> 0.3), so the beam is the only
+  real light
+
+**Full headless run** (`_smoketest/full_run.gd`, a bot that plays the whole game
+from the shift to the ending):
+- **How it plays:**
+  - uses real inputs to move, crouch, run, climb stairs and hold E
+  - the torch is aimed by script, as a player would: ahead, at arms, at spiders
+  - torch off when the Thing is within 450 px; creeps when it's within 300
+  - hides under it (dark, still, crouched) and stays down until it's 110 px past
+  - if it's spotted: light the Thing to freeze it, run, go dark
+  - after 4 deaths in one section it would turn the Thing harmless there and
+    log it (it never needed to)
+
+| | seed 29 | seed 11 |
+|---|---|---|
+| Time to the ending | **11.5 min** | 13.3 min |
+| Real encounters | 15 | 18 |
+| **Average gap between encounters** | **42 s** | 40 s |
+| Longest gap | 62 s | 62 s |
+| False alarms | 51 (3.4x real) | 57 (3.2x real) |
+| Deaths | 1 (the Lure bite) | 3 (Lure bite + 2 in zone 3b) |
+
+**Timeline (seed 29):**
+
+| Time | What happened |
+|---|---|
+| 1:04 | power cut |
+| 1:16 | torch |
+| 1:31 | basement |
+| 2:22 | tunnels |
+| 5:49 | trip 1 |
+| 5:59 | zone 3a |
+| 7:58 | trip 2 |
+| 8:12 | zone 3b |
+| 9:38 | trip 3 |
+| 9:57 | zone 4 |
+| 10:28 | Lure bite |
+| 11:19 | climax |
+| 11:31 | ending |
+
+**Gaps by zone:**
+- **Zones 1-2:** 61 / 62 / 59 / 60 s, the same on both seeds (all scripted).
+- **Zone 3:** 61 / 19 / 44 / 44 / 1 / 25 / 18 / 23 s.
+  - It gets denser: the Thing adds its own moments on top of the scripted ones.
+  - The "1 s" is the leg hiding among spiders, so it's really one moment.
+- **Zone 4:** 60 / 51 s, then the climax.
+
+**What I changed because of the run:**
+- The Thing walking right over you now counts as an encounter for pacing
+  (`thing_pass`).
+  - Before, the scariest moment in the game didn't reset the pacing clock.
+  - So false alarms could start right after it, and zone 3 looked like it had
+    96-128 s dead gaps when it didn't.
+
+**Regressions, all pass:**
+- AI 17/17 and the Phase 4 systems test 5/5
+  - These two time themselves on the wall clock: run them without `--fixed-fps`.
+- arm, teaching arm, Cable, leg, death
+- the full descent to the ending
+
+**Clips:** recorded with Godot's movie writer through the same bot, captioned,
+and brightened for phone screens (the real game is darker).
+
 ## Untested
 - Audio, by ear (no sound card here).
 - Real input feel: mouse aiming, camera lean, crouch timing.
@@ -1023,8 +1167,14 @@ All behaviour rules are unchanged; this is how they look and move.
   ceiling":** the game sees it from the front (like your concept art), so
   leaning forward shows as the head hanging down in front of the chest. Say if
   you meant something else.
-- Encounter spacing in zones 3 and 4 isn't measured yet (the pacing test stops
-  at the end of zone 2). Phase 5's full run will report it.
+- **Zone 3b's real arm sits inside the Thing's patrol.**
+  - On one seed the bot hid from the Thing right under it: the arm grabbed it.
+  - The next attempt, the Thing caught it while it was busy lighting the arm.
+  - It's a nasty combo but fair (the scratching warns you). Say if it's too
+    mean.
+- **The bot can't judge sound.** The 3.4x false-alarm ratio is a count, not a
+  feeling. Whether they read as "alive" or as noise is your call with
+  headphones.
 - Silences only come before SCRIPTED encounters. The Thing in zone 3 is
   dynamic: its approach drops the hum within 240 px (Phase 1), but there's no
   4-8 s silence before it finds you.
@@ -1036,6 +1186,24 @@ All behaviour rules are unchanged; this is how they look and move.
 - The pipe texture repeats its bracket and rust spots every 16 px. Fine for now.
 
 ## Decisions to check
+- **"The hand thing" = the Ceiling Arm** (and the floor-grate arm, same
+  creature). Black with an oily sheen, so it reads in your beam instead of
+  vanishing into the brick. Pure flat black was unreadable on my renders.
+  - In the beam it's a black silhouette against lit brick. That works, but
+    only if you get to see it, hence the 0.35 s freeze.
+  - Under a floodlight (not something the game has) it's nearly invisible on
+    dark brick.
+- **The scarier torch keeps the same gameplay cone** (40 degrees, 120 px). Only
+  the look changed: a hotter, smaller centre, a dirty spill, brownouts, lag,
+  motes. A smaller real cone would have changed every creature's balance.
+- **The third Lure (zone 4) is a guaranteed death the first time.**
+  - Both bot runs died there. By then you've learned "lights lie", so the
+    honest-looking one baits you.
+  - It doesn't come back after the bite, and the checkpoint is ~30 s back.
+  - If that feels cheap, give it a tell (the cord twitching) or move the
+    checkpoint closer.
+- **The Thing passing over you counts as an encounter** (pacing only: it
+  doesn't know you're there).
 - **Length vs spacing:**
   - Your two targets fight each other. 3-4x the route can't hold ~10
     encounters each 60-90 s apart at walking speed; that needs ~8x.

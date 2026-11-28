@@ -407,6 +407,11 @@ func _patrol(delta: float, lit: bool, player: Player) -> void:
 			_notice(player.global_position, "light")
 		return
 	_light_seen = maxf(0.0, _light_seen - delta * 0.5)
+	# Walking right over you without knowing: that's an encounter too, as far
+	# as the pacing is concerned (it doesn't know, but YOU do).
+	if absf(player.global_position.x - global_position.x) < 26.0 \
+			and absf(player.global_position.y - global_position.y) < 40.0:
+		GameState.mark_encounter("thing_pass", "thing", 15.0)
 	if _perceived and _hears(player):
 		_notice(player.global_position, "heard")
 		return

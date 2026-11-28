@@ -65,7 +65,7 @@ polygon = PackedVector2Array(0, 0, 113, -41, 120, 0, 113, 41)
 
 [node name="Glow" type="PointLight2D" parent="."]
 position = Vector2(0, -22)
-energy = 0.45
+energy = 0.3
 range_item_cull_mask = 1
 texture_scale = 1.0
 height = 30.0
